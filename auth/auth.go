@@ -2,8 +2,11 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
+	"strings"
 
+	"encore.app/users"
 	"encore.dev/beta/auth"
 	"encore.dev/beta/errs"
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -87,9 +90,67 @@ func (s *Service) Callback(
 		}
 	}
 
+	provider, providerUserID := parseAuth0Subject(profile["sub"])
+	var email *string
+	if v, ok := profile["email"].(string); ok {
+		v = strings.TrimSpace(v)
+		if v != "" {
+			email = &v
+		}
+	}
+	emailVerified, _ := profile["email_verified"].(bool)
+	rawProfile, err := json.Marshal(profile)
+	if err != nil {
+		return nil, &errs.Error{
+			Code:    errs.Internal,
+			Message: "Failed to encode profile data.",
+		}
+	}
+
+	_, err = users.UpsertFromAuth(ctx, &users.UpsertFromAuthParams{
+		Provider:       provider,
+		ProviderUserID: providerUserID,
+		Email:          email,
+		EmailVerified:  emailVerified,
+		RawProfile:     rawProfile,
+	})
+	if err != nil {
+		return nil, &errs.Error{
+			Code:    errs.Internal,
+			Message: "Failed to persist authenticated user.",
+		}
+	}
+
 	return &CallbackResponse{
 		Token: token.Extra("id_token").(string),
 	}, nil
+}
+
+func parseAuth0Subject(raw interface{}) (provider string, providerUserID string) {
+	sub, ok := raw.(string)
+	if !ok || strings.TrimSpace(sub) == "" {
+		return "auth0", ""
+	}
+
+	parts := strings.SplitN(sub, "|", 2)
+	prefix := strings.TrimSpace(parts[0])
+	switch prefix {
+	case "google-oauth2":
+		provider = "google"
+	case "apple":
+		provider = "apple"
+	case "facebook":
+		provider = "facebook"
+	case "auth0":
+		provider = "email"
+	default:
+		provider = "auth0"
+	}
+
+	if len(parts) == 2 {
+		return provider, strings.TrimSpace(parts[1])
+	}
+	return provider, strings.TrimSpace(sub)
 }
 
 type LogoutResponse struct {

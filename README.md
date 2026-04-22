@@ -182,3 +182,25 @@ Follow these steps to link your app to GitHub:
 ```bash
 encore test ./...
 ```
+
+## Supabase migrations (external database)
+
+This project stores external database migrations in `supabase/migrations`.
+
+1. Install Supabase CLI:
+
+```bash
+brew install supabase/tap/supabase
+```
+
+2. Link this repo to your Supabase project:
+
+```bash
+supabase link --project-ref xofbxjbrzpsocnjdsmmk
+```
+
+3. Apply pending migrations:
+
+```bash
+supabase db push
+```
