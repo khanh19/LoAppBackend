@@ -7,6 +7,14 @@
                 "--app=lo-app-backend-s33i"
             ],
             "command": "encore"
+        },
+        "supabase": {
+            "args": [
+                "mcp",
+                "run",
+                "--url=https://mcp.supabase.com/mcp?project_ref=xofbxjbrzpsocnjdsmmk"
+            ],
+            "command": "curl"
         }
     }
 }
