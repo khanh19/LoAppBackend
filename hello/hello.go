@@ -3,6 +3,8 @@ package hello
 
 import (
 	"context"
+
+	"encore.app/pkg/externaldb"
 )
 
 // Welcome to Encore!
@@ -28,6 +30,28 @@ func World(ctx context.Context, name string) (*Response, error) {
 
 type Response struct {
 	Message string
+}
+
+// DBPingResponse is the result of DBPing.
+type DBPingResponse struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
+// DBPing checks that the external database pool is reachable (opens on first call).
+// Public for easy local testing; lock down or remove before production.
+//   curl "http://localhost:4000/debug/db-ping"
+//
+//encore:api public method=GET path=/debug/db-ping
+func DBPing(ctx context.Context) (*DBPingResponse, error) {
+	pool, err := externaldb.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := pool.Ping(ctx); err != nil {
+		return nil, err
+	}
+	return &DBPingResponse{OK: true, Message: "external database reached"}, nil
 }
 
 // ==================================================================
