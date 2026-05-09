@@ -1,10 +1,10 @@
 {
     "mcpServers": {
-        "encore-mcp": {
+        "encore": {
             "args": [
                 "mcp",
                 "run",
-                "--app=lo-app-backend-s33i"
+                "--app=loappbackend-a9f2"
             ],
             "command": "encore"
         },

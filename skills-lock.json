@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "skills": {
+    "encore-api": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/api/SKILL.md",
+      "computedHash": "ee75d07636707641d282d6987d8d0493e9ce19e66ec3e0aeb35f7b47042cd44f"
+    },
+    "encore-auth": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/auth/SKILL.md",
+      "computedHash": "3b0fce11c5ebd674d1524f95fc5be76e587fd2329f83fc2d7c31837abb869aa4"
+    },
+    "encore-code-review": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/code-review/SKILL.md",
+      "computedHash": "b34eac415624303c613162d2ce19c15c7cecf35907ee6384a1025db5391b4a2b"
+    },
+    "encore-database": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/database/SKILL.md",
+      "computedHash": "60ebd206628cf313d0e10ae206093ed81768c5b42cfe57bb752463750f145eb0"
+    },
+    "encore-frontend": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/frontend/SKILL.md",
+      "computedHash": "2440caecfb44ee5bfe685547dcce92af5666f5773951e19ea369edf1ca6b41b6"
+    },
+    "encore-getting-started": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/getting-started/SKILL.md",
+      "computedHash": "aaf828f27f0403f08890166ca271bacf038a2ca57ec0b5e59ee8c528bbc6d59f"
+    },
+    "encore-go-api": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/go-api/SKILL.md",
+      "computedHash": "f158299c157580871ddb498871addfb510b449412a5b86d6d739c322a12d77f8"
+    },
+    "encore-go-auth": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/go-auth/SKILL.md",
+      "computedHash": "88829f83ede73bdd390d706fce17fa81a50268852de0142b10a0de776cb8b198"
+    },
+    "encore-go-code-review": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/go-code-review/SKILL.md",
+      "computedHash": "603e9a695bc0ed02f6806a021ef59e9e05efdac36a451ffe0a24c65874ec3a2c"
+    },
+    "encore-go-database": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/go-database/SKILL.md",
+      "computedHash": "e9ec002159375c3195cc79c39842430c9c0efabf5305ee198f70eb9f403fc942"
+    },
+    "encore-go-getting-started": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/go-getting-started/SKILL.md",
+      "computedHash": "05dc3a68b5c20c93d3c9bdb71afa608f4ab935d3c388953e9c941dc8610970f3"
+    },
+    "encore-go-infrastructure": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/go-infrastructure/SKILL.md",
+      "computedHash": "540e90d43d85597a4964ff04b57a764b01ac1992d8a464e9e81674937114ff15"
+    },
+    "encore-go-service": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/go-service/SKILL.md",
+      "computedHash": "e0cae841fd50b7460a8465a62e944f404f7f694e34487e6a572b2e3770949c7f"
+    },
+    "encore-go-testing": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/go-testing/SKILL.md",
+      "computedHash": "d52ecd99fa49454554d3f8d50164e0cf6ff920f0269fbb8563f01e06b66dfe8b"
+    },
+    "encore-infrastructure": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/infrastructure/SKILL.md",
+      "computedHash": "ac2e301359f423b5d4fa111025cbd9362abd8d41c6602feb1318164623abb13c"
+    },
+    "encore-migrate": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/migrate/SKILL.md",
+      "computedHash": "5e52268c410fc611c349d5401ebd8c68201856baa501c9674b0b2ce125421cbd"
+    },
+    "encore-service": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/service/SKILL.md",
+      "computedHash": "f321dba7f9c7ead61c25f492d2ef3491ff93b977e5ebec6d47b5bf9b5bb7e868"
+    },
+    "encore-testing": {
+      "source": "encoredev/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/encore-skills/skills/testing/SKILL.md",
+      "computedHash": "fcccc2f6c732b16a710f8b01a5bf7c91ef84fe39770a247f509c0326dbc304e5"
+    }
+  }
+}
