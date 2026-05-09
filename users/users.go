@@ -33,14 +33,15 @@ type User struct {
 	LastLoginAt     *time.Time `json:"last_login_at"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
+	IsNewIdentity   bool       `json:"is_new_identity,omitempty"`
 }
 
 type UpsertFromAuthParams struct {
-	Provider       string                 `json:"provider"`
-	ProviderUserID string                 `json:"provider_user_id"`
-	Email          *string                `json:"email"`
-	EmailVerified  bool                   `json:"email_verified"`
-	RawProfile     json.RawMessage        `json:"raw_profile"`
+	Provider       string          `json:"provider"`
+	ProviderUserID string          `json:"provider_user_id"`
+	Email          *string         `json:"email"`
+	EmailVerified  bool            `json:"email_verified"`
+	RawProfile     json.RawMessage `json:"raw_profile"`
 }
 
 //encore:api private method=POST path=/users/upsert-from-auth
@@ -80,6 +81,7 @@ func (s *Service) UpsertFromAuth(ctx context.Context, req *UpsertFromAuthParams)
 	if err != nil {
 		return nil, err
 	}
+	isNewIdentity := user == nil
 	if user == nil && req.Email != nil {
 		user, err = findByEmail(ctx, tx, *req.Email)
 		if err != nil {
@@ -104,6 +106,7 @@ func (s *Service) UpsertFromAuth(ctx context.Context, req *UpsertFromAuthParams)
 	if err := tx.Commit(ctx); err != nil {
 		return nil, errs.WrapCode(err, errs.Internal, "failed to commit user auth transaction")
 	}
+	user.IsNewIdentity = isNewIdentity
 	return user, nil
 }
 
