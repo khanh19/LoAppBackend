@@ -12,6 +12,9 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
+const auth0ClaimNamespace = "https://lo-app.example.com"
+const auth0IsNewAccountClaim = auth0ClaimNamespace + "/is_new_auth0_account"
+
 // Service struct definition.
 // Learn more: encore.dev/docs/primitives/services-and-apis/service-structs
 //
@@ -56,7 +59,8 @@ type CallbackRequest struct {
 }
 
 type CallbackResponse struct {
-	Token string `json:"token"`
+	Token             string `json:"token"`
+	IsNewAuth0Account bool   `json:"is_new_auth0_account"`
 }
 
 //encore:api public method=POST path=/auth/callback
@@ -90,6 +94,8 @@ func (s *Service) Callback(
 		}
 	}
 
+	isNewAuth0Account := claimBool(profile, auth0IsNewAccountClaim)
+
 	provider, providerUserID := parseAuth0Subject(profile["sub"])
 	var email *string
 	if v, ok := profile["email"].(string); ok {
@@ -122,7 +128,8 @@ func (s *Service) Callback(
 	}
 
 	return &CallbackResponse{
-		Token: token.Extra("id_token").(string),
+		Token:             token.Extra("id_token").(string),
+		IsNewAuth0Account: isNewAuth0Account,
 	}, nil
 }
 
@@ -151,6 +158,21 @@ func parseAuth0Subject(raw interface{}) (provider string, providerUserID string)
 		return provider, strings.TrimSpace(parts[1])
 	}
 	return provider, strings.TrimSpace(sub)
+}
+
+func claimBool(profile map[string]interface{}, key string) bool {
+	if profile == nil {
+		return false
+	}
+	v, ok := profile[key]
+	if !ok {
+		return false
+	}
+	b, ok := v.(bool)
+	if !ok {
+		return false
+	}
+	return b
 }
 
 type LogoutResponse struct {
@@ -190,7 +212,7 @@ type ProfileData struct {
 	Picture string `json:"picture"`
 }
 
-// The `encore:authhandler` annotation tells Encore to run this function for all 
+// The `encore:authhandler` annotation tells Encore to run this function for all
 // incoming API call that requires authentication.
 // Learn more: encore.dev/docs/develop/auth#the-auth-handler
 //
