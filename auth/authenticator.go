@@ -4,8 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"encore.dev/config"
 	"errors"
+
+	"encore.dev/config"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 )
@@ -27,6 +28,8 @@ var secrets struct {
 type Authenticator struct {
 	*oidc.Provider
 	oauth2.Config
+	auth0Domain string
+	httpClient  httpClient
 }
 
 // New instantiates the *Authenticator.
@@ -48,8 +51,10 @@ func New() (*Authenticator, error) {
 	}
 
 	return &Authenticator{
-		Provider: provider,
-		Config:   conf,
+		Provider:    provider,
+		Config:      conf,
+		auth0Domain: cfg.Domain(),
+		httpClient:  nil,
 	}, nil
 }
 
