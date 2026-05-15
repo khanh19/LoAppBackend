@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 
+	"encore.app/users"
 	encoreauth "encore.dev/beta/auth"
 	"encore.dev/beta/errs"
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -34,10 +36,40 @@ func (s *Service) AuthHandler(ctx context.Context, token string) (encoreauth.UID
 		}
 	}
 
-	profileData := &ProfileData{
-		Email:   profile["email"].(string),
-		Picture: profile["picture"].(string),
+	provider, providerUserID := parseAuth0Subject(profile["sub"])
+	email := profileEmail(profile)
+	emailVerified, _ := profile["email_verified"].(bool)
+	rawProfile, err := json.Marshal(profile)
+	if err != nil {
+		return "", nil, &errs.Error{
+			Code:    errs.Internal,
+			Message: "failed to encode profile data",
+		}
 	}
 
-	return encoreauth.UID(profile["sub"].(string)), profileData, nil
+	upserted, err := users.UpsertFromAuth(ctx, &users.UpsertFromAuthParams{
+		Provider:       provider,
+		ProviderUserID: providerUserID,
+		Email:          email,
+		EmailVerified:  emailVerified,
+		RawProfile:     rawProfile,
+	})
+	if err != nil {
+		return "", nil, &errs.Error{
+			Code:    errs.Internal,
+			Message: "failed to persist authenticated user",
+		}
+	}
+
+	profileData := &ProfileData{
+		Email:   valueOrEmpty(profile["email"]),
+		Picture: valueOrEmpty(profile["picture"]),
+	}
+
+	return encoreauth.UID(upserted.ID), profileData, nil
+}
+
+func valueOrEmpty(v interface{}) string {
+	s, _ := v.(string)
+	return s
 }
