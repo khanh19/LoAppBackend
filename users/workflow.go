@@ -19,7 +19,6 @@ func (s *Service) upsertFromAuth(ctx context.Context, req *UpsertFromAuthParams,
 	if err != nil {
 		return nil, err
 	}
-	isNewIdentity := user == nil
 
 	if user == nil && req.Email != nil {
 		user, err = findByEmail(ctx, tx, *req.Email)
@@ -41,10 +40,13 @@ func (s *Service) upsertFromAuth(ctx context.Context, req *UpsertFromAuthParams,
 	if err != nil {
 		return nil, err
 	}
+	user.ProfileExists, err = hasUserProfile(ctx, tx, user.ID)
+	if err != nil {
+		return nil, err
+	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return nil, errs.WrapCode(err, errs.Internal, "failed to commit user auth transaction")
 	}
-	user.IsNewIdentity = isNewIdentity
 	return user, nil
 }

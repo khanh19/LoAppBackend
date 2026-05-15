@@ -10,10 +10,10 @@ type User struct {
 	PrimaryEmail    *string    `json:"primary_email"`
 	EmailVerifiedAt *time.Time `json:"email_verified_at"`
 	OnboardingState string     `json:"onboarding_status"`
+	ProfileExists   bool       `json:"profile_exists"`
 	LastLoginAt     *time.Time `json:"last_login_at"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
-	IsNewIdentity   bool       `json:"is_new_identity,omitempty"`
 }
 
 type UpsertFromAuthParams struct {

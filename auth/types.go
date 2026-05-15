@@ -10,8 +10,9 @@ type CallbackRequest struct {
 }
 
 type CallbackResponse struct {
-	Token             string `json:"token"`
-	IsNewAuth0Account bool   `json:"is_new_auth0_account"`
+	Token            string `json:"token"`
+	OnboardingStatus string `json:"onboarding_status"`
+	ProfileExists    bool   `json:"profile_exists"`
 }
 
 type OTPStartRequest struct {

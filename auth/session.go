@@ -61,7 +61,8 @@ func (s *Service) callbackResponseFromToken(ctx context.Context, token *oauth2.T
 	}
 
 	return &CallbackResponse{
-		Token:             rawIDToken,
-		IsNewAuth0Account: upserted.IsNewIdentity,
+		Token:            rawIDToken,
+		OnboardingStatus: upserted.OnboardingState,
+		ProfileExists:    upserted.ProfileExists,
 	}, nil
 }

@@ -15,6 +15,7 @@ type Querier interface {
 	FindUserByEmail(ctx context.Context, primaryEmail *string) (FindUserByEmailRow, error)
 	FindUserByIdentity(ctx context.Context, arg FindUserByIdentityParams) (FindUserByIdentityRow, error)
 	GetUserProfile(ctx context.Context, userID pgtype.UUID) (GetUserProfileRow, error)
+	HasUserProfile(ctx context.Context, userID pgtype.UUID) (bool, error)
 	IsUsernameTakenByAnotherUser(ctx context.Context, arg IsUsernameTakenByAnotherUserParams) (bool, error)
 	UpdateLastLogin(ctx context.Context, arg UpdateLastLoginParams) (UpdateLastLoginRow, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) error
