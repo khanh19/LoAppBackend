@@ -87,6 +87,15 @@ func updateLastLogin(ctx context.Context, tx pgx.Tx, userID string, email *strin
 	return userFromUpdateRow(row), nil
 }
 
+func hasUserProfile(ctx context.Context, tx pgx.Tx, userID string) (bool, error) {
+	q := dbgen.New(tx)
+	uuid, err := uuidFromString(userID)
+	if err != nil {
+		return false, errs.WrapCode(err, errs.InvalidArgument, "invalid user id")
+	}
+	return q.HasUserProfile(ctx, uuid)
+}
+
 func userFromIdentityRow(row dbgen.FindUserByIdentityRow) *User {
 	return &User{
 		ID:              row.ID,

@@ -158,3 +158,10 @@ SELECT EXISTS (
   WHERE username = sqlc.arg(username)::citext
     AND user_id <> sqlc.arg(current_user_id)::uuid
 ) AS taken;
+
+-- name: HasUserProfile :one
+SELECT EXISTS (
+  SELECT 1
+  FROM user_profiles
+  WHERE user_id = sqlc.arg(user_id)::uuid
+) AS profile_exists;

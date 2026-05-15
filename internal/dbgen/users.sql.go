@@ -195,6 +195,21 @@ func (q *Queries) GetUserProfile(ctx context.Context, userID pgtype.UUID) (GetUs
 	return i, err
 }
 
+const hasUserProfile = `-- name: HasUserProfile :one
+SELECT EXISTS (
+  SELECT 1
+  FROM user_profiles
+  WHERE user_id = $1::uuid
+) AS profile_exists
+`
+
+func (q *Queries) HasUserProfile(ctx context.Context, userID pgtype.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, hasUserProfile, userID)
+	var profile_exists bool
+	err := row.Scan(&profile_exists)
+	return profile_exists, err
+}
+
 const isUsernameTakenByAnotherUser = `-- name: IsUsernameTakenByAnotherUser :one
 SELECT EXISTS (
   SELECT 1
