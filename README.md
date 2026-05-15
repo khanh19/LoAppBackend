@@ -204,3 +204,47 @@ supabase link --project-ref xofbxjbrzpsocnjdsmmk
 ```bash
 supabase db push
 ```
+
+## sqlc + pgx setup
+
+This project uses `sqlc` to generate typed Go query methods from SQL, while keeping schema/migrations in `supabase/migrations`.
+
+### Install sqlc
+
+```bash
+brew install sqlc
+```
+
+### Project wiring
+
+- `sqlc.yaml`: sqlc config
+- `supabase/migrations/*.sql`: schema source for sqlc type inference
+- `db/queries/users.sql`: query definitions
+- `internal/dbgen/*`: generated code (typed params/results + query methods)
+
+### Generate typed queries
+
+Run this after changing migrations or query files:
+
+```bash
+sqlc generate
+```
+
+### How it is used in code
+
+- Services keep validation/business logic in `users/*.go`.
+- Repositories call generated methods from `encore.app/internal/dbgen` instead of embedding SQL strings.
+- Transactions are still handled with pgx (`BeginTx`), and sqlc queries are bound to tx via `dbgen.New(tx)`.
+
+Example pattern:
+
+```go
+q := dbgen.New(tx)
+row, err := q.UpdateLastLogin(ctx, dbgen.UpdateLastLoginParams{
+    UserID:        uuid,
+    EmailVerified: emailVerified,
+    PrimaryEmail:  email,
+})
+```
+
+This keeps SQL explicit and reviewable, with compile-time typed query contracts in Go.
