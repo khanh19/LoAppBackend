@@ -8,27 +8,24 @@ import (
 )
 
 //encore:api auth method=POST path=/onboarding/steps/:step
-func (s *Service) SaveStep(ctx context.Context, params *SaveStepParams, req *SaveStepRequest) (*SaveStepResponse, error) {
+func (s *Service) SaveStep(ctx context.Context, step int, req *SaveStepRequest) (*SaveStepResponse, error) {
 	userID, ok := encoreauth.UserID()
 	if !ok {
 		return nil, &errs.Error{Code: errs.Unauthenticated, Message: "authentication required"}
-	}
-	if params == nil {
-		return nil, &errs.Error{Code: errs.InvalidArgument, Message: "step is required"}
 	}
 	if req == nil {
 		return nil, &errs.Error{Code: errs.InvalidArgument, Message: "request is required"}
 	}
 
-	if err := validateSaveStepRequest(params.Step, req); err != nil {
+	if err := validateSaveStepRequest(step, req); err != nil {
 		return nil, err
 	}
 
-	if err := saveOnboardingStep(ctx, s.db, string(userID), params.Step, req); err != nil {
+	if err := saveOnboardingStep(ctx, s.db, string(userID), step, req); err != nil {
 		return nil, err
 	}
 
-	return &SaveStepResponse{Step: params.Step, Completed: true}, nil
+	return &SaveStepResponse{Step: step, Completed: true}, nil
 }
 
 //encore:api auth method=POST path=/onboarding/complete
