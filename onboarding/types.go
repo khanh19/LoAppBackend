@@ -54,10 +54,6 @@ type ListVenuesResponse struct {
 	Venues []Venue `json:"venues"`
 }
 
-type SaveStepParams struct {
-	Step int `path:"step"`
-}
-
 type SaveStepRequest struct {
 	CityIDs     []string `json:"cityIds"`
 	CategoryIDs []string `json:"categoryIds"`
