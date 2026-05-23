@@ -3,7 +3,9 @@ sql:
   - engine: postgresql
     schema:
       - "supabase/migrations/*.sql"
-    queries: "db/queries/users.sql"
+    queries:
+      - "db/queries/users.sql"
+      - "db/queries/onboarding.sql"
     gen:
       go:
         package: "dbgen"

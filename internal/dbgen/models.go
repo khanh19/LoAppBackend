@@ -8,6 +8,70 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type City struct {
+	ID            pgtype.UUID        `json:"id"`
+	Slug          string             `json:"slug"`
+	Name          string             `json:"name"`
+	CountryCode   string             `json:"country_code"`
+	Latitude      pgtype.Numeric     `json:"latitude"`
+	Longitude     pgtype.Numeric     `json:"longitude"`
+	CoverImageUrl *string            `json:"cover_image_url"`
+	IsActive      bool               `json:"is_active"`
+	SortOrder     int32              `json:"sort_order"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type OnboardingStep struct {
+	UserID      pgtype.UUID        `json:"user_id"`
+	StepNumber  int16              `json:"step_number"`
+	CompletedAt pgtype.Timestamptz `json:"completed_at"`
+	Metadata    []byte             `json:"metadata"`
+}
+
+type Place struct {
+	ID            pgtype.UUID        `json:"id"`
+	CityID        pgtype.UUID        `json:"city_id"`
+	GooglePlaceID *string            `json:"google_place_id"`
+	Source        string             `json:"source"`
+	Name          string             `json:"name"`
+	Slug          *string            `json:"slug"`
+	Neighborhood  *string            `json:"neighborhood"`
+	Address       *string            `json:"address"`
+	Latitude      pgtype.Numeric     `json:"latitude"`
+	Longitude     pgtype.Numeric     `json:"longitude"`
+	PriceLevel    *int16             `json:"price_level"`
+	RatingCached  pgtype.Numeric     `json:"rating_cached"`
+	CoverImageUrl *string            `json:"cover_image_url"`
+	Tags          []string           `json:"tags"`
+	LastSyncedAt  pgtype.Timestamptz `json:"last_synced_at"`
+	IsActive      bool               `json:"is_active"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
+type PlaceCategory struct {
+	PlaceID    pgtype.UUID        `json:"place_id"`
+	CategoryID pgtype.UUID        `json:"category_id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type PlaceVibe struct {
+	PlaceID   pgtype.UUID        `json:"place_id"`
+	VibeID    pgtype.UUID        `json:"vibe_id"`
+	Strength  pgtype.Numeric     `json:"strength"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type PurposeCategory struct {
+	ID        pgtype.UUID        `json:"id"`
+	Slug      string             `json:"slug"`
+	Name      string             `json:"name"`
+	IconName  string             `json:"icon_name"`
+	SortOrder int32              `json:"sort_order"`
+	IsActive  bool               `json:"is_active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type User struct {
 	ID                    pgtype.UUID        `json:"id"`
 	PrimaryEmail          *string            `json:"primary_email"`
@@ -33,10 +97,24 @@ type UserAuthIdentity struct {
 	LastUsedAt     pgtype.Timestamptz `json:"last_used_at"`
 }
 
+type UserExploreCity struct {
+	UserID    pgtype.UUID        `json:"user_id"`
+	CityID    pgtype.UUID        `json:"city_id"`
+	Priority  int32              `json:"priority"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type UserFollow struct {
 	FollowerUserID  pgtype.UUID        `json:"follower_user_id"`
 	FollowingUserID pgtype.UUID        `json:"following_user_id"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+}
+
+type UserLikedPlace struct {
+	UserID    pgtype.UUID        `json:"user_id"`
+	PlaceID   pgtype.UUID        `json:"place_id"`
+	Source    string             `json:"source"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type UserProfile struct {
@@ -53,4 +131,27 @@ type UserProfile struct {
 	Bio                 *string            `json:"bio"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
+type UserPurposeCategory struct {
+	UserID     pgtype.UUID        `json:"user_id"`
+	CategoryID pgtype.UUID        `json:"category_id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type UserVibe struct {
+	UserID    pgtype.UUID        `json:"user_id"`
+	VibeID    pgtype.UUID        `json:"vibe_id"`
+	Weight    pgtype.Numeric     `json:"weight"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type Vibe struct {
+	ID          pgtype.UUID        `json:"id"`
+	Slug        string             `json:"slug"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	SortOrder   int32              `json:"sort_order"`
+	IsActive    bool               `json:"is_active"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }

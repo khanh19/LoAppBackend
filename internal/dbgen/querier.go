@@ -11,14 +11,30 @@ import (
 )
 
 type Querier interface {
+	CompleteUserOnboarding(ctx context.Context, userID pgtype.UUID) (string, error)
+	CountOnboardingSteps(ctx context.Context, userID pgtype.UUID) (int32, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	DeleteUserExploreCities(ctx context.Context, userID pgtype.UUID) error
+	DeleteUserLikedPlacesBySource(ctx context.Context, arg DeleteUserLikedPlacesBySourceParams) error
+	DeleteUserPurposeCategories(ctx context.Context, userID pgtype.UUID) error
+	DeleteUserVibes(ctx context.Context, userID pgtype.UUID) error
 	FindUserByEmail(ctx context.Context, primaryEmail *string) (FindUserByEmailRow, error)
 	FindUserByIdentity(ctx context.Context, arg FindUserByIdentityParams) (FindUserByIdentityRow, error)
 	GetUserProfile(ctx context.Context, userID pgtype.UUID) (GetUserProfileRow, error)
 	HasUserProfile(ctx context.Context, userID pgtype.UUID) (bool, error)
+	InsertUserExploreCity(ctx context.Context, arg InsertUserExploreCityParams) error
+	InsertUserLikedPlace(ctx context.Context, arg InsertUserLikedPlaceParams) error
+	InsertUserPurposeCategory(ctx context.Context, arg InsertUserPurposeCategoryParams) error
+	InsertUserVibe(ctx context.Context, arg InsertUserVibeParams) error
 	IsUsernameTakenByAnotherUser(ctx context.Context, arg IsUsernameTakenByAnotherUserParams) (bool, error)
+	ListActiveCities(ctx context.Context) ([]ListActiveCitiesRow, error)
+	ListActivePurposeCategories(ctx context.Context) ([]ListActivePurposeCategoriesRow, error)
+	ListActiveVibes(ctx context.Context) ([]ListActiveVibesRow, error)
+	ListCuratedVenuesByCity(ctx context.Context, cityID pgtype.UUID) ([]ListCuratedVenuesByCityRow, error)
+	MarkUserOnboardingInProgress(ctx context.Context, userID pgtype.UUID) error
 	UpdateLastLogin(ctx context.Context, arg UpdateLastLoginParams) (UpdateLastLoginRow, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) error
+	UpsertOnboardingStep(ctx context.Context, arg UpsertOnboardingStepParams) error
 	UpsertUserProfile(ctx context.Context, arg UpsertUserProfileParams) (UpsertUserProfileRow, error)
 }
 
