@@ -21,13 +21,6 @@ type City struct {
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
-type OnboardingStep struct {
-	UserID      pgtype.UUID        `json:"user_id"`
-	StepNumber  int16              `json:"step_number"`
-	CompletedAt pgtype.Timestamptz `json:"completed_at"`
-	Metadata    []byte             `json:"metadata"`
-}
-
 type Place struct {
 	ID            pgtype.UUID        `json:"id"`
 	CityID        pgtype.UUID        `json:"city_id"`

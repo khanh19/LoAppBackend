@@ -54,20 +54,12 @@ type ListVenuesResponse struct {
 	Venues []Venue `json:"venues"`
 }
 
-type SaveStepRequest struct {
+type CompleteOnboardingRequest struct {
+	Skip        bool     `json:"skip"`
 	CityIDs     []string `json:"cityIds"`
 	CategoryIDs []string `json:"categoryIds"`
 	VibeIDs     []string `json:"vibeIds"`
 	PlaceIDs    []string `json:"placeIds"`
-}
-
-type SaveStepResponse struct {
-	Step      int  `json:"step"`
-	Completed bool `json:"completed"`
-}
-
-type CompleteOnboardingRequest struct {
-	Skip bool `json:"skip"`
 }
 
 type CompleteOnboardingResponse struct {

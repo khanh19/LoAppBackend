@@ -27,19 +27,6 @@ func (q *Queries) CompleteUserOnboarding(ctx context.Context, userID pgtype.UUID
 	return onboarding_status, err
 }
 
-const countOnboardingSteps = `-- name: CountOnboardingSteps :one
-SELECT COUNT(*)::integer AS step_count
-FROM onboarding_steps
-WHERE user_id = $1::uuid
-`
-
-func (q *Queries) CountOnboardingSteps(ctx context.Context, userID pgtype.UUID) (int32, error) {
-	row := q.db.QueryRow(ctx, countOnboardingSteps, userID)
-	var step_count int32
-	err := row.Scan(&step_count)
-	return step_count, err
-}
-
 const deleteUserExploreCities = `-- name: DeleteUserExploreCities :exec
 DELETE FROM user_explore_cities
 WHERE user_id = $1::uuid
@@ -371,41 +358,4 @@ func (q *Queries) ListCuratedVenuesByCity(ctx context.Context, cityID pgtype.UUI
 		return nil, err
 	}
 	return items, nil
-}
-
-const markUserOnboardingInProgress = `-- name: MarkUserOnboardingInProgress :exec
-UPDATE users
-SET onboarding_status = 'in_progress'
-WHERE id = $1::uuid
-  AND onboarding_status <> 'completed'
-`
-
-func (q *Queries) MarkUserOnboardingInProgress(ctx context.Context, userID pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, markUserOnboardingInProgress, userID)
-	return err
-}
-
-const upsertOnboardingStep = `-- name: UpsertOnboardingStep :exec
-INSERT INTO onboarding_steps (user_id, step_number, completed_at, metadata)
-VALUES (
-  $1::uuid,
-  $2::smallint,
-  now(),
-  $3::jsonb
-)
-ON CONFLICT (user_id, step_number)
-DO UPDATE SET
-  completed_at = now(),
-  metadata = EXCLUDED.metadata
-`
-
-type UpsertOnboardingStepParams struct {
-	UserID     pgtype.UUID `json:"user_id"`
-	StepNumber int16       `json:"step_number"`
-	Metadata   []byte      `json:"metadata"`
-}
-
-func (q *Queries) UpsertOnboardingStep(ctx context.Context, arg UpsertOnboardingStepParams) error {
-	_, err := q.db.Exec(ctx, upsertOnboardingStep, arg.UserID, arg.StepNumber, arg.Metadata)
-	return err
 }

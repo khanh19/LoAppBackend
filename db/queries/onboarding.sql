@@ -105,30 +105,6 @@ VALUES (
   sqlc.arg(source)
 );
 
--- name: UpsertOnboardingStep :exec
-INSERT INTO onboarding_steps (user_id, step_number, completed_at, metadata)
-VALUES (
-  sqlc.arg(user_id)::uuid,
-  sqlc.arg(step_number)::smallint,
-  now(),
-  sqlc.arg(metadata)::jsonb
-)
-ON CONFLICT (user_id, step_number)
-DO UPDATE SET
-  completed_at = now(),
-  metadata = EXCLUDED.metadata;
-
--- name: CountOnboardingSteps :one
-SELECT COUNT(*)::integer AS step_count
-FROM onboarding_steps
-WHERE user_id = sqlc.arg(user_id)::uuid;
-
--- name: MarkUserOnboardingInProgress :exec
-UPDATE users
-SET onboarding_status = 'in_progress'
-WHERE id = sqlc.arg(user_id)::uuid
-  AND onboarding_status <> 'completed';
-
 -- name: CompleteUserOnboarding :one
 UPDATE users
 SET
