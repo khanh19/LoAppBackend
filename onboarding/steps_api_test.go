@@ -7,9 +7,12 @@ import (
 	"encore.dev/beta/errs"
 )
 
-func TestValidateSaveStepRequestCategoriesMaxThree(t *testing.T) {
-	err := validateSaveStepRequest(2, &SaveStepRequest{
+func TestValidateCompleteOnboardingRequestCategoriesMaxThree(t *testing.T) {
+	err := validateCompleteOnboardingRequest(&CompleteOnboardingRequest{
+		CityIDs:     []string{"city"},
 		CategoryIDs: []string{"a", "b", "c", "d"},
+		VibeIDs:     []string{"vibe"},
+		PlaceIDs:    []string{"place"},
 	})
 	if err == nil {
 		t.Fatal("expected error")
@@ -23,10 +26,16 @@ func TestValidateSaveStepRequestCategoriesMaxThree(t *testing.T) {
 	}
 }
 
-func TestValidateSaveStepRequestStepOneRequiresCity(t *testing.T) {
-	err := validateSaveStepRequest(1, &SaveStepRequest{})
+func TestValidateCompleteOnboardingRequestRequiresSelections(t *testing.T) {
+	err := validateCompleteOnboardingRequest(&CompleteOnboardingRequest{})
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestValidateCompleteOnboardingRequestAllowsSkip(t *testing.T) {
+	if err := validateCompleteOnboardingRequest(&CompleteOnboardingRequest{Skip: true}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

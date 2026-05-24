@@ -131,15 +131,6 @@ CREATE TABLE IF NOT EXISTS public.user_liked_places (
     PRIMARY KEY (user_id, place_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.onboarding_steps (
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-    step_number SMALLINT NOT NULL,
-    completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-    PRIMARY KEY (user_id, step_number),
-    CONSTRAINT onboarding_steps_number_valid CHECK (step_number BETWEEN 1 AND 4)
-);
-
 DROP TRIGGER IF EXISTS places_set_updated_at ON public.places;
 CREATE TRIGGER places_set_updated_at
 BEFORE UPDATE ON public.places
