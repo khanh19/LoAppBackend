@@ -21,6 +21,33 @@ type City struct {
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
+type EventSource struct {
+	ID        pgtype.UUID        `json:"id"`
+	Slug      string             `json:"slug"`
+	Name      string             `json:"name"`
+	BaseUrl   *string            `json:"base_url"`
+	IsActive  bool               `json:"is_active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ExternalEvent struct {
+	ID             pgtype.UUID        `json:"id"`
+	SourceID       pgtype.UUID        `json:"source_id"`
+	CityID         pgtype.UUID        `json:"city_id"`
+	PlaceID        pgtype.UUID        `json:"place_id"`
+	EventName      string             `json:"event_name"`
+	EventUrl       string             `json:"event_url"`
+	VenueName      *string            `json:"venue_name"`
+	VenueUrl       *string            `json:"venue_url"`
+	ScheduleText   *string            `json:"schedule_text"`
+	MusicText      *string            `json:"music_text"`
+	Description    *string            `json:"description"`
+	PosterImageUrl *string            `json:"poster_image_url"`
+	ImportedAt     pgtype.Timestamptz `json:"imported_at"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Place struct {
 	ID            pgtype.UUID        `json:"id"`
 	CityID        pgtype.UUID        `json:"city_id"`

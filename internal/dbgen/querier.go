@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	CompleteUserOnboarding(ctx context.Context, userID pgtype.UUID) (string, error)
+	CountExternalEvents(ctx context.Context, citySlug *string) (int64, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteUserExploreCities(ctx context.Context, userID pgtype.UUID) error
 	DeleteUserLikedPlacesBySource(ctx context.Context, arg DeleteUserLikedPlacesBySourceParams) error
@@ -30,6 +31,8 @@ type Querier interface {
 	ListActivePurposeCategories(ctx context.Context) ([]ListActivePurposeCategoriesRow, error)
 	ListActiveVibes(ctx context.Context) ([]ListActiveVibesRow, error)
 	ListCuratedVenuesByCity(ctx context.Context, cityID pgtype.UUID) ([]ListCuratedVenuesByCityRow, error)
+	ListExternalEvents(ctx context.Context, arg ListExternalEventsParams) ([]ListExternalEventsRow, error)
+	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]ListUpcomingEventsRow, error)
 	UpdateLastLogin(ctx context.Context, arg UpdateLastLoginParams) (UpdateLastLoginRow, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) error
 	UpsertUserProfile(ctx context.Context, arg UpsertUserProfileParams) (UpsertUserProfileRow, error)
