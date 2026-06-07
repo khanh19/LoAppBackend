@@ -6,6 +6,7 @@ sql:
     queries:
       - "db/queries/users.sql"
       - "db/queries/onboarding.sql"
+      - "db/queries/events.sql"
     gen:
       go:
         package: "dbgen"
