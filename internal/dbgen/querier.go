@@ -13,13 +13,20 @@ import (
 type Querier interface {
 	CompleteUserOnboarding(ctx context.Context, userID pgtype.UUID) (string, error)
 	CountExternalEvents(ctx context.Context, citySlug *string) (int64, error)
+	CreateListSyncRun(ctx context.Context) (string, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	DeactivatePlaceListEntriesNotInSeedNames(ctx context.Context, arg DeactivatePlaceListEntriesNotInSeedNamesParams) (int64, error)
 	DeleteUserExploreCities(ctx context.Context, userID pgtype.UUID) error
 	DeleteUserLikedPlacesBySource(ctx context.Context, arg DeleteUserLikedPlacesBySourceParams) error
 	DeleteUserPurposeCategories(ctx context.Context, userID pgtype.UUID) error
 	DeleteUserVibes(ctx context.Context, userID pgtype.UUID) error
+	FindPlaceByNameInCity(ctx context.Context, arg FindPlaceByNameInCityParams) (string, error)
 	FindUserByEmail(ctx context.Context, primaryEmail *string) (FindUserByEmailRow, error)
 	FindUserByIdentity(ctx context.Context, arg FindUserByIdentityParams) (FindUserByIdentityRow, error)
+	FinishListSyncRun(ctx context.Context, arg FinishListSyncRunParams) error
+	GetCityByHint(ctx context.Context, arg GetCityByHintParams) (GetCityByHintRow, error)
+	GetPlaceListByID(ctx context.Context, id pgtype.UUID) (GetPlaceListByIDRow, error)
+	GetPlaceListBySlug(ctx context.Context, slug string) (GetPlaceListBySlugRow, error)
 	GetUserProfile(ctx context.Context, userID pgtype.UUID) (GetUserProfileRow, error)
 	HasUserProfile(ctx context.Context, userID pgtype.UUID) (bool, error)
 	InsertUserExploreCity(ctx context.Context, arg InsertUserExploreCityParams) error
@@ -28,13 +35,20 @@ type Querier interface {
 	InsertUserVibe(ctx context.Context, arg InsertUserVibeParams) error
 	IsUsernameTakenByAnotherUser(ctx context.Context, arg IsUsernameTakenByAnotherUserParams) (bool, error)
 	ListActiveCities(ctx context.Context) ([]ListActiveCitiesRow, error)
+	ListActivePlaceLists(ctx context.Context) ([]ListActivePlaceListsRow, error)
 	ListActivePurposeCategories(ctx context.Context) ([]ListActivePurposeCategoriesRow, error)
 	ListActiveVibes(ctx context.Context) ([]ListActiveVibesRow, error)
 	ListCuratedVenuesByCity(ctx context.Context, cityID pgtype.UUID) ([]ListCuratedVenuesByCityRow, error)
 	ListExternalEvents(ctx context.Context, arg ListExternalEventsParams) ([]ListExternalEventsRow, error)
+	ListPlaceListEntriesByListID(ctx context.Context, listID pgtype.UUID) ([]ListPlaceListEntriesByListIDRow, error)
+	ListPlaceListEntrySeedNamesByListID(ctx context.Context, listID pgtype.UUID) ([]string, error)
+	ListRecentSyncRuns(ctx context.Context, limitVal int32) ([]ListRecentSyncRunsRow, error)
 	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]ListUpcomingEventsRow, error)
 	UpdateLastLogin(ctx context.Context, arg UpdateLastLoginParams) (UpdateLastLoginRow, error)
+	UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlaceParams) (string, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) error
+	UpsertPlaceList(ctx context.Context, arg UpsertPlaceListParams) (string, error)
+	UpsertPlaceListEntry(ctx context.Context, arg UpsertPlaceListEntryParams) error
 	UpsertUserProfile(ctx context.Context, arg UpsertUserProfileParams) (UpsertUserProfileRow, error)
 }
 

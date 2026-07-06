@@ -48,6 +48,17 @@ type ExternalEvent struct {
 	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
+type ListSyncRun struct {
+	ID             pgtype.UUID        `json:"id"`
+	StartedAt      pgtype.Timestamptz `json:"started_at"`
+	FinishedAt     pgtype.Timestamptz `json:"finished_at"`
+	Status         string             `json:"status"`
+	EntriesAdded   int32              `json:"entries_added"`
+	EntriesSkipped int32              `json:"entries_skipped"`
+	EntriesFailed  int32              `json:"entries_failed"`
+	Details        []byte             `json:"details"`
+}
+
 type Place struct {
 	ID            pgtype.UUID        `json:"id"`
 	CityID        pgtype.UUID        `json:"city_id"`
@@ -73,6 +84,33 @@ type PlaceCategory struct {
 	PlaceID    pgtype.UUID        `json:"place_id"`
 	CategoryID pgtype.UUID        `json:"category_id"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type PlaceList struct {
+	ID           pgtype.UUID        `json:"id"`
+	Slug         string             `json:"slug"`
+	Title        string             `json:"title"`
+	Category     string             `json:"category"`
+	Area         string             `json:"area"`
+	Occasions    []string           `json:"occasions"`
+	CityID       pgtype.UUID        `json:"city_id"`
+	SortOrder    int32              `json:"sort_order"`
+	IsActive     bool               `json:"is_active"`
+	SourceHash   *string            `json:"source_hash"`
+	LastSyncedAt pgtype.Timestamptz `json:"last_synced_at"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+type PlaceListEntry struct {
+	ListID    pgtype.UUID        `json:"list_id"`
+	PlaceID   pgtype.UUID        `json:"place_id"`
+	SeedName  string             `json:"seed_name"`
+	Rank      int32              `json:"rank"`
+	Note      string             `json:"note"`
+	IsActive  bool               `json:"is_active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type PlaceVibe struct {
