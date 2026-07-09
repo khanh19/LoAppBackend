@@ -265,24 +265,36 @@ SELECT
     FROM place_list_entries ple
     WHERE ple.list_id = pl.id
       AND ple.is_active = true
-  ) AS entry_count
+  ) AS entry_count,
+  cover.cover_image_url
 FROM place_lists pl
 JOIN cities c ON c.id = pl.city_id
+LEFT JOIN LATERAL (
+  SELECT p.cover_image_url
+  FROM place_list_entries ple
+  JOIN places p ON p.id = ple.place_id
+  WHERE ple.list_id = pl.id
+    AND ple.is_active = true
+    AND p.cover_image_url IS NOT NULL
+  ORDER BY ple.rank
+  LIMIT 1
+) cover ON true
 WHERE pl.is_active = true
 ORDER BY pl.sort_order, pl.title
 `
 
 type ListActivePlaceListsRow struct {
-	ID         string   `json:"id"`
-	Slug       string   `json:"slug"`
-	Title      string   `json:"title"`
-	Category   string   `json:"category"`
-	Area       string   `json:"area"`
-	Occasions  []string `json:"occasions"`
-	SortOrder  int32    `json:"sort_order"`
-	CitySlug   string   `json:"city_slug"`
-	CityName   string   `json:"city_name"`
-	EntryCount int32    `json:"entry_count"`
+	ID            string   `json:"id"`
+	Slug          string   `json:"slug"`
+	Title         string   `json:"title"`
+	Category      string   `json:"category"`
+	Area          string   `json:"area"`
+	Occasions     []string `json:"occasions"`
+	SortOrder     int32    `json:"sort_order"`
+	CitySlug      string   `json:"city_slug"`
+	CityName      string   `json:"city_name"`
+	EntryCount    int32    `json:"entry_count"`
+	CoverImageUrl *string  `json:"cover_image_url"`
 }
 
 func (q *Queries) ListActivePlaceLists(ctx context.Context) ([]ListActivePlaceListsRow, error) {
@@ -305,6 +317,7 @@ func (q *Queries) ListActivePlaceLists(ctx context.Context) ([]ListActivePlaceLi
 			&i.CitySlug,
 			&i.CityName,
 			&i.EntryCount,
+			&i.CoverImageUrl,
 		); err != nil {
 			return nil, err
 		}

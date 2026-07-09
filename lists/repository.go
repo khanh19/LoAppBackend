@@ -22,15 +22,16 @@ func listPlaceLists(ctx context.Context, db *pgxpool.Pool) ([]PlaceListSummary, 
 	lists := make([]PlaceListSummary, 0, len(rows))
 	for _, row := range rows {
 		lists = append(lists, PlaceListSummary{
-			ID:         row.ID,
-			Slug:       row.Slug,
-			Title:      row.Title,
-			Category:   row.Category,
-			Area:       row.Area,
-			Occasions:  row.Occasions,
-			CitySlug:   row.CitySlug,
-			CityName:   row.CityName,
-			EntryCount: row.EntryCount,
+			ID:            row.ID,
+			Slug:          row.Slug,
+			Title:         row.Title,
+			Category:      row.Category,
+			Area:          row.Area,
+			Occasions:     row.Occasions,
+			CitySlug:      row.CitySlug,
+			CityName:      row.CityName,
+			EntryCount:    row.EntryCount,
+			CoverImageURL: row.CoverImageUrl,
 		})
 	}
 	return lists, nil

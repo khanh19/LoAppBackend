@@ -14,9 +14,20 @@ SELECT
     FROM place_list_entries ple
     WHERE ple.list_id = pl.id
       AND ple.is_active = true
-  ) AS entry_count
+  ) AS entry_count,
+  cover.cover_image_url
 FROM place_lists pl
 JOIN cities c ON c.id = pl.city_id
+LEFT JOIN LATERAL (
+  SELECT p.cover_image_url
+  FROM place_list_entries ple
+  JOIN places p ON p.id = ple.place_id
+  WHERE ple.list_id = pl.id
+    AND ple.is_active = true
+    AND p.cover_image_url IS NOT NULL
+  ORDER BY ple.rank
+  LIMIT 1
+) cover ON true
 WHERE pl.is_active = true
 ORDER BY pl.sort_order, pl.title;
 
