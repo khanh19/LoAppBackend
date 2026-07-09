@@ -7,9 +7,10 @@ type PlaceListSummary struct {
 	Category    string   `json:"category"`
 	Area        string   `json:"area"`
 	Occasions   []string `json:"occasions"`
-	CitySlug    string   `json:"city_slug"`
-	CityName    string   `json:"city_name"`
-	EntryCount  int32    `json:"entry_count"`
+	CitySlug      string  `json:"city_slug"`
+	CityName      string  `json:"city_name"`
+	EntryCount    int32   `json:"entry_count"`
+	CoverImageURL *string `json:"cover_image_url"`
 }
 
 type PlaceListEntry struct {

@@ -2,7 +2,7 @@
   "lists": [
     {
       "list_id": "d1-cocktail-circuit",
-      "title": "The D1 Cocktail Circuit",
+      "title": "Cocktail Circuit",
       "category": "Cocktail bars",
       "area": "District 1",
       "occasions": ["Date", "Squad"],
@@ -21,7 +21,7 @@
     },
     {
       "list_id": "street-food-hall-of-fame",
-      "title": "The Saigon Street Food Hall of Fame",
+      "title": "Saigon Street Food",
       "category": "Restaurants",
       "area": "HCMC-wide",
       "occasions": ["Solo", "Visitor", "Squad"],
@@ -40,7 +40,7 @@
     },
     {
       "list_id": "day-in-thao-dien",
-      "title": "A Day in Thảo Điền",
+      "title": "Thảo Điền Day Tour",
       "category": "Mixed",
       "area": "Thảo Điền",
       "occasions": ["Solo", "Date", "Squad"],
@@ -59,7 +59,7 @@
     },
     {
       "list_id": "saigon-specialty-coffee",
-      "title": "Saigon Specialty Coffee",
+      "title": "Saigon Coffee",
       "category": "Cafés",
       "area": "HCMC-wide",
       "occasions": ["Solo", "Date"],
@@ -97,7 +97,7 @@
     },
     {
       "list_id": "michelin-saigon",
-      "title": "Michelin Saigon",
+      "title": "Saigon Michelin",
       "category": "Restaurants",
       "area": "HCMC-wide",
       "occasions": ["Date", "Family", "Visitor"],
@@ -135,7 +135,7 @@
     },
     {
       "list_id": "saigon-weekend-brunch",
-      "title": "Saigon Weekend Brunch",
+      "title": "Saigon Brunch",
       "category": "Cafés / Restaurants",
       "area": "Thảo Điền + D1/D3",
       "occasions": ["Date", "Squad", "Family"],
