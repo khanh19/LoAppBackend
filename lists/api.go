@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	encoreauth "encore.dev/beta/auth"
 	"encore.dev/beta/errs"
 )
 
@@ -44,4 +45,17 @@ func (s *Service) GetPlaceList(ctx context.Context, slug string) (*GetPlaceListR
 		return nil, err
 	}
 	return &GetPlaceListResponse{List: *list}, nil
+}
+
+//encore:api auth method=POST path=/plans
+func (s *Service) CreatePlan(ctx context.Context, req *CreatePlanRequest) (*CreatePlanResponse, error) {
+	userID, ok := encoreauth.UserID()
+	if !ok {
+		return nil, &errs.Error{Code: errs.Unauthenticated, Message: "authentication required"}
+	}
+	plan, err := s.createPlan(ctx, string(userID), req)
+	if err != nil {
+		return nil, err
+	}
+	return &CreatePlanResponse{Plan: *plan}, nil
 }

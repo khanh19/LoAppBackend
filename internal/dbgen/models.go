@@ -87,30 +87,38 @@ type PlaceCategory struct {
 }
 
 type PlaceList struct {
-	ID           pgtype.UUID        `json:"id"`
-	Slug         string             `json:"slug"`
-	Title        string             `json:"title"`
-	Category     string             `json:"category"`
-	Area         string             `json:"area"`
-	Occasions    []string           `json:"occasions"`
-	CityID       pgtype.UUID        `json:"city_id"`
-	SortOrder    int32              `json:"sort_order"`
-	IsActive     bool               `json:"is_active"`
-	SourceHash   *string            `json:"source_hash"`
-	LastSyncedAt pgtype.Timestamptz `json:"last_synced_at"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	Slug          string             `json:"slug"`
+	Title         string             `json:"title"`
+	Category      string             `json:"category"`
+	Area          string             `json:"area"`
+	Occasions     []string           `json:"occasions"`
+	CityID        pgtype.UUID        `json:"city_id"`
+	SortOrder     int32              `json:"sort_order"`
+	IsActive      bool               `json:"is_active"`
+	SourceHash    *string            `json:"source_hash"`
+	LastSyncedAt  pgtype.Timestamptz `json:"last_synced_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	CreatorUserID pgtype.UUID        `json:"creator_user_id"`
+	Subtitle      string             `json:"subtitle"`
+	ListType      string             `json:"list_type"`
+	Visibility    string             `json:"visibility"`
+	SavesCount    int32              `json:"saves_count"`
 }
 
 type PlaceListEntry struct {
-	ListID    pgtype.UUID        `json:"list_id"`
-	PlaceID   pgtype.UUID        `json:"place_id"`
-	SeedName  string             `json:"seed_name"`
-	Rank      int32              `json:"rank"`
-	Note      string             `json:"note"`
-	IsActive  bool               `json:"is_active"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ListID       pgtype.UUID        `json:"list_id"`
+	PlaceID      pgtype.UUID        `json:"place_id"`
+	SeedName     string             `json:"seed_name"`
+	Rank         int32              `json:"rank"`
+	Note         string             `json:"note"`
+	IsActive     bool               `json:"is_active"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	TimeLabel    string             `json:"time_label"`
+	ActivityType string             `json:"activity_type"`
+	ImageUrl     *string            `json:"image_url"`
 }
 
 type PlaceVibe struct {

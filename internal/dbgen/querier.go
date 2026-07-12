@@ -14,6 +14,9 @@ type Querier interface {
 	CompleteUserOnboarding(ctx context.Context, userID pgtype.UUID) (string, error)
 	CountExternalEvents(ctx context.Context, citySlug *string) (int64, error)
 	CreateListSyncRun(ctx context.Context) (string, error)
+	CreatePlan(ctx context.Context, arg CreatePlanParams) (string, error)
+	CreatePlanEntry(ctx context.Context, arg CreatePlanEntryParams) error
+	CreatePlanPlace(ctx context.Context, arg CreatePlanPlaceParams) (string, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeactivatePlaceListEntriesNotInSeedNames(ctx context.Context, arg DeactivatePlaceListEntriesNotInSeedNamesParams) (int64, error)
 	DeleteUserExploreCities(ctx context.Context, userID pgtype.UUID) error
