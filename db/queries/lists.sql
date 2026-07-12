@@ -36,16 +36,32 @@ SELECT
   pl.id::text AS id,
   pl.slug,
   pl.title,
+  pl.subtitle,
   pl.category,
   pl.area,
   pl.occasions,
   pl.sort_order,
   pl.source_hash,
+  pl.list_type,
+  pl.visibility,
+  pl.saves_count,
   pl.city_id::text AS city_id,
   c.slug AS city_slug,
-  c.name AS city_name
+  c.name AS city_name,
+  COALESCE(pl.creator_user_id::text, ''::text)::text AS creator_user_id,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
+  COALESCE(up.username::text, ''::text)::text AS creator_username,
+  up.avatar_url AS creator_avatar_url,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count
 FROM place_lists pl
 JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
 WHERE pl.slug = sqlc.arg(slug)
   AND pl.is_active = true;
 
@@ -54,16 +70,32 @@ SELECT
   pl.id::text AS id,
   pl.slug,
   pl.title,
+  pl.subtitle,
   pl.category,
   pl.area,
   pl.occasions,
   pl.sort_order,
   pl.source_hash,
+  pl.list_type,
+  pl.visibility,
+  pl.saves_count,
   pl.city_id::text AS city_id,
   c.slug AS city_slug,
-  c.name AS city_name
+  c.name AS city_name,
+  COALESCE(pl.creator_user_id::text, ''::text)::text AS creator_user_id,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
+  COALESCE(up.username::text, ''::text)::text AS creator_username,
+  up.avatar_url AS creator_avatar_url,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count
 FROM place_lists pl
 JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
 WHERE pl.id = sqlc.arg(id)::uuid;
 
 -- name: ListPlaceListEntriesByListID :many
@@ -71,6 +103,9 @@ SELECT
   ple.seed_name,
   ple.rank,
   ple.note,
+  ple.time_label,
+  ple.activity_type,
+  COALESCE(ple.image_url, p.cover_image_url) AS image_url,
   p.id::text AS place_id,
   p.name AS place_name,
   p.google_place_id,
@@ -129,6 +164,105 @@ SET
   last_synced_at = now(),
   updated_at = now()
 RETURNING id::text AS id;
+
+-- name: CreatePlan :one
+INSERT INTO place_lists (
+  slug,
+  title,
+  subtitle,
+  category,
+  area,
+  occasions,
+  city_id,
+  creator_user_id,
+  list_type,
+  visibility,
+  saves_count,
+  sort_order,
+  is_active
+)
+VALUES (
+  sqlc.arg(slug),
+  sqlc.arg(title),
+  sqlc.arg(subtitle),
+  sqlc.arg(category),
+  sqlc.arg(area),
+  sqlc.arg(occasions),
+  sqlc.arg(city_id)::uuid,
+  sqlc.arg(creator_user_id)::uuid,
+  'user_plan',
+  sqlc.arg(visibility),
+  sqlc.arg(saves_count)::integer,
+  sqlc.arg(sort_order)::integer,
+  true
+)
+RETURNING id::text AS id;
+
+-- name: CreatePlanPlace :one
+INSERT INTO places (
+  city_id,
+  google_place_id,
+  source,
+  name,
+  neighborhood,
+  address,
+  latitude,
+  longitude,
+  cover_image_url,
+  tags,
+  is_active
+)
+VALUES (
+  sqlc.arg(city_id)::uuid,
+  sqlc.narg(google_place_id),
+  CASE WHEN sqlc.narg(google_place_id)::text IS NULL THEN 'curated' ELSE 'google' END,
+  sqlc.arg(name),
+  sqlc.narg(neighborhood),
+  sqlc.narg(address),
+  sqlc.narg(latitude),
+  sqlc.narg(longitude),
+  sqlc.narg(cover_image_url),
+  sqlc.arg(tags),
+  true
+)
+ON CONFLICT (google_place_id) DO UPDATE
+SET
+  name = EXCLUDED.name,
+  neighborhood = COALESCE(EXCLUDED.neighborhood, places.neighborhood),
+  address = COALESCE(EXCLUDED.address, places.address),
+  latitude = COALESCE(EXCLUDED.latitude, places.latitude),
+  longitude = COALESCE(EXCLUDED.longitude, places.longitude),
+  cover_image_url = COALESCE(EXCLUDED.cover_image_url, places.cover_image_url),
+  tags = CASE
+    WHEN cardinality(EXCLUDED.tags) > 0 THEN EXCLUDED.tags
+    ELSE places.tags
+  END,
+  updated_at = now()
+RETURNING id::text AS id;
+
+-- name: CreatePlanEntry :exec
+INSERT INTO place_list_entries (
+  list_id,
+  place_id,
+  seed_name,
+  rank,
+  note,
+  time_label,
+  activity_type,
+  image_url,
+  is_active
+)
+VALUES (
+  sqlc.arg(list_id)::uuid,
+  sqlc.arg(place_id)::uuid,
+  sqlc.arg(seed_name),
+  sqlc.arg(rank)::integer,
+  sqlc.arg(note),
+  sqlc.arg(time_label),
+  sqlc.arg(activity_type),
+  sqlc.narg(image_url),
+  true
+);
 
 -- name: UpsertPlaceListEntry :exec
 INSERT INTO place_list_entries (

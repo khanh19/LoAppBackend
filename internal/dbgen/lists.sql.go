@@ -24,6 +24,195 @@ func (q *Queries) CreateListSyncRun(ctx context.Context) (string, error) {
 	return id, err
 }
 
+const createPlan = `-- name: CreatePlan :one
+INSERT INTO place_lists (
+  slug,
+  title,
+  subtitle,
+  category,
+  area,
+  occasions,
+  city_id,
+  creator_user_id,
+  list_type,
+  visibility,
+  saves_count,
+  sort_order,
+  is_active
+)
+VALUES (
+  $1,
+  $2,
+  $3,
+  $4,
+  $5,
+  $6,
+  $7::uuid,
+  $8::uuid,
+  'user_plan',
+  $9,
+  $10::integer,
+  $11::integer,
+  true
+)
+RETURNING id::text AS id
+`
+
+type CreatePlanParams struct {
+	Slug          string      `json:"slug"`
+	Title         string      `json:"title"`
+	Subtitle      string      `json:"subtitle"`
+	Category      string      `json:"category"`
+	Area          string      `json:"area"`
+	Occasions     []string    `json:"occasions"`
+	CityID        pgtype.UUID `json:"city_id"`
+	CreatorUserID pgtype.UUID `json:"creator_user_id"`
+	Visibility    string      `json:"visibility"`
+	SavesCount    int32       `json:"saves_count"`
+	SortOrder     int32       `json:"sort_order"`
+}
+
+func (q *Queries) CreatePlan(ctx context.Context, arg CreatePlanParams) (string, error) {
+	row := q.db.QueryRow(ctx, createPlan,
+		arg.Slug,
+		arg.Title,
+		arg.Subtitle,
+		arg.Category,
+		arg.Area,
+		arg.Occasions,
+		arg.CityID,
+		arg.CreatorUserID,
+		arg.Visibility,
+		arg.SavesCount,
+		arg.SortOrder,
+	)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}
+
+const createPlanEntry = `-- name: CreatePlanEntry :exec
+INSERT INTO place_list_entries (
+  list_id,
+  place_id,
+  seed_name,
+  rank,
+  note,
+  time_label,
+  activity_type,
+  image_url,
+  is_active
+)
+VALUES (
+  $1::uuid,
+  $2::uuid,
+  $3,
+  $4::integer,
+  $5,
+  $6,
+  $7,
+  $8,
+  true
+)
+`
+
+type CreatePlanEntryParams struct {
+	ListID       pgtype.UUID `json:"list_id"`
+	PlaceID      pgtype.UUID `json:"place_id"`
+	SeedName     string      `json:"seed_name"`
+	Rank         int32       `json:"rank"`
+	Note         string      `json:"note"`
+	TimeLabel    string      `json:"time_label"`
+	ActivityType string      `json:"activity_type"`
+	ImageUrl     *string     `json:"image_url"`
+}
+
+func (q *Queries) CreatePlanEntry(ctx context.Context, arg CreatePlanEntryParams) error {
+	_, err := q.db.Exec(ctx, createPlanEntry,
+		arg.ListID,
+		arg.PlaceID,
+		arg.SeedName,
+		arg.Rank,
+		arg.Note,
+		arg.TimeLabel,
+		arg.ActivityType,
+		arg.ImageUrl,
+	)
+	return err
+}
+
+const createPlanPlace = `-- name: CreatePlanPlace :one
+INSERT INTO places (
+  city_id,
+  google_place_id,
+  source,
+  name,
+  neighborhood,
+  address,
+  latitude,
+  longitude,
+  cover_image_url,
+  tags,
+  is_active
+)
+VALUES (
+  $1::uuid,
+  $2,
+  CASE WHEN $2::text IS NULL THEN 'curated' ELSE 'google' END,
+  $3,
+  $4,
+  $5,
+  $6,
+  $7,
+  $8,
+  $9,
+  true
+)
+ON CONFLICT (google_place_id) DO UPDATE
+SET
+  name = EXCLUDED.name,
+  neighborhood = COALESCE(EXCLUDED.neighborhood, places.neighborhood),
+  address = COALESCE(EXCLUDED.address, places.address),
+  latitude = COALESCE(EXCLUDED.latitude, places.latitude),
+  longitude = COALESCE(EXCLUDED.longitude, places.longitude),
+  cover_image_url = COALESCE(EXCLUDED.cover_image_url, places.cover_image_url),
+  tags = CASE
+    WHEN cardinality(EXCLUDED.tags) > 0 THEN EXCLUDED.tags
+    ELSE places.tags
+  END,
+  updated_at = now()
+RETURNING id::text AS id
+`
+
+type CreatePlanPlaceParams struct {
+	CityID        pgtype.UUID    `json:"city_id"`
+	GooglePlaceID *string        `json:"google_place_id"`
+	Name          string         `json:"name"`
+	Neighborhood  *string        `json:"neighborhood"`
+	Address       *string        `json:"address"`
+	Latitude      pgtype.Numeric `json:"latitude"`
+	Longitude     pgtype.Numeric `json:"longitude"`
+	CoverImageUrl *string        `json:"cover_image_url"`
+	Tags          []string       `json:"tags"`
+}
+
+func (q *Queries) CreatePlanPlace(ctx context.Context, arg CreatePlanPlaceParams) (string, error) {
+	row := q.db.QueryRow(ctx, createPlanPlace,
+		arg.CityID,
+		arg.GooglePlaceID,
+		arg.Name,
+		arg.Neighborhood,
+		arg.Address,
+		arg.Latitude,
+		arg.Longitude,
+		arg.CoverImageUrl,
+		arg.Tags,
+	)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}
+
 const deactivatePlaceListEntriesNotInSeedNames = `-- name: DeactivatePlaceListEntriesNotInSeedNames :execrows
 UPDATE place_list_entries
 SET
@@ -151,31 +340,56 @@ SELECT
   pl.id::text AS id,
   pl.slug,
   pl.title,
+  pl.subtitle,
   pl.category,
   pl.area,
   pl.occasions,
   pl.sort_order,
   pl.source_hash,
+  pl.list_type,
+  pl.visibility,
+  pl.saves_count,
   pl.city_id::text AS city_id,
   c.slug AS city_slug,
-  c.name AS city_name
+  c.name AS city_name,
+  COALESCE(pl.creator_user_id::text, ''::text)::text AS creator_user_id,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
+  COALESCE(up.username::text, ''::text)::text AS creator_username,
+  up.avatar_url AS creator_avatar_url,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count
 FROM place_lists pl
 JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
 WHERE pl.id = $1::uuid
 `
 
 type GetPlaceListByIDRow struct {
-	ID         string   `json:"id"`
-	Slug       string   `json:"slug"`
-	Title      string   `json:"title"`
-	Category   string   `json:"category"`
-	Area       string   `json:"area"`
-	Occasions  []string `json:"occasions"`
-	SortOrder  int32    `json:"sort_order"`
-	SourceHash *string  `json:"source_hash"`
-	CityID     string   `json:"city_id"`
-	CitySlug   string   `json:"city_slug"`
-	CityName   string   `json:"city_name"`
+	ID                 string   `json:"id"`
+	Slug               string   `json:"slug"`
+	Title              string   `json:"title"`
+	Subtitle           string   `json:"subtitle"`
+	Category           string   `json:"category"`
+	Area               string   `json:"area"`
+	Occasions          []string `json:"occasions"`
+	SortOrder          int32    `json:"sort_order"`
+	SourceHash         *string  `json:"source_hash"`
+	ListType           string   `json:"list_type"`
+	Visibility         string   `json:"visibility"`
+	SavesCount         int32    `json:"saves_count"`
+	CityID             string   `json:"city_id"`
+	CitySlug           string   `json:"city_slug"`
+	CityName           string   `json:"city_name"`
+	CreatorUserID      string   `json:"creator_user_id"`
+	CreatorDisplayName *string  `json:"creator_display_name"`
+	CreatorUsername    string   `json:"creator_username"`
+	CreatorAvatarUrl   *string  `json:"creator_avatar_url"`
+	StopsCount         int32    `json:"stops_count"`
 }
 
 func (q *Queries) GetPlaceListByID(ctx context.Context, id pgtype.UUID) (GetPlaceListByIDRow, error) {
@@ -185,14 +399,23 @@ func (q *Queries) GetPlaceListByID(ctx context.Context, id pgtype.UUID) (GetPlac
 		&i.ID,
 		&i.Slug,
 		&i.Title,
+		&i.Subtitle,
 		&i.Category,
 		&i.Area,
 		&i.Occasions,
 		&i.SortOrder,
 		&i.SourceHash,
+		&i.ListType,
+		&i.Visibility,
+		&i.SavesCount,
 		&i.CityID,
 		&i.CitySlug,
 		&i.CityName,
+		&i.CreatorUserID,
+		&i.CreatorDisplayName,
+		&i.CreatorUsername,
+		&i.CreatorAvatarUrl,
+		&i.StopsCount,
 	)
 	return i, err
 }
@@ -202,32 +425,57 @@ SELECT
   pl.id::text AS id,
   pl.slug,
   pl.title,
+  pl.subtitle,
   pl.category,
   pl.area,
   pl.occasions,
   pl.sort_order,
   pl.source_hash,
+  pl.list_type,
+  pl.visibility,
+  pl.saves_count,
   pl.city_id::text AS city_id,
   c.slug AS city_slug,
-  c.name AS city_name
+  c.name AS city_name,
+  COALESCE(pl.creator_user_id::text, ''::text)::text AS creator_user_id,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
+  COALESCE(up.username::text, ''::text)::text AS creator_username,
+  up.avatar_url AS creator_avatar_url,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count
 FROM place_lists pl
 JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
 WHERE pl.slug = $1
   AND pl.is_active = true
 `
 
 type GetPlaceListBySlugRow struct {
-	ID         string   `json:"id"`
-	Slug       string   `json:"slug"`
-	Title      string   `json:"title"`
-	Category   string   `json:"category"`
-	Area       string   `json:"area"`
-	Occasions  []string `json:"occasions"`
-	SortOrder  int32    `json:"sort_order"`
-	SourceHash *string  `json:"source_hash"`
-	CityID     string   `json:"city_id"`
-	CitySlug   string   `json:"city_slug"`
-	CityName   string   `json:"city_name"`
+	ID                 string   `json:"id"`
+	Slug               string   `json:"slug"`
+	Title              string   `json:"title"`
+	Subtitle           string   `json:"subtitle"`
+	Category           string   `json:"category"`
+	Area               string   `json:"area"`
+	Occasions          []string `json:"occasions"`
+	SortOrder          int32    `json:"sort_order"`
+	SourceHash         *string  `json:"source_hash"`
+	ListType           string   `json:"list_type"`
+	Visibility         string   `json:"visibility"`
+	SavesCount         int32    `json:"saves_count"`
+	CityID             string   `json:"city_id"`
+	CitySlug           string   `json:"city_slug"`
+	CityName           string   `json:"city_name"`
+	CreatorUserID      string   `json:"creator_user_id"`
+	CreatorDisplayName *string  `json:"creator_display_name"`
+	CreatorUsername    string   `json:"creator_username"`
+	CreatorAvatarUrl   *string  `json:"creator_avatar_url"`
+	StopsCount         int32    `json:"stops_count"`
 }
 
 func (q *Queries) GetPlaceListBySlug(ctx context.Context, slug string) (GetPlaceListBySlugRow, error) {
@@ -237,14 +485,23 @@ func (q *Queries) GetPlaceListBySlug(ctx context.Context, slug string) (GetPlace
 		&i.ID,
 		&i.Slug,
 		&i.Title,
+		&i.Subtitle,
 		&i.Category,
 		&i.Area,
 		&i.Occasions,
 		&i.SortOrder,
 		&i.SourceHash,
+		&i.ListType,
+		&i.Visibility,
+		&i.SavesCount,
 		&i.CityID,
 		&i.CitySlug,
 		&i.CityName,
+		&i.CreatorUserID,
+		&i.CreatorDisplayName,
+		&i.CreatorUsername,
+		&i.CreatorAvatarUrl,
+		&i.StopsCount,
 	)
 	return i, err
 }
@@ -334,6 +591,9 @@ SELECT
   ple.seed_name,
   ple.rank,
   ple.note,
+  ple.time_label,
+  ple.activity_type,
+  COALESCE(ple.image_url, p.cover_image_url) AS image_url,
   p.id::text AS place_id,
   p.name AS place_name,
   p.google_place_id,
@@ -356,6 +616,9 @@ type ListPlaceListEntriesByListIDRow struct {
 	SeedName      string         `json:"seed_name"`
 	Rank          int32          `json:"rank"`
 	Note          string         `json:"note"`
+	TimeLabel     string         `json:"time_label"`
+	ActivityType  string         `json:"activity_type"`
+	ImageUrl      *string        `json:"image_url"`
 	PlaceID       string         `json:"place_id"`
 	PlaceName     string         `json:"place_name"`
 	GooglePlaceID *string        `json:"google_place_id"`
@@ -382,6 +645,9 @@ func (q *Queries) ListPlaceListEntriesByListID(ctx context.Context, listID pgtyp
 			&i.SeedName,
 			&i.Rank,
 			&i.Note,
+			&i.TimeLabel,
+			&i.ActivityType,
+			&i.ImageUrl,
 			&i.PlaceID,
 			&i.PlaceName,
 			&i.GooglePlaceID,
