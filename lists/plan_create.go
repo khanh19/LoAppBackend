@@ -169,6 +169,7 @@ func normalizeCreatePlanRequest(req *CreatePlanRequest) (*CreatePlanRequest, err
 	}
 	normalized.Stops = append([]CreatePlanStopRequest(nil), normalized.Stops...)
 	seenRanks := make(map[int32]struct{}, len(normalized.Stops))
+	seenPlaceNames := make(map[string]struct{}, len(normalized.Stops))
 	for i := range normalized.Stops {
 		stop, err := normalizeCreatePlanStop(normalized.Stops[i], i+1)
 		if err != nil {
@@ -178,6 +179,11 @@ func normalizeCreatePlanRequest(req *CreatePlanRequest) (*CreatePlanRequest, err
 			return nil, &errs.Error{Code: errs.InvalidArgument, Message: "stop ranks must be unique"}
 		}
 		seenRanks[stop.Rank] = struct{}{}
+		placeNameKey := strings.ToLower(stop.PlaceName)
+		if _, ok := seenPlaceNames[placeNameKey]; ok {
+			return nil, &errs.Error{Code: errs.InvalidArgument, Message: "stop place_name values must be unique"}
+		}
+		seenPlaceNames[placeNameKey] = struct{}{}
 		normalized.Stops[i] = stop
 	}
 

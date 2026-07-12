@@ -61,6 +61,20 @@ func TestNormalizeCreatePlanRequestRejectsDuplicateRanks(t *testing.T) {
 	}
 }
 
+func TestNormalizeCreatePlanRequestRejectsDuplicatePlaceNames(t *testing.T) {
+	_, err := normalizeCreatePlanRequest(&CreatePlanRequest{
+		Title:    "Sunset Tour",
+		CitySlug: "hcmc",
+		Stops: []CreatePlanStopRequest{
+			{PlaceName: "Bitexco Financial Tower"},
+			{PlaceName: " bitexco financial tower "},
+		},
+	})
+	if err == nil {
+		t.Fatal("expected duplicate place name error")
+	}
+}
+
 func TestNormalizeCreatePlanRequestRejectsInvalidCoordinates(t *testing.T) {
 	lat := 100.0
 	_, err := normalizeCreatePlanRequest(&CreatePlanRequest{
