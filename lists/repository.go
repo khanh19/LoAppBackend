@@ -63,21 +63,37 @@ func getPlaceListBySlug(ctx context.Context, db *pgxpool.Pool, slug string) (*Pl
 	}
 
 	detail := &PlaceListDetail{
-		ID:        list.ID,
-		Slug:      list.Slug,
-		Title:     list.Title,
-		Category:  list.Category,
-		Area:      list.Area,
-		Occasions: list.Occasions,
-		CitySlug:  list.CitySlug,
-		CityName:  list.CityName,
-		Entries:   make([]PlaceListEntry, 0, len(entries)),
+		ID:         list.ID,
+		Slug:       list.Slug,
+		Title:      list.Title,
+		Subtitle:   list.Subtitle,
+		Category:   list.Category,
+		Area:       list.Area,
+		Occasions:  list.Occasions,
+		ListType:   list.ListType,
+		Visibility: list.Visibility,
+		SavesCount: list.SavesCount,
+		StopsCount: list.StopsCount,
+		CitySlug:   list.CitySlug,
+		CityName:   list.CityName,
+		Entries:    make([]PlaceListEntry, 0, len(entries)),
+	}
+	if list.CreatorUserID != "" || list.CreatorDisplayName != nil || list.CreatorUsername != "" || list.CreatorAvatarUrl != nil {
+		detail.Creator = &PlaceListCreator{
+			UserID:      list.CreatorUserID,
+			DisplayName: list.CreatorDisplayName,
+			Username:    list.CreatorUsername,
+			AvatarURL:   list.CreatorAvatarUrl,
+		}
 	}
 	for _, row := range entries {
 		detail.Entries = append(detail.Entries, PlaceListEntry{
 			Rank:          row.Rank,
 			SeedName:      row.SeedName,
 			Note:          row.Note,
+			TimeLabel:     row.TimeLabel,
+			ActivityType:  row.ActivityType,
+			ImageURL:      row.ImageUrl,
 			PlaceID:       row.PlaceID,
 			Name:          row.PlaceName,
 			GooglePlaceID: row.GooglePlaceID,
