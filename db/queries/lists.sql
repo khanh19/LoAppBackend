@@ -29,7 +29,48 @@ LEFT JOIN LATERAL (
   LIMIT 1
 ) cover ON true
 WHERE pl.is_active = true
+  AND pl.list_type = 'curated'
 ORDER BY pl.sort_order, pl.title;
+
+-- name: ListActivePlans :many
+SELECT
+  pl.id::text AS id,
+  pl.slug,
+  pl.title,
+  pl.subtitle,
+  pl.category,
+  pl.area,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  pl.saves_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count,
+  cover.cover_image_url,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name
+FROM place_lists pl
+JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
+LEFT JOIN LATERAL (
+  SELECT COALESCE(ple.image_url, p.cover_image_url) AS cover_image_url
+  FROM place_list_entries ple
+  JOIN places p ON p.id = ple.place_id
+  WHERE ple.list_id = pl.id
+    AND ple.is_active = true
+    AND COALESCE(ple.image_url, p.cover_image_url) IS NOT NULL
+  ORDER BY ple.stop_order
+  LIMIT 1
+) cover ON true
+WHERE pl.is_active = true
+  AND pl.list_type = 'user_plan'
+  AND pl.visibility = 'public'
+  AND (sqlc.narg(city_slug)::text IS NULL OR c.slug = sqlc.narg(city_slug))
+ORDER BY pl.sort_order, pl.title
+LIMIT sqlc.arg(limit_val)::int;
 
 -- name: GetPlaceListBySlug :one
 SELECT

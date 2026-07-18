@@ -99,6 +99,30 @@ type CreatePlanResponse struct {
 	Plan PlaceListDetail `json:"plan"`
 }
 
+type ListPlansParams struct {
+	Limit    int    `query:"limit"`
+	CitySlug string `query:"city_slug"`
+}
+
+type PlanSummary struct {
+	ID                 string  `json:"id"`
+	Slug               string  `json:"slug"`
+	Title              string  `json:"title"`
+	Subtitle           string  `json:"subtitle"`
+	Category           string  `json:"category"`
+	Area               string  `json:"area"`
+	CitySlug           string  `json:"city_slug"`
+	CityName           string  `json:"city_name"`
+	SavesCount         int32   `json:"saves_count"`
+	StopsCount         int32   `json:"stops_count"`
+	CoverImageURL      *string `json:"cover_image_url"`
+	CreatorDisplayName *string `json:"creator_display_name"`
+}
+
+type ListPlansResponse struct {
+	Plans []PlanSummary `json:"plans"`
+}
+
 type SyncPlaceListsResponse struct {
 	RunID          string `json:"run_id"`
 	Status         string `json:"status"`

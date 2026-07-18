@@ -39,6 +39,7 @@ type Querier interface {
 	IsUsernameTakenByAnotherUser(ctx context.Context, arg IsUsernameTakenByAnotherUserParams) (bool, error)
 	ListActiveCities(ctx context.Context) ([]ListActiveCitiesRow, error)
 	ListActivePlaceLists(ctx context.Context) ([]ListActivePlaceListsRow, error)
+	ListActivePlans(ctx context.Context, arg ListActivePlansParams) ([]ListActivePlansRow, error)
 	ListActivePurposeCategories(ctx context.Context) ([]ListActivePurposeCategoriesRow, error)
 	ListActiveVibes(ctx context.Context) ([]ListActiveVibesRow, error)
 	ListCuratedVenuesByCity(ctx context.Context, cityID pgtype.UUID) ([]ListCuratedVenuesByCityRow, error)

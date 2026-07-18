@@ -47,6 +47,22 @@ func (s *Service) GetPlaceList(ctx context.Context, slug string) (*GetPlaceListR
 	return &GetPlaceListResponse{List: *list}, nil
 }
 
+//encore:api public method=GET path=/plans
+func (s *Service) ListPlans(ctx context.Context, params *ListPlansParams) (*ListPlansResponse, error) {
+	limit := defaultPlansLimit
+	citySlug := ""
+	if params != nil {
+		limit = normalizePlansLimit(params.Limit)
+		citySlug = params.CitySlug
+	}
+
+	plans, err := listPlans(ctx, s.db, citySlug, limit)
+	if err != nil {
+		return nil, err
+	}
+	return &ListPlansResponse{Plans: plans}, nil
+}
+
 //encore:api auth method=POST path=/plans
 func (s *Service) CreatePlan(ctx context.Context, req *CreatePlanRequest) (*CreatePlanResponse, error) {
 	userID, ok := encoreauth.UserID()

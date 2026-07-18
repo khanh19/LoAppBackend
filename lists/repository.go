@@ -37,6 +37,42 @@ func listPlaceLists(ctx context.Context, db *pgxpool.Pool) ([]PlaceListSummary, 
 	return lists, nil
 }
 
+func listPlans(ctx context.Context, db *pgxpool.Pool, citySlug string, limit int) ([]PlanSummary, error) {
+	rows, err := dbgen.New(db).ListActivePlans(ctx, dbgen.ListActivePlansParams{
+		CitySlug: optionalCitySlug(strings.TrimSpace(citySlug)),
+		LimitVal: int32(limit),
+	})
+	if err != nil {
+		return nil, errs.WrapCode(err, errs.Internal, "failed to list plans")
+	}
+
+	plans := make([]PlanSummary, 0, len(rows))
+	for _, row := range rows {
+		plans = append(plans, PlanSummary{
+			ID:                 row.ID,
+			Slug:               row.Slug,
+			Title:              row.Title,
+			Subtitle:           row.Subtitle,
+			Category:           row.Category,
+			Area:               row.Area,
+			CitySlug:           row.CitySlug,
+			CityName:           row.CityName,
+			SavesCount:         row.SavesCount,
+			StopsCount:         row.StopsCount,
+			CoverImageURL:      row.CoverImageUrl,
+			CreatorDisplayName: row.CreatorDisplayName,
+		})
+	}
+	return plans, nil
+}
+
+func optionalCitySlug(v string) *string {
+	if v == "" {
+		return nil
+	}
+	return &v
+}
+
 func getPlaceListBySlug(ctx context.Context, db *pgxpool.Pool, slug string) (*PlaceListDetail, error) {
 	slug = strings.TrimSpace(slug)
 	if slug == "" {
