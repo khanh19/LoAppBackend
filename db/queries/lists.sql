@@ -25,7 +25,7 @@ LEFT JOIN LATERAL (
   WHERE ple.list_id = pl.id
     AND ple.is_active = true
     AND p.cover_image_url IS NOT NULL
-  ORDER BY ple.rank
+  ORDER BY ple.stop_order
   LIMIT 1
 ) cover ON true
 WHERE pl.is_active = true
@@ -101,7 +101,7 @@ WHERE pl.id = sqlc.arg(id)::uuid;
 -- name: ListPlaceListEntriesByListID :many
 SELECT
   ple.seed_name,
-  ple.rank,
+  ple.stop_order,
   ple.note,
   ple.time_label,
   ple.activity_type,
@@ -121,7 +121,7 @@ FROM place_list_entries ple
 JOIN places p ON p.id = ple.place_id
 WHERE ple.list_id = sqlc.arg(list_id)::uuid
   AND ple.is_active = true
-ORDER BY ple.rank;
+ORDER BY ple.stop_order;
 
 -- name: ListPlaceListEntrySeedNamesByListID :many
 SELECT seed_name
@@ -187,7 +187,7 @@ VALUES (
   sqlc.arg(subtitle),
   sqlc.arg(category),
   sqlc.arg(area),
-  sqlc.arg(occasions),
+  COALESCE(sqlc.arg(occasions), '{}'::text[]),
   sqlc.arg(city_id)::uuid,
   sqlc.arg(creator_user_id)::uuid,
   'user_plan',
@@ -222,7 +222,7 @@ VALUES (
   sqlc.narg(latitude),
   sqlc.narg(longitude),
   sqlc.narg(cover_image_url),
-  sqlc.arg(tags),
+  COALESCE(sqlc.arg(tags), '{}'::text[]),
   true
 )
 ON CONFLICT (google_place_id) DO UPDATE
@@ -245,7 +245,7 @@ INSERT INTO place_list_entries (
   list_id,
   place_id,
   seed_name,
-  rank,
+  stop_order,
   note,
   time_label,
   activity_type,
@@ -256,7 +256,7 @@ VALUES (
   sqlc.arg(list_id)::uuid,
   sqlc.arg(place_id)::uuid,
   sqlc.arg(seed_name),
-  sqlc.arg(rank)::integer,
+  sqlc.arg(stop_order)::integer,
   sqlc.arg(note),
   sqlc.arg(time_label),
   sqlc.arg(activity_type),
@@ -269,7 +269,7 @@ INSERT INTO place_list_entries (
   list_id,
   place_id,
   seed_name,
-  rank,
+  stop_order,
   note,
   is_active
 )
@@ -277,14 +277,14 @@ VALUES (
   sqlc.arg(list_id)::uuid,
   sqlc.arg(place_id)::uuid,
   sqlc.arg(seed_name),
-  sqlc.arg(rank)::integer,
+  sqlc.arg(stop_order)::integer,
   sqlc.arg(note),
   true
 )
 ON CONFLICT (list_id, seed_name) DO UPDATE
 SET
   place_id = EXCLUDED.place_id,
-  rank = EXCLUDED.rank,
+  stop_order = EXCLUDED.stop_order,
   note = EXCLUDED.note,
   is_active = true,
   updated_at = now();

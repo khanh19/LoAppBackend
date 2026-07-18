@@ -14,7 +14,7 @@ type PlaceListSummary struct {
 }
 
 type PlaceListEntry struct {
-	Rank          int32    `json:"rank"`
+	StopOrder     int32    `json:"stop_order"`
 	SeedName      string   `json:"seed_name"`
 	Note          string   `json:"note"`
 	TimeLabel     string   `json:"time_label"`
@@ -80,7 +80,7 @@ type CreatePlanRequest struct {
 }
 
 type CreatePlanStopRequest struct {
-	Rank          int32    `json:"rank"`
+	StopOrder     int32    `json:"stop_order"`
 	TimeLabel     string   `json:"time_label"`
 	ActivityType  string   `json:"activity_type"`
 	PlaceID       *string  `json:"place_id"`

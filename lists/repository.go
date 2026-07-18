@@ -88,7 +88,7 @@ func getPlaceListBySlug(ctx context.Context, db *pgxpool.Pool, slug string) (*Pl
 	}
 	for _, row := range entries {
 		detail.Entries = append(detail.Entries, PlaceListEntry{
-			Rank:          row.Rank,
+			StopOrder:     row.StopOrder,
 			SeedName:      row.SeedName,
 			Note:          row.Note,
 			TimeLabel:     row.TimeLabel,
