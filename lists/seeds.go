@@ -2,9 +2,9 @@ package lists
 
 import (
 	"crypto/sha256"
+	_ "embed"
 	"encoding/hex"
 	"encoding/json"
-	_ "embed"
 	"fmt"
 	"sort"
 )
@@ -26,14 +26,14 @@ type seedList struct {
 }
 
 type seedItem struct {
-	Order         int    `json:"order"`
-	SeedName      string `json:"seed_name"`
-	CityHint      string `json:"city_hint"`
-	DistrictHint  string `json:"district_hint"`
-	AddressHint   string `json:"address_hint"`
-	Note          string `json:"note"`
-	PlaceID       any    `json:"place_id"`
-	Resolved      bool   `json:"resolved"`
+	StopOrder    int    `json:"stop_order"`
+	SeedName     string `json:"seed_name"`
+	CityHint     string `json:"city_hint"`
+	DistrictHint string `json:"district_hint"`
+	AddressHint  string `json:"address_hint"`
+	Note         string `json:"note"`
+	PlaceID      any    `json:"place_id"`
+	Resolved     bool   `json:"resolved"`
 }
 
 func loadSeedFile() (*seedFile, error) {
@@ -72,10 +72,10 @@ func normalizeSeedItems(items []seedItem) []seedItem {
 	out := make([]seedItem, len(items))
 	copy(out, items)
 	sort.SliceStable(out, func(i, j int) bool {
-		if out[i].Order == out[j].Order {
+		if out[i].StopOrder == out[j].StopOrder {
 			return out[i].SeedName < out[j].SeedName
 		}
-		return out[i].Order < out[j].Order
+		return out[i].StopOrder < out[j].StopOrder
 	})
 	for i := range out {
 		out[i].PlaceID = nil

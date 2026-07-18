@@ -6,13 +6,13 @@ import (
 
 func TestHashSeedListStable(t *testing.T) {
 	list := seedList{
-		ListID:   "d1-cocktail-circuit",
-		Title:    "The D1 Cocktail Circuit",
-		Category: "Cocktail bars",
-		Area:     "District 1",
+		ListID:    "d1-cocktail-circuit",
+		Title:     "The D1 Cocktail Circuit",
+		Category:  "Cocktail bars",
+		Area:      "District 1",
 		Occasions: []string{"Date", "Squad"},
 		Items: []seedItem{
-			{Order: 1, SeedName: "Summer Experiment", CityHint: "Ho Chi Minh City", Note: "Farm-to-bar"},
+			{StopOrder: 1, SeedName: "Summer Experiment", CityHint: "Ho Chi Minh City", Note: "Farm-to-bar"},
 		},
 	}
 
@@ -50,5 +50,12 @@ func TestLoadSeedFile(t *testing.T) {
 	}
 	if len(file.Lists) == 0 {
 		t.Fatal("expected seeded lists")
+	}
+	for _, list := range file.Lists {
+		for _, item := range list.Items {
+			if item.StopOrder <= 0 {
+				t.Fatalf("list %q item %q has invalid stop_order %d", list.ListID, item.SeedName, item.StopOrder)
+			}
+		}
 	}
 }

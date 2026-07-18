@@ -219,11 +219,11 @@ func (s *Service) syncSeedList(ctx context.Context, q *dbgen.Queries, list seedL
 			continue
 		}
 		if err := q.UpsertPlaceListEntry(ctx, dbgen.UpsertPlaceListEntryParams{
-			ListID:   listUUID,
-			PlaceID:  placeUUID,
-			SeedName: result.item.SeedName,
-			Rank:     int32(result.item.Order),
-			Note:     result.item.Note,
+			ListID:    listUUID,
+			PlaceID:   placeUUID,
+			SeedName:  result.item.SeedName,
+			StopOrder: int32(result.item.StopOrder),
+			Note:      result.item.Note,
 		}); err != nil {
 			return nil, added, skipped, failed, err
 		}
@@ -242,11 +242,11 @@ func (s *Service) syncSeedList(ctx context.Context, q *dbgen.Queries, list seedL
 			continue
 		}
 		if err := q.UpsertPlaceListEntry(ctx, dbgen.UpsertPlaceListEntryParams{
-			ListID:   listUUID,
-			PlaceID:  placeUUID,
-			SeedName: item.SeedName,
-			Rank:     int32(item.Order),
-			Note:     item.Note,
+			ListID:    listUUID,
+			PlaceID:   placeUUID,
+			SeedName:  item.SeedName,
+			StopOrder: int32(item.StopOrder),
+			Note:      item.Note,
 		}); err != nil {
 			return nil, added, skipped, failed, err
 		}

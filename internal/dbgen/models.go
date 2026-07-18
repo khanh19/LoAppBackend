@@ -111,7 +111,7 @@ type PlaceListEntry struct {
 	ListID       pgtype.UUID        `json:"list_id"`
 	PlaceID      pgtype.UUID        `json:"place_id"`
 	SeedName     string             `json:"seed_name"`
-	Rank         int32              `json:"rank"`
+	StopOrder    int32              `json:"stop_order"`
 	Note         string             `json:"note"`
 	IsActive     bool               `json:"is_active"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`

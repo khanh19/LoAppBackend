@@ -54,7 +54,7 @@ func (s *Service) createPlan(ctx context.Context, userID string, req *CreatePlan
 		Subtitle:      normalized.Subtitle,
 		Category:      normalized.Category,
 		Area:          normalized.Area,
-		Occasions:     normalized.Occasions,
+		Occasions:     stringSliceOrEmpty(normalized.Occasions),
 		CityID:        cityID,
 		CreatorUserID: creatorID,
 		Visibility:    normalized.Visibility,
@@ -85,7 +85,7 @@ func (s *Service) createPlan(ctx context.Context, userID string, req *CreatePlan
 			ListID:       listUUID,
 			PlaceID:      placeUUID,
 			SeedName:     stop.PlaceName,
-			Rank:         stop.Rank,
+			StopOrder:    stop.StopOrder,
 			Note:         stop.Note,
 			TimeLabel:    stop.TimeLabel,
 			ActivityType: stop.ActivityType,
@@ -120,7 +120,8 @@ func (s *Service) createOrUsePlanStopPlace(ctx context.Context, q *dbgen.Queries
 		Latitude:      numericFromOptionalFloat(stop.Latitude),
 		Longitude:     numericFromOptionalFloat(stop.Longitude),
 		CoverImageUrl: stop.ImageURL,
-		Tags:          stop.Tags,
+		// places.tags is NOT NULL; nil []string encodes as SQL NULL.
+		Tags: stringSliceOrEmpty(stop.Tags),
 	})
 	if err != nil {
 		return "", errs.WrapCode(err, errs.Internal, "failed to create plan place")
@@ -168,17 +169,17 @@ func normalizeCreatePlanRequest(req *CreatePlanRequest) (*CreatePlanRequest, err
 		return nil, &errs.Error{Code: errs.InvalidArgument, Message: "at least one stop is required"}
 	}
 	normalized.Stops = append([]CreatePlanStopRequest(nil), normalized.Stops...)
-	seenRanks := make(map[int32]struct{}, len(normalized.Stops))
+	seenStopOrders := make(map[int32]struct{}, len(normalized.Stops))
 	seenPlaceNames := make(map[string]struct{}, len(normalized.Stops))
 	for i := range normalized.Stops {
 		stop, err := normalizeCreatePlanStop(normalized.Stops[i], i+1)
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := seenRanks[stop.Rank]; ok {
-			return nil, &errs.Error{Code: errs.InvalidArgument, Message: "stop ranks must be unique"}
+		if _, ok := seenStopOrders[stop.StopOrder]; ok {
+			return nil, &errs.Error{Code: errs.InvalidArgument, Message: "stop_order values must be unique"}
 		}
-		seenRanks[stop.Rank] = struct{}{}
+		seenStopOrders[stop.StopOrder] = struct{}{}
 		placeNameKey := strings.ToLower(stop.PlaceName)
 		if _, ok := seenPlaceNames[placeNameKey]; ok {
 			return nil, &errs.Error{Code: errs.InvalidArgument, Message: "stop place_name values must be unique"}
@@ -190,13 +191,13 @@ func normalizeCreatePlanRequest(req *CreatePlanRequest) (*CreatePlanRequest, err
 	return &normalized, nil
 }
 
-func normalizeCreatePlanStop(stop CreatePlanStopRequest, fallbackRank int) (CreatePlanStopRequest, error) {
+func normalizeCreatePlanStop(stop CreatePlanStopRequest, fallbackStopOrder int) (CreatePlanStopRequest, error) {
 	stop.PlaceName = strings.TrimSpace(stop.PlaceName)
 	if stop.PlaceName == "" {
 		return stop, &errs.Error{Code: errs.InvalidArgument, Message: "stop place_name is required"}
 	}
-	if stop.Rank <= 0 {
-		stop.Rank = int32(fallbackRank)
+	if stop.StopOrder <= 0 {
+		stop.StopOrder = int32(fallbackStopOrder)
 	}
 	stop.TimeLabel = strings.TrimSpace(stop.TimeLabel)
 	stop.ActivityType = strings.TrimSpace(stop.ActivityType)
@@ -276,6 +277,13 @@ func normalizeStringSlice(values []string) []string {
 		out = append(out, value)
 	}
 	return out
+}
+
+func stringSliceOrEmpty(values []string) []string {
+	if values == nil {
+		return []string{}
+	}
+	return values
 }
 
 func trimStringPtr(value *string) *string {

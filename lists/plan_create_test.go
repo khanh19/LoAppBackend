@@ -1,6 +1,34 @@
 package lists
 
-import "testing"
+import (
+	"encoding/json"
+	"strings"
+	"testing"
+)
+
+func TestStringSliceOrEmpty(t *testing.T) {
+	if got := stringSliceOrEmpty(nil); got == nil || len(got) != 0 {
+		t.Fatalf("nil -> %#v, want empty non-nil slice", got)
+	}
+	in := []string{"a"}
+	if got := stringSliceOrEmpty(in); len(got) != 1 || got[0] != "a" {
+		t.Fatalf("non-nil -> %#v", got)
+	}
+}
+
+func TestCreatePlanStopRequestUsesStopOrderJSONField(t *testing.T) {
+	data, err := json.Marshal(CreatePlanStopRequest{StopOrder: 2})
+	if err != nil {
+		t.Fatalf("marshal stop: %v", err)
+	}
+	got := string(data)
+	if !strings.Contains(got, `"stop_order":2`) {
+		t.Fatalf("JSON = %s, want stop_order", got)
+	}
+	if strings.Contains(got, `"order"`) || strings.Contains(got, `"rank"`) {
+		t.Fatalf("JSON = %s, contains legacy order field", got)
+	}
+}
 
 func TestNormalizeCreatePlanRequestDefaults(t *testing.T) {
 	req := &CreatePlanRequest{
@@ -36,8 +64,8 @@ func TestNormalizeCreatePlanRequestDefaults(t *testing.T) {
 	if got := normalized.Occasions; len(got) != 2 || got[0] != "Date" || got[1] != "Friends" {
 		t.Fatalf("occasions = %#v, want Date/Friends", got)
 	}
-	if normalized.Stops[0].Rank != 1 || normalized.Stops[1].Rank != 2 {
-		t.Fatalf("ranks = %d/%d, want 1/2", normalized.Stops[0].Rank, normalized.Stops[1].Rank)
+	if normalized.Stops[0].StopOrder != 1 || normalized.Stops[1].StopOrder != 2 {
+		t.Fatalf("stop orders = %d/%d, want 1/2", normalized.Stops[0].StopOrder, normalized.Stops[1].StopOrder)
 	}
 	if normalized.Stops[0].Address == nil || *normalized.Stops[0].Address != "2 Hai Trieu" {
 		t.Fatalf("address = %#v, want trimmed value", normalized.Stops[0].Address)
@@ -47,17 +75,17 @@ func TestNormalizeCreatePlanRequestDefaults(t *testing.T) {
 	}
 }
 
-func TestNormalizeCreatePlanRequestRejectsDuplicateRanks(t *testing.T) {
+func TestNormalizeCreatePlanRequestRejectsDuplicateStopOrders(t *testing.T) {
 	_, err := normalizeCreatePlanRequest(&CreatePlanRequest{
 		Title:    "Sunset Tour",
 		CitySlug: "hcmc",
 		Stops: []CreatePlanStopRequest{
-			{Rank: 1, PlaceName: "Stop One"},
-			{Rank: 1, PlaceName: "Stop Two"},
+			{StopOrder: 1, PlaceName: "Stop One"},
+			{StopOrder: 1, PlaceName: "Stop Two"},
 		},
 	})
 	if err == nil {
-		t.Fatal("expected duplicate rank error")
+		t.Fatal("expected duplicate stop_order error")
 	}
 }
 

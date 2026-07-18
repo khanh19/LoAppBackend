@@ -46,7 +46,7 @@ VALUES (
   $3,
   $4,
   $5,
-  $6,
+  COALESCE($6, '{}'::text[]),
   $7::uuid,
   $8::uuid,
   'user_plan',
@@ -64,7 +64,7 @@ type CreatePlanParams struct {
 	Subtitle      string      `json:"subtitle"`
 	Category      string      `json:"category"`
 	Area          string      `json:"area"`
-	Occasions     []string    `json:"occasions"`
+	Occasions     interface{} `json:"occasions"`
 	CityID        pgtype.UUID `json:"city_id"`
 	CreatorUserID pgtype.UUID `json:"creator_user_id"`
 	Visibility    string      `json:"visibility"`
@@ -96,7 +96,7 @@ INSERT INTO place_list_entries (
   list_id,
   place_id,
   seed_name,
-  rank,
+  stop_order,
   note,
   time_label,
   activity_type,
@@ -120,7 +120,7 @@ type CreatePlanEntryParams struct {
 	ListID       pgtype.UUID `json:"list_id"`
 	PlaceID      pgtype.UUID `json:"place_id"`
 	SeedName     string      `json:"seed_name"`
-	Rank         int32       `json:"rank"`
+	StopOrder    int32       `json:"stop_order"`
 	Note         string      `json:"note"`
 	TimeLabel    string      `json:"time_label"`
 	ActivityType string      `json:"activity_type"`
@@ -132,7 +132,7 @@ func (q *Queries) CreatePlanEntry(ctx context.Context, arg CreatePlanEntryParams
 		arg.ListID,
 		arg.PlaceID,
 		arg.SeedName,
-		arg.Rank,
+		arg.StopOrder,
 		arg.Note,
 		arg.TimeLabel,
 		arg.ActivityType,
@@ -165,7 +165,7 @@ VALUES (
   $6,
   $7,
   $8,
-  $9,
+  COALESCE($9, '{}'::text[]),
   true
 )
 ON CONFLICT (google_place_id) DO UPDATE
@@ -193,7 +193,7 @@ type CreatePlanPlaceParams struct {
 	Latitude      pgtype.Numeric `json:"latitude"`
 	Longitude     pgtype.Numeric `json:"longitude"`
 	CoverImageUrl *string        `json:"cover_image_url"`
-	Tags          []string       `json:"tags"`
+	Tags          interface{}    `json:"tags"`
 }
 
 func (q *Queries) CreatePlanPlace(ctx context.Context, arg CreatePlanPlaceParams) (string, error) {
@@ -533,7 +533,7 @@ LEFT JOIN LATERAL (
   WHERE ple.list_id = pl.id
     AND ple.is_active = true
     AND p.cover_image_url IS NOT NULL
-  ORDER BY ple.rank
+  ORDER BY ple.stop_order
   LIMIT 1
 ) cover ON true
 WHERE pl.is_active = true
@@ -589,7 +589,7 @@ func (q *Queries) ListActivePlaceLists(ctx context.Context) ([]ListActivePlaceLi
 const listPlaceListEntriesByListID = `-- name: ListPlaceListEntriesByListID :many
 SELECT
   ple.seed_name,
-  ple.rank,
+  ple.stop_order,
   ple.note,
   ple.time_label,
   ple.activity_type,
@@ -609,12 +609,12 @@ FROM place_list_entries ple
 JOIN places p ON p.id = ple.place_id
 WHERE ple.list_id = $1::uuid
   AND ple.is_active = true
-ORDER BY ple.rank
+ORDER BY ple.stop_order
 `
 
 type ListPlaceListEntriesByListIDRow struct {
 	SeedName      string         `json:"seed_name"`
-	Rank          int32          `json:"rank"`
+	StopOrder     int32          `json:"stop_order"`
 	Note          string         `json:"note"`
 	TimeLabel     string         `json:"time_label"`
 	ActivityType  string         `json:"activity_type"`
@@ -643,7 +643,7 @@ func (q *Queries) ListPlaceListEntriesByListID(ctx context.Context, listID pgtyp
 		var i ListPlaceListEntriesByListIDRow
 		if err := rows.Scan(
 			&i.SeedName,
-			&i.Rank,
+			&i.StopOrder,
 			&i.Note,
 			&i.TimeLabel,
 			&i.ActivityType,
@@ -906,7 +906,7 @@ INSERT INTO place_list_entries (
   list_id,
   place_id,
   seed_name,
-  rank,
+  stop_order,
   note,
   is_active
 )
@@ -921,18 +921,18 @@ VALUES (
 ON CONFLICT (list_id, seed_name) DO UPDATE
 SET
   place_id = EXCLUDED.place_id,
-  rank = EXCLUDED.rank,
+  stop_order = EXCLUDED.stop_order,
   note = EXCLUDED.note,
   is_active = true,
   updated_at = now()
 `
 
 type UpsertPlaceListEntryParams struct {
-	ListID   pgtype.UUID `json:"list_id"`
-	PlaceID  pgtype.UUID `json:"place_id"`
-	SeedName string      `json:"seed_name"`
-	Rank     int32       `json:"rank"`
-	Note     string      `json:"note"`
+	ListID    pgtype.UUID `json:"list_id"`
+	PlaceID   pgtype.UUID `json:"place_id"`
+	SeedName  string      `json:"seed_name"`
+	StopOrder int32       `json:"stop_order"`
+	Note      string      `json:"note"`
 }
 
 func (q *Queries) UpsertPlaceListEntry(ctx context.Context, arg UpsertPlaceListEntryParams) error {
@@ -940,7 +940,7 @@ func (q *Queries) UpsertPlaceListEntry(ctx context.Context, arg UpsertPlaceListE
 		arg.ListID,
 		arg.PlaceID,
 		arg.SeedName,
-		arg.Rank,
+		arg.StopOrder,
 		arg.Note,
 	)
 	return err

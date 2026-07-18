@@ -7,16 +7,16 @@
       "area": "District 1",
       "occasions": ["Date", "Squad"],
       "items": [
-        { "order": 1, "seed_name": "Summer Experiment", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Farm-to-bar, intimate, Asia's 50 Best", "place_id": null, "resolved": false },
-        { "order": 2, "seed_name": "Layla", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Classic cocktails, upscale", "place_id": null, "resolved": false },
-        { "order": 3, "seed_name": "Tamarind", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Local ingredients, World Class Rising Star 2025", "place_id": null, "resolved": false },
-        { "order": 4, "seed_name": "Rabbit Hole", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Speakeasy, live jazz, mirrors and leather", "place_id": null, "resolved": false },
-        { "order": 5, "seed_name": "Stir", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Asia's 50 Best 51–100, Vietnamese-inspired cocktails", "place_id": null, "resolved": false },
-        { "order": 6, "seed_name": "Emme House", "city_hint": "Ho Chi Minh City", "district_hint": "Ham Nghi, District 1", "note": "Hidden apartment bar", "place_id": null, "resolved": false },
-        { "order": 7, "seed_name": "Ủ Bar", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Fermentation-forward, slow-paced", "place_id": null, "resolved": false },
-        { "order": 8, "seed_name": "Lost & Found", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Alley speakeasy, Tyler Kooy behind the bar", "place_id": null, "resolved": false },
-        { "order": 9, "seed_name": "Dot Drinkery & Kitchen", "city_hint": "Ho Chi Minh City", "district_hint": "Hai Bà Trưng, District 1", "note": "Indochine speakeasy, 3rd floor", "place_id": null, "resolved": false },
-        { "order": 10, "seed_name": "Ne Cocktail Bar", "city_hint": "Ho Chi Minh City", "district_hint": "Đa Kao, District 1", "note": "Serious cocktail cred, well-rated locally", "place_id": null, "resolved": false }
+        { "stop_order": 1, "seed_name": "Summer Experiment", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Farm-to-bar, intimate, Asia's 50 Best", "place_id": null, "resolved": false },
+        { "stop_order": 2, "seed_name": "Layla", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Classic cocktails, upscale", "place_id": null, "resolved": false },
+        { "stop_order": 3, "seed_name": "Tamarind", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Local ingredients, World Class Rising Star 2025", "place_id": null, "resolved": false },
+        { "stop_order": 4, "seed_name": "Rabbit Hole", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Speakeasy, live jazz, mirrors and leather", "place_id": null, "resolved": false },
+        { "stop_order": 5, "seed_name": "Stir", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Asia's 50 Best 51–100, Vietnamese-inspired cocktails", "place_id": null, "resolved": false },
+        { "stop_order": 6, "seed_name": "Emme House", "city_hint": "Ho Chi Minh City", "district_hint": "Ham Nghi, District 1", "note": "Hidden apartment bar", "place_id": null, "resolved": false },
+        { "stop_order": 7, "seed_name": "Ủ Bar", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Fermentation-forward, slow-paced", "place_id": null, "resolved": false },
+        { "stop_order": 8, "seed_name": "Lost & Found", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Alley speakeasy, Tyler Kooy behind the bar", "place_id": null, "resolved": false },
+        { "stop_order": 9, "seed_name": "Dot Drinkery & Kitchen", "city_hint": "Ho Chi Minh City", "district_hint": "Hai Bà Trưng, District 1", "note": "Indochine speakeasy, 3rd floor", "place_id": null, "resolved": false },
+        { "stop_order": 10, "seed_name": "Ne Cocktail Bar", "city_hint": "Ho Chi Minh City", "district_hint": "Đa Kao, District 1", "note": "Serious cocktail cred, well-rated locally", "place_id": null, "resolved": false }
       ]
     },
     {
@@ -26,16 +26,16 @@
       "area": "HCMC-wide",
       "occasions": ["Solo", "Visitor", "Squad"],
       "items": [
-        { "order": 1, "seed_name": "Phở Hòa Pasteur", "city_hint": "Ho Chi Minh City", "address_hint": "260C Pasteur", "note": "Serving since 1968. Michelin Bib Gourmand. Add quẩy (fried dough). Best as an early breakfast.", "place_id": null, "resolved": false },
-        { "order": 2, "seed_name": "Bánh Mì Huỳnh Hoa", "city_hint": "Ho Chi Minh City", "address_hint": "26 Lê Thị Riêng, Bến Thành", "note": "Since 1989. No tables, takeaway only, permanent queue. One sandwich feeds two.", "place_id": null, "resolved": false },
-        { "order": 3, "seed_name": "Cơm Tấm Ba Ghiền", "city_hint": "Ho Chi Minh City", "address_hint": "84 Đặng Văn Ngữ, Phú Nhuận", "note": "Bib Gourmand, ~30 years. Chop is 400–500g, marinated overnight.", "place_id": null, "resolved": false },
-        { "order": 4, "seed_name": "Bánh Xèo 46A", "city_hint": "Ho Chi Minh City", "address_hint": "46A Đinh Công Trạng, Tân Định", "note": "Bib Gourmand. Recipe four generations / 80 years deep.", "place_id": null, "resolved": false },
-        { "order": 5, "seed_name": "Bếp Mẹ Ỉn", "city_hint": "Ho Chi Minh City", "address_hint": "136 Lê Thánh Tôn, Bến Thành", "note": "Bib Gourmand hole-in-the-wall. Reserve — it fills up.", "place_id": null, "resolved": false },
-        { "order": 6, "seed_name": "Hủ Tiếu Nam Lợi", "city_hint": "Ho Chi Minh City", "address_hint": "43 Tôn Thất Đạm", "note": "Chinese-Vietnamese institution since 1975. Service is brusque — part of the charm.", "place_id": null, "resolved": false },
-        { "order": 7, "seed_name": "Bún Bò Huế 14B", "city_hint": "Ho Chi Minh City", "address_hint": "14B Kỳ Đồng area, District 3 (verify exact)", "note": "Bib Gourmand — the only bún bò Huế stall on the HCMC list.", "place_id": null, "resolved": false },
-        { "order": 8, "seed_name": "Bò Lá Lốt Cô Liêng", "city_hint": "Ho Chi Minh City", "address_hint": "District 3 shophouse", "note": "Since 1995. Michelin-noted. Smoky, herby, rolled bites.", "place_id": null, "resolved": false },
-        { "order": 9, "seed_name": "Cơm Tấm Hồng Calmette", "city_hint": "Ho Chi Minh City", "address_hint": "134 Hoàng Diệu, District 4", "note": "Open until 3AM — the definitive late-night cơm tấm. Free iced tea.", "place_id": null, "resolved": false },
-        { "order": 10, "seed_name": "Thiệu Ký Mì Gia", "city_hint": "Ho Chi Minh City", "address_hint": "Chinatown", "note": "Chinatown-style, ~90 years of Cantonese noodles. Char siu, wontons, crispy shrimp fritters.", "place_id": null, "resolved": false }
+        { "stop_order": 1, "seed_name": "Phở Hòa Pasteur", "city_hint": "Ho Chi Minh City", "address_hint": "260C Pasteur", "note": "Serving since 1968. Michelin Bib Gourmand. Add quẩy (fried dough). Best as an early breakfast.", "place_id": null, "resolved": false },
+        { "stop_order": 2, "seed_name": "Bánh Mì Huỳnh Hoa", "city_hint": "Ho Chi Minh City", "address_hint": "26 Lê Thị Riêng, Bến Thành", "note": "Since 1989. No tables, takeaway only, permanent queue. One sandwich feeds two.", "place_id": null, "resolved": false },
+        { "stop_order": 3, "seed_name": "Cơm Tấm Ba Ghiền", "city_hint": "Ho Chi Minh City", "address_hint": "84 Đặng Văn Ngữ, Phú Nhuận", "note": "Bib Gourmand, ~30 years. Chop is 400–500g, marinated overnight.", "place_id": null, "resolved": false },
+        { "stop_order": 4, "seed_name": "Bánh Xèo 46A", "city_hint": "Ho Chi Minh City", "address_hint": "46A Đinh Công Trạng, Tân Định", "note": "Bib Gourmand. Recipe four generations / 80 years deep.", "place_id": null, "resolved": false },
+        { "stop_order": 5, "seed_name": "Bếp Mẹ Ỉn", "city_hint": "Ho Chi Minh City", "address_hint": "136 Lê Thánh Tôn, Bến Thành", "note": "Bib Gourmand hole-in-the-wall. Reserve — it fills up.", "place_id": null, "resolved": false },
+        { "stop_order": 6, "seed_name": "Hủ Tiếu Nam Lợi", "city_hint": "Ho Chi Minh City", "address_hint": "43 Tôn Thất Đạm", "note": "Chinese-Vietnamese institution since 1975. Service is brusque — part of the charm.", "place_id": null, "resolved": false },
+        { "stop_order": 7, "seed_name": "Bún Bò Huế 14B", "city_hint": "Ho Chi Minh City", "address_hint": "14B Kỳ Đồng area, District 3 (verify exact)", "note": "Bib Gourmand — the only bún bò Huế stall on the HCMC list.", "place_id": null, "resolved": false },
+        { "stop_order": 8, "seed_name": "Bò Lá Lốt Cô Liêng", "city_hint": "Ho Chi Minh City", "address_hint": "District 3 shophouse", "note": "Since 1995. Michelin-noted. Smoky, herby, rolled bites.", "place_id": null, "resolved": false },
+        { "stop_order": 9, "seed_name": "Cơm Tấm Hồng Calmette", "city_hint": "Ho Chi Minh City", "address_hint": "134 Hoàng Diệu, District 4", "note": "Open until 3AM — the definitive late-night cơm tấm. Free iced tea.", "place_id": null, "resolved": false },
+        { "stop_order": 10, "seed_name": "Thiệu Ký Mì Gia", "city_hint": "Ho Chi Minh City", "address_hint": "Chinatown", "note": "Chinatown-style, ~90 years of Cantonese noodles. Char siu, wontons, crispy shrimp fritters.", "place_id": null, "resolved": false }
       ]
     },
     {
@@ -45,16 +45,16 @@
       "area": "Thảo Điền",
       "occasions": ["Solo", "Date", "Squad"],
       "items": [
-        { "order": 1, "seed_name": "Every Half Coffee Roasters", "city_hint": "Ho Chi Minh City", "address_hint": "62 Hoàng Thế Thiện, Thảo Điền", "note": "June 2025 flagship roastery — natural light, balsa-toned, solar-powered.", "place_id": null, "resolved": false },
-        { "order": 2, "seed_name": "Maison Marou Thảo Điền", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Vietnam's best-known bean-to-bar chocolate maker.", "place_id": null, "resolved": false },
-        { "order": 3, "seed_name": "WKND", "city_hint": "Ho Chi Minh City", "address_hint": "27 Tống Hữu Định, Thảo Điền", "note": "The brunch institution — 4.8 stars, 2,400+ reviews. Same team as Summer Experiment.", "place_id": null, "resolved": false },
-        { "order": 4, "seed_name": "L'Usine Thảo Điền", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Doubles as a boutique. Quieter alternative to WKND.", "place_id": null, "resolved": false },
-        { "order": 5, "seed_name": "The Snap Café", "city_hint": "Ho Chi Minh City", "address_hint": "Trần Ngọc Diện, Thảo Điền", "note": "Big, light-filled, reliably busy. Family-and-groups anchor.", "place_id": null, "resolved": false },
-        { "order": 6, "seed_name": "Madame Lam", "city_hint": "Ho Chi Minh City", "address_hint": "10 Trần Ngọc Diện, Thảo Điền", "note": "Michelin Selected 3 years running (2023–25). Restored Indochine house.", "place_id": null, "resolved": false },
-        { "order": 7, "seed_name": "Okra FoodBar", "city_hint": "Ho Chi Minh City", "address_hint": "2 Lê Văn Miên, Thảo Điền", "note": "Michelin Selected. Chef Jamie Celaya. ~20 seats, book ahead. Happy hour 5:30–6:30PM.", "place_id": null, "resolved": false },
-        { "order": 8, "seed_name": "Mặn Mòi Thảo Điền", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Michelin Bib Gourmand. Regional Vietnamese in a greenery-filled space.", "place_id": null, "resolved": false },
-        { "order": 9, "seed_name": "86 Proof", "city_hint": "Ho Chi Minh City", "address_hint": "Xuân Thủy, Thảo Điền", "note": "Strong neighbourhood cocktail bar. Happy hour runs late.", "place_id": null, "resolved": false },
-        { "order": 10, "seed_name": "Mami", "city_hint": "Ho Chi Minh City", "address_hint": "Xuân Thủy, Thảo Điền", "note": "A few doors from 86 Proof, same owners. Happy hour until 8PM.", "place_id": null, "resolved": false }
+        { "stop_order": 1, "seed_name": "Every Half Coffee Roasters", "city_hint": "Ho Chi Minh City", "address_hint": "62 Hoàng Thế Thiện, Thảo Điền", "note": "June 2025 flagship roastery — natural light, balsa-toned, solar-powered.", "place_id": null, "resolved": false },
+        { "stop_order": 2, "seed_name": "Maison Marou Thảo Điền", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Vietnam's best-known bean-to-bar chocolate maker.", "place_id": null, "resolved": false },
+        { "stop_order": 3, "seed_name": "WKND", "city_hint": "Ho Chi Minh City", "address_hint": "27 Tống Hữu Định, Thảo Điền", "note": "The brunch institution — 4.8 stars, 2,400+ reviews. Same team as Summer Experiment.", "place_id": null, "resolved": false },
+        { "stop_order": 4, "seed_name": "L'Usine Thảo Điền", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Doubles as a boutique. Quieter alternative to WKND.", "place_id": null, "resolved": false },
+        { "stop_order": 5, "seed_name": "The Snap Café", "city_hint": "Ho Chi Minh City", "address_hint": "Trần Ngọc Diện, Thảo Điền", "note": "Big, light-filled, reliably busy. Family-and-groups anchor.", "place_id": null, "resolved": false },
+        { "stop_order": 6, "seed_name": "Madame Lam", "city_hint": "Ho Chi Minh City", "address_hint": "10 Trần Ngọc Diện, Thảo Điền", "note": "Michelin Selected 3 years running (2023–25). Restored Indochine house.", "place_id": null, "resolved": false },
+        { "stop_order": 7, "seed_name": "Okra FoodBar", "city_hint": "Ho Chi Minh City", "address_hint": "2 Lê Văn Miên, Thảo Điền", "note": "Michelin Selected. Chef Jamie Celaya. ~20 seats, book ahead. Happy hour 5:30–6:30PM.", "place_id": null, "resolved": false },
+        { "stop_order": 8, "seed_name": "Mặn Mòi Thảo Điền", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Michelin Bib Gourmand. Regional Vietnamese in a greenery-filled space.", "place_id": null, "resolved": false },
+        { "stop_order": 9, "seed_name": "86 Proof", "city_hint": "Ho Chi Minh City", "address_hint": "Xuân Thủy, Thảo Điền", "note": "Strong neighbourhood cocktail bar. Happy hour runs late.", "place_id": null, "resolved": false },
+        { "stop_order": 10, "seed_name": "Mami", "city_hint": "Ho Chi Minh City", "address_hint": "Xuân Thủy, Thảo Điền", "note": "A few doors from 86 Proof, same owners. Happy hour until 8PM.", "place_id": null, "resolved": false }
       ]
     },
     {
@@ -64,16 +64,16 @@
       "area": "HCMC-wide",
       "occasions": ["Solo", "Date"],
       "items": [
-        { "order": 1, "seed_name": "The Workshop", "city_hint": "Ho Chi Minh City", "address_hint": "27 Ngô Đức Kế", "note": "Saigon's original specialty café, heritage shophouse. Pour-overs, good for working.", "place_id": null, "resolved": false },
-        { "order": 2, "seed_name": "Bosgaurus Coffee Roasters", "city_hint": "Ho Chi Minh City", "address_hint": "Saigon Pearl villa (Bình Thạnh) or Opera House, 12 Nguyễn Siêu, D1", "note": "Trained Vietnam's barista champions. Best coffee in the city per many.", "place_id": null, "resolved": false },
-        { "order": 3, "seed_name": "Every Half Coffee Roasters", "city_hint": "Ho Chi Minh City", "address_hint": "62 Hoàng Thế Thiện, Thảo Điền", "note": "Single-origins, solar-powered roastery. Coconut Blossom cold brew.", "place_id": null, "resolved": false },
-        { "order": 4, "seed_name": "Okkio Caffè – Đồng Khởi", "city_hint": "Ho Chi Minh City", "address_hint": "151 Đồng Khởi", "note": "Opera House views. Try the Dak Lak fine robusta or iced coconut coffee.", "place_id": null, "resolved": false },
-        { "order": 5, "seed_name": "Lacàph", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Colonial shophouse. Dutch-Korean founded, Vietnamese-coffee focused.", "place_id": null, "resolved": false },
-        { "order": 6, "seed_name": "Maison Marou", "city_hint": "Ho Chi Minh City", "address_hint": "169 Calmette, District 1", "note": "Bean-to-bar chocolate maker — order the dark-chocolate egg cream.", "place_id": null, "resolved": false },
-        { "order": 7, "seed_name": "Shin Coffee", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "D1 specialty institution, often named alongside Workshop and Bosgaurus.", "place_id": null, "resolved": false },
-        { "order": 8, "seed_name": "Grandmum Cafe", "city_hint": "Ho Chi Minh City", "note": "Tiny living-room-vibe spot. Possibly the best beans in the city, freshly roasted.", "place_id": null, "resolved": false },
-        { "order": 9, "seed_name": "The Hummingbird", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Small roastery, serious coffee credentials. Quiet.", "place_id": null, "resolved": false },
-        { "order": 10, "seed_name": "16 Grams Café", "city_hint": "Ho Chi Minh City", "address_hint": "32 Thạch Thị Thanh, Tân Định", "note": "Single-origin pour-overs near the pink church. Calm alley setting.", "place_id": null, "resolved": false }
+        { "stop_order": 1, "seed_name": "The Workshop", "city_hint": "Ho Chi Minh City", "address_hint": "27 Ngô Đức Kế", "note": "Saigon's original specialty café, heritage shophouse. Pour-overs, good for working.", "place_id": null, "resolved": false },
+        { "stop_order": 2, "seed_name": "Bosgaurus Coffee Roasters", "city_hint": "Ho Chi Minh City", "address_hint": "Saigon Pearl villa (Bình Thạnh) or Opera House, 12 Nguyễn Siêu, D1", "note": "Trained Vietnam's barista champions. Best coffee in the city per many.", "place_id": null, "resolved": false },
+        { "stop_order": 3, "seed_name": "Every Half Coffee Roasters", "city_hint": "Ho Chi Minh City", "address_hint": "62 Hoàng Thế Thiện, Thảo Điền", "note": "Single-origins, solar-powered roastery. Coconut Blossom cold brew.", "place_id": null, "resolved": false },
+        { "stop_order": 4, "seed_name": "Okkio Caffè – Đồng Khởi", "city_hint": "Ho Chi Minh City", "address_hint": "151 Đồng Khởi", "note": "Opera House views. Try the Dak Lak fine robusta or iced coconut coffee.", "place_id": null, "resolved": false },
+        { "stop_order": 5, "seed_name": "Lacàph", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Colonial shophouse. Dutch-Korean founded, Vietnamese-coffee focused.", "place_id": null, "resolved": false },
+        { "stop_order": 6, "seed_name": "Maison Marou", "city_hint": "Ho Chi Minh City", "address_hint": "169 Calmette, District 1", "note": "Bean-to-bar chocolate maker — order the dark-chocolate egg cream.", "place_id": null, "resolved": false },
+        { "stop_order": 7, "seed_name": "Shin Coffee", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "D1 specialty institution, often named alongside Workshop and Bosgaurus.", "place_id": null, "resolved": false },
+        { "stop_order": 8, "seed_name": "Grandmum Cafe", "city_hint": "Ho Chi Minh City", "note": "Tiny living-room-vibe spot. Possibly the best beans in the city, freshly roasted.", "place_id": null, "resolved": false },
+        { "stop_order": 9, "seed_name": "The Hummingbird", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Small roastery, serious coffee credentials. Quiet.", "place_id": null, "resolved": false },
+        { "stop_order": 10, "seed_name": "16 Grams Café", "city_hint": "Ho Chi Minh City", "address_hint": "32 Thạch Thị Thanh, Tân Định", "note": "Single-origin pour-overs near the pink church. Calm alley setting.", "place_id": null, "resolved": false }
       ]
     },
     {
@@ -83,16 +83,16 @@
       "area": "HCMC-wide",
       "occasions": ["Squad", "Solo"],
       "items": [
-        { "order": 1, "seed_name": "Cơm Tấm Hồng Calmette", "city_hint": "Ho Chi Minh City", "address_hint": "134 Hoàng Diệu, District 4", "note": "The definitive late-night cơm tấm — grilled ribs, free iced tea. (till ~3AM)", "place_id": null, "resolved": false },
-        { "order": 2, "seed_name": "Phở Quỳnh", "city_hint": "Ho Chi Minh City", "district_hint": "Bùi Viện edge", "note": "Southern-style phở, also bò kho. The go-to 2AM phở. (24h / very late)", "place_id": null, "resolved": false },
-        { "order": 3, "seed_name": "Ốc Đào", "city_hint": "Ho Chi Minh City", "note": "Michelin Selected snail-and-seafood nhậu — Peter Cuong Franklin's pick. (till ~1AM+)", "place_id": null, "resolved": false },
-        { "order": 4, "seed_name": "Tân Hải Vân", "city_hint": "Ho Chi Minh City", "note": "Cantonese dim sum through the night — har gow, siu mai, char siu bao. (overnight)", "place_id": null, "resolved": false },
-        { "order": 5, "seed_name": "Cháo Ếch", "city_hint": "Ho Chi Minh City", "address_hint": "199 Đồng Du", "note": "Cambodian-Vietnamese frog/pork-organ porridge — the post-night-out comfort bowl. (late)", "place_id": null, "resolved": false },
-        { "order": 6, "seed_name": "Nông Thôn Đại Việt", "city_hint": "Ho Chi Minh City", "note": "Live-tank seafood and Vietnamese nhậu, big-group friendly. Genuinely 24/7.", "place_id": null, "resolved": false },
-        { "order": 7, "seed_name": "Fortune Ivy", "city_hint": "Ho Chi Minh City", "note": "Modern Chinese with a dedicated late-night menu from 10PM — Biang Biang noodles, Sichuan karaage.", "place_id": null, "resolved": false },
-        { "order": 8, "seed_name": "Bún Bò 725 Hoàng Sa", "city_hint": "Ho Chi Minh City", "address_hint": "725 Hoàng Sa", "note": "Dark, rich late-night bún bò Huế, loaded bowls. (late)", "place_id": null, "resolved": false },
-        { "order": 9, "seed_name": "Cơm Tấm Bãi Rác", "city_hint": "Ho Chi Minh City", "address_hint": "Tô Hiến Thành", "note": "Legendary post-midnight cơm tấm that only gets going after 11PM.", "place_id": null, "resolved": false },
-        { "order": 10, "seed_name": "Bột Chiên Đạt Thành", "city_hint": "Ho Chi Minh City", "note": "Classic Saigon late-night bột chiên (fried rice cake). (late)", "place_id": null, "resolved": false }
+        { "stop_order": 1, "seed_name": "Cơm Tấm Hồng Calmette", "city_hint": "Ho Chi Minh City", "address_hint": "134 Hoàng Diệu, District 4", "note": "The definitive late-night cơm tấm — grilled ribs, free iced tea. (till ~3AM)", "place_id": null, "resolved": false },
+        { "stop_order": 2, "seed_name": "Phở Quỳnh", "city_hint": "Ho Chi Minh City", "district_hint": "Bùi Viện edge", "note": "Southern-style phở, also bò kho. The go-to 2AM phở. (24h / very late)", "place_id": null, "resolved": false },
+        { "stop_order": 3, "seed_name": "Ốc Đào", "city_hint": "Ho Chi Minh City", "note": "Michelin Selected snail-and-seafood nhậu — Peter Cuong Franklin's pick. (till ~1AM+)", "place_id": null, "resolved": false },
+        { "stop_order": 4, "seed_name": "Tân Hải Vân", "city_hint": "Ho Chi Minh City", "note": "Cantonese dim sum through the night — har gow, siu mai, char siu bao. (overnight)", "place_id": null, "resolved": false },
+        { "stop_order": 5, "seed_name": "Cháo Ếch", "city_hint": "Ho Chi Minh City", "address_hint": "199 Đồng Du", "note": "Cambodian-Vietnamese frog/pork-organ porridge — the post-night-out comfort bowl. (late)", "place_id": null, "resolved": false },
+        { "stop_order": 6, "seed_name": "Nông Thôn Đại Việt", "city_hint": "Ho Chi Minh City", "note": "Live-tank seafood and Vietnamese nhậu, big-group friendly. Genuinely 24/7.", "place_id": null, "resolved": false },
+        { "stop_order": 7, "seed_name": "Fortune Ivy", "city_hint": "Ho Chi Minh City", "note": "Modern Chinese with a dedicated late-night menu from 10PM — Biang Biang noodles, Sichuan karaage.", "place_id": null, "resolved": false },
+        { "stop_order": 8, "seed_name": "Bún Bò 725 Hoàng Sa", "city_hint": "Ho Chi Minh City", "address_hint": "725 Hoàng Sa", "note": "Dark, rich late-night bún bò Huế, loaded bowls. (late)", "place_id": null, "resolved": false },
+        { "stop_order": 9, "seed_name": "Cơm Tấm Bãi Rác", "city_hint": "Ho Chi Minh City", "address_hint": "Tô Hiến Thành", "note": "Legendary post-midnight cơm tấm that only gets going after 11PM.", "place_id": null, "resolved": false },
+        { "stop_order": 10, "seed_name": "Bột Chiên Đạt Thành", "city_hint": "Ho Chi Minh City", "note": "Classic Saigon late-night bột chiên (fried rice cake). (late)", "place_id": null, "resolved": false }
       ]
     },
     {
@@ -102,16 +102,16 @@
       "area": "HCMC-wide",
       "occasions": ["Date", "Family", "Visitor"],
       "items": [
-        { "order": 1, "seed_name": "Akuna", "city_hint": "Ho Chi Minh City", "note": "One Michelin Star — the city's only starred restaurant. Modern Australian-European tasting menu. Book ahead.", "place_id": null, "resolved": false },
-        { "order": 2, "seed_name": "Okra FoodBar", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Michelin Selected. ~20-seat counter, charcoal-grilled, rotating menu.", "place_id": null, "resolved": false },
-        { "order": 3, "seed_name": "Madame Lam", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Michelin Selected 3 years running. Restored Indochine house. Roasted bantam chicken.", "place_id": null, "resolved": false },
-        { "order": 4, "seed_name": "An's Saigon", "city_hint": "Ho Chi Minh City", "note": "Michelin-listed. Three dining zones including an 8-seat chef's counter. Creative Vietnamese.", "place_id": null, "resolved": false },
-        { "order": 5, "seed_name": "Mặn Mòi", "city_hint": "Ho Chi Minh City", "note": "Michelin-listed (verify Bib vs Selected). Regional Vietnamese, grilled squid, basil fried rice.", "place_id": null, "resolved": false },
-        { "order": 6, "seed_name": "Cơm Tấm Ba Ghiền", "city_hint": "Ho Chi Minh City", "district_hint": "Phú Nhuận", "note": "Bib Gourmand. Giant grilled pork chop.", "place_id": null, "resolved": false },
-        { "order": 7, "seed_name": "Phở Hòa Pasteur", "city_hint": "Ho Chi Minh City", "note": "Bib Gourmand. Phở since 1968.", "place_id": null, "resolved": false },
-        { "order": 8, "seed_name": "Bánh Xèo 46A", "city_hint": "Ho Chi Minh City", "district_hint": "Tân Định", "note": "Bib Gourmand. Four-generation bánh xèo recipe.", "place_id": null, "resolved": false },
-        { "order": 9, "seed_name": "Bún Bò Huế 14B", "city_hint": "Ho Chi Minh City", "district_hint": "District 3", "note": "Bib Gourmand. The only bún bò Huế on the HCMC list. Mostly takeaway.", "place_id": null, "resolved": false },
-        { "order": 10, "seed_name": "Bếp Mẹ Ỉn", "city_hint": "Ho Chi Minh City", "district_hint": "Bến Thành", "note": "Bib Gourmand. Saigonese street dishes, hole-in-the-wall. Reserve.", "place_id": null, "resolved": false }
+        { "stop_order": 1, "seed_name": "Akuna", "city_hint": "Ho Chi Minh City", "note": "One Michelin Star — the city's only starred restaurant. Modern Australian-European tasting menu. Book ahead.", "place_id": null, "resolved": false },
+        { "stop_order": 2, "seed_name": "Okra FoodBar", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Michelin Selected. ~20-seat counter, charcoal-grilled, rotating menu.", "place_id": null, "resolved": false },
+        { "stop_order": 3, "seed_name": "Madame Lam", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Michelin Selected 3 years running. Restored Indochine house. Roasted bantam chicken.", "place_id": null, "resolved": false },
+        { "stop_order": 4, "seed_name": "An's Saigon", "city_hint": "Ho Chi Minh City", "note": "Michelin-listed. Three dining zones including an 8-seat chef's counter. Creative Vietnamese.", "place_id": null, "resolved": false },
+        { "stop_order": 5, "seed_name": "Mặn Mòi", "city_hint": "Ho Chi Minh City", "note": "Michelin-listed (verify Bib vs Selected). Regional Vietnamese, grilled squid, basil fried rice.", "place_id": null, "resolved": false },
+        { "stop_order": 6, "seed_name": "Cơm Tấm Ba Ghiền", "city_hint": "Ho Chi Minh City", "district_hint": "Phú Nhuận", "note": "Bib Gourmand. Giant grilled pork chop.", "place_id": null, "resolved": false },
+        { "stop_order": 7, "seed_name": "Phở Hòa Pasteur", "city_hint": "Ho Chi Minh City", "note": "Bib Gourmand. Phở since 1968.", "place_id": null, "resolved": false },
+        { "stop_order": 8, "seed_name": "Bánh Xèo 46A", "city_hint": "Ho Chi Minh City", "district_hint": "Tân Định", "note": "Bib Gourmand. Four-generation bánh xèo recipe.", "place_id": null, "resolved": false },
+        { "stop_order": 9, "seed_name": "Bún Bò Huế 14B", "city_hint": "Ho Chi Minh City", "district_hint": "District 3", "note": "Bib Gourmand. The only bún bò Huế on the HCMC list. Mostly takeaway.", "place_id": null, "resolved": false },
+        { "stop_order": 10, "seed_name": "Bếp Mẹ Ỉn", "city_hint": "Ho Chi Minh City", "district_hint": "Bến Thành", "note": "Bib Gourmand. Saigonese street dishes, hole-in-the-wall. Reserve.", "place_id": null, "resolved": false }
       ]
     },
     {
@@ -121,16 +121,16 @@
       "area": "District 1 + Thảo Điền",
       "occasions": ["Date"],
       "items": [
-        { "order": 1, "seed_name": "Aiii", "city_hint": "Ho Chi Minh City", "note": "Contemporary Vietnamese-French, 40 seats, open kitchen. The dinner anchor.", "place_id": null, "resolved": false },
-        { "order": 2, "seed_name": "Okra FoodBar", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Counter dining, sake on tap. Book ahead.", "place_id": null, "resolved": false },
-        { "order": 3, "seed_name": "Madame Lam", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Restored Indochine house — memorable without being stuffy.", "place_id": null, "resolved": false },
-        { "order": 4, "seed_name": "Maison Marou", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Dessert detour — dark-chocolate egg cream, bean-to-bar.", "place_id": null, "resolved": false },
-        { "order": 5, "seed_name": "Emme House", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Hidden apartment bar, concept cocktail menu. First drinks.", "place_id": null, "resolved": false },
-        { "order": 6, "seed_name": "Summer Experiment", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Intimate, herb-garden balcony. The main cocktail stop.", "place_id": null, "resolved": false },
-        { "order": 7, "seed_name": "Stir", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Quiet, classic-focused, ground floor. Good for actually talking.", "place_id": null, "resolved": false },
-        { "order": 8, "seed_name": "Rabbit Hole", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Subterranean speakeasy, piano, live music. Later in the night.", "place_id": null, "resolved": false },
-        { "order": 9, "seed_name": "Ủ Bar", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Slow, fermentation-led cocktails. The wind-down.", "place_id": null, "resolved": false },
-        { "order": 10, "seed_name": "Social Club Rooftop", "city_hint": "Ho Chi Minh City", "note": "Hôtel des Arts, infinity pool, skyline. If you want a view to end on.", "place_id": null, "resolved": false }
+        { "stop_order": 1, "seed_name": "Aiii", "city_hint": "Ho Chi Minh City", "note": "Contemporary Vietnamese-French, 40 seats, open kitchen. The dinner anchor.", "place_id": null, "resolved": false },
+        { "stop_order": 2, "seed_name": "Okra FoodBar", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Counter dining, sake on tap. Book ahead.", "place_id": null, "resolved": false },
+        { "stop_order": 3, "seed_name": "Madame Lam", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Restored Indochine house — memorable without being stuffy.", "place_id": null, "resolved": false },
+        { "stop_order": 4, "seed_name": "Maison Marou", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Dessert detour — dark-chocolate egg cream, bean-to-bar.", "place_id": null, "resolved": false },
+        { "stop_order": 5, "seed_name": "Emme House", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Hidden apartment bar, concept cocktail menu. First drinks.", "place_id": null, "resolved": false },
+        { "stop_order": 6, "seed_name": "Summer Experiment", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Intimate, herb-garden balcony. The main cocktail stop.", "place_id": null, "resolved": false },
+        { "stop_order": 7, "seed_name": "Stir", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Quiet, classic-focused, ground floor. Good for actually talking.", "place_id": null, "resolved": false },
+        { "stop_order": 8, "seed_name": "Rabbit Hole", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Subterranean speakeasy, piano, live music. Later in the night.", "place_id": null, "resolved": false },
+        { "stop_order": 9, "seed_name": "Ủ Bar", "city_hint": "Ho Chi Minh City", "district_hint": "District 1", "note": "Slow, fermentation-led cocktails. The wind-down.", "place_id": null, "resolved": false },
+        { "stop_order": 10, "seed_name": "Social Club Rooftop", "city_hint": "Ho Chi Minh City", "note": "Hôtel des Arts, infinity pool, skyline. If you want a view to end on.", "place_id": null, "resolved": false }
       ]
     },
     {
@@ -140,16 +140,16 @@
       "area": "Thảo Điền + D1/D3",
       "occasions": ["Date", "Squad", "Family"],
       "items": [
-        { "order": 1, "seed_name": "WKND", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "The brunch institution. Smashed peas on toast, octopus salad. Weekend queues; garden, kids' area.", "place_id": null, "resolved": false },
-        { "order": 2, "seed_name": "L'Usine", "city_hint": "Ho Chi Minh City", "note": "French-Vietnamese brunch in a designed space that doubles as a boutique.", "place_id": null, "resolved": false },
-        { "order": 3, "seed_name": "The Snap Café", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Big, light-filled, family-friendly. Smoothie bowls to full plates.", "place_id": null, "resolved": false },
-        { "order": 4, "seed_name": "SOKO Cake Bake & Brunch", "city_hint": "Ho Chi Minh City", "note": "Bakehouse plus brunch — baked eggs, fresh pastries. Quieter alternative.", "place_id": null, "resolved": false },
-        { "order": 5, "seed_name": "BARTELS", "city_hint": "Ho Chi Minh City", "note": "Sourdough sandwiches, fresh juices, specialty coffee. Pared-back.", "place_id": null, "resolved": false },
-        { "order": 6, "seed_name": "Bagel Brothers", "city_hint": "Ho Chi Minh City", "note": "Fresh-baked bagels, loyal expat following. Kids' play area.", "place_id": null, "resolved": false },
-        { "order": 7, "seed_name": "Godmother Bake + Brunch", "city_hint": "Ho Chi Minh City", "note": "Antipodean café, Wes-Anderson interior, shakshuka. Hip crowd.", "place_id": null, "resolved": false },
-        { "order": 8, "seed_name": "Satsuma House", "city_hint": "Ho Chi Minh City", "note": "Japanese-inspired breakfast and brunch, detail-driven.", "place_id": null, "resolved": false },
-        { "order": 9, "seed_name": "Bakes", "city_hint": "Ho Chi Minh City", "note": "French patisserie — croissants, cheesecake — with a 2nd-floor bistro.", "place_id": null, "resolved": false },
-        { "order": 10, "seed_name": "Maison Marou", "city_hint": "Ho Chi Minh City", "note": "Chocolate-forward brunch detour — pastries and the dark-chocolate egg cream.", "place_id": null, "resolved": false }
+        { "stop_order": 1, "seed_name": "WKND", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "The brunch institution. Smashed peas on toast, octopus salad. Weekend queues; garden, kids' area.", "place_id": null, "resolved": false },
+        { "stop_order": 2, "seed_name": "L'Usine", "city_hint": "Ho Chi Minh City", "note": "French-Vietnamese brunch in a designed space that doubles as a boutique.", "place_id": null, "resolved": false },
+        { "stop_order": 3, "seed_name": "The Snap Café", "city_hint": "Ho Chi Minh City", "district_hint": "Thảo Điền", "note": "Big, light-filled, family-friendly. Smoothie bowls to full plates.", "place_id": null, "resolved": false },
+        { "stop_order": 4, "seed_name": "SOKO Cake Bake & Brunch", "city_hint": "Ho Chi Minh City", "note": "Bakehouse plus brunch — baked eggs, fresh pastries. Quieter alternative.", "place_id": null, "resolved": false },
+        { "stop_order": 5, "seed_name": "BARTELS", "city_hint": "Ho Chi Minh City", "note": "Sourdough sandwiches, fresh juices, specialty coffee. Pared-back.", "place_id": null, "resolved": false },
+        { "stop_order": 6, "seed_name": "Bagel Brothers", "city_hint": "Ho Chi Minh City", "note": "Fresh-baked bagels, loyal expat following. Kids' play area.", "place_id": null, "resolved": false },
+        { "stop_order": 7, "seed_name": "Godmother Bake + Brunch", "city_hint": "Ho Chi Minh City", "note": "Antipodean café, Wes-Anderson interior, shakshuka. Hip crowd.", "place_id": null, "resolved": false },
+        { "stop_order": 8, "seed_name": "Satsuma House", "city_hint": "Ho Chi Minh City", "note": "Japanese-inspired breakfast and brunch, detail-driven.", "place_id": null, "resolved": false },
+        { "stop_order": 9, "seed_name": "Bakes", "city_hint": "Ho Chi Minh City", "note": "French patisserie — croissants, cheesecake — with a 2nd-floor bistro.", "place_id": null, "resolved": false },
+        { "stop_order": 10, "seed_name": "Maison Marou", "city_hint": "Ho Chi Minh City", "note": "Chocolate-forward brunch detour — pastries and the dark-chocolate egg cream.", "place_id": null, "resolved": false }
       ]
     },
     {
@@ -159,16 +159,16 @@
       "area": "HCMC-wide",
       "occasions": ["Solo", "Family", "Visitor"],
       "items": [
-        { "order": 1, "seed_name": "Bánh Mì Hòa Mã", "city_hint": "Ho Chi Minh City", "address_hint": "53 Cao Thắng", "note": "60+ years. The bánh mì chảo — eggs, sausage, cold cuts in a sizzling pan. The original sit-down breakfast bánh mì.", "place_id": null, "resolved": false },
-        { "order": 2, "seed_name": "Phở Minh", "city_hint": "Ho Chi Minh City", "district_hint": "off Pasteur", "note": "1950s alley institution, shuts ~10AM or when the phở runs out. Tiny, local, historic.", "place_id": null, "resolved": false },
-        { "order": 3, "seed_name": "Bánh Cuốn Tây Hồ", "city_hint": "Ho Chi Minh City", "address_hint": "127 Đinh Tiên Hoàng", "note": "Long-standing favourite for steamed rice rolls with pork and mushroom. Michelin-noted.", "place_id": null, "resolved": false },
-        { "order": 4, "seed_name": "Xôi Gà Number One (Út Mập)", "city_hint": "Ho Chi Minh City", "address_hint": "15 Nguyễn Trung Trực", "note": "Bib Gourmand. Sticky rice with chicken — the on-the-go local breakfast.", "place_id": null, "resolved": false },
-        { "order": 5, "seed_name": "Cơm Tấm Ba Ghiền", "city_hint": "Ho Chi Minh City", "district_hint": "Phú Nhuận", "note": "Bib Gourmand broken rice — locals eat it before 9AM. The giant grilled pork chop.", "place_id": null, "resolved": false },
-        { "order": 6, "seed_name": "Bún Bò Đông Ba", "city_hint": "Ho Chi Minh City", "address_hint": "Nguyễn Du, behind Reunification Palace", "note": "Hue-style spicy beef noodles for a morning with heat.", "place_id": null, "resolved": false },
-        { "order": 7, "seed_name": "Hủ Tiếu Mỹ Tho Thanh Xuân", "city_hint": "Ho Chi Minh City", "note": "70+ years. My Tho-style hủ tiếu, crab variation the highlight. Classic Saigon morning noodle.", "place_id": null, "resolved": false },
-        { "order": 8, "seed_name": "Bánh Canh Cua Hiền", "city_hint": "Ho Chi Minh City", "note": "Thick chewy noodles in crab broth with pork hock, blood pudding, shrimp. Heartier morning option.", "place_id": null, "resolved": false },
-        { "order": 9, "seed_name": "Dim Sum Tiến Phát", "city_hint": "Ho Chi Minh City", "district_hint": "Chinatown", "note": "Chinatown institution, packed by mid-morning. Authentic Cantonese yum cha, multi-floor old-HK setting.", "place_id": null, "resolved": false },
-        { "order": 10, "seed_name": "Bò Né Thanh Tuyền", "city_hint": "Ho Chi Minh City", "note": "Sizzling cast-iron beef, egg, pâté with baguette. ~300 plates a day.", "place_id": null, "resolved": false }
+        { "stop_order": 1, "seed_name": "Bánh Mì Hòa Mã", "city_hint": "Ho Chi Minh City", "address_hint": "53 Cao Thắng", "note": "60+ years. The bánh mì chảo — eggs, sausage, cold cuts in a sizzling pan. The original sit-down breakfast bánh mì.", "place_id": null, "resolved": false },
+        { "stop_order": 2, "seed_name": "Phở Minh", "city_hint": "Ho Chi Minh City", "district_hint": "off Pasteur", "note": "1950s alley institution, shuts ~10AM or when the phở runs out. Tiny, local, historic.", "place_id": null, "resolved": false },
+        { "stop_order": 3, "seed_name": "Bánh Cuốn Tây Hồ", "city_hint": "Ho Chi Minh City", "address_hint": "127 Đinh Tiên Hoàng", "note": "Long-standing favourite for steamed rice rolls with pork and mushroom. Michelin-noted.", "place_id": null, "resolved": false },
+        { "stop_order": 4, "seed_name": "Xôi Gà Number One (Út Mập)", "city_hint": "Ho Chi Minh City", "address_hint": "15 Nguyễn Trung Trực", "note": "Bib Gourmand. Sticky rice with chicken — the on-the-go local breakfast.", "place_id": null, "resolved": false },
+        { "stop_order": 5, "seed_name": "Cơm Tấm Ba Ghiền", "city_hint": "Ho Chi Minh City", "district_hint": "Phú Nhuận", "note": "Bib Gourmand broken rice — locals eat it before 9AM. The giant grilled pork chop.", "place_id": null, "resolved": false },
+        { "stop_order": 6, "seed_name": "Bún Bò Đông Ba", "city_hint": "Ho Chi Minh City", "address_hint": "Nguyễn Du, behind Reunification Palace", "note": "Hue-style spicy beef noodles for a morning with heat.", "place_id": null, "resolved": false },
+        { "stop_order": 7, "seed_name": "Hủ Tiếu Mỹ Tho Thanh Xuân", "city_hint": "Ho Chi Minh City", "note": "70+ years. My Tho-style hủ tiếu, crab variation the highlight. Classic Saigon morning noodle.", "place_id": null, "resolved": false },
+        { "stop_order": 8, "seed_name": "Bánh Canh Cua Hiền", "city_hint": "Ho Chi Minh City", "note": "Thick chewy noodles in crab broth with pork hock, blood pudding, shrimp. Heartier morning option.", "place_id": null, "resolved": false },
+        { "stop_order": 9, "seed_name": "Dim Sum Tiến Phát", "city_hint": "Ho Chi Minh City", "district_hint": "Chinatown", "note": "Chinatown institution, packed by mid-morning. Authentic Cantonese yum cha, multi-floor old-HK setting.", "place_id": null, "resolved": false },
+        { "stop_order": 10, "seed_name": "Bò Né Thanh Tuyền", "city_hint": "Ho Chi Minh City", "note": "Sizzling cast-iron beef, egg, pâté with baguette. ~300 plates a day.", "place_id": null, "resolved": false }
       ]
     }
   ]
