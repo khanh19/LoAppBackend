@@ -537,6 +537,7 @@ LEFT JOIN LATERAL (
   LIMIT 1
 ) cover ON true
 WHERE pl.is_active = true
+  AND pl.list_type = 'curated'
 ORDER BY pl.sort_order, pl.title
 `
 
@@ -575,6 +576,100 @@ func (q *Queries) ListActivePlaceLists(ctx context.Context) ([]ListActivePlaceLi
 			&i.CityName,
 			&i.EntryCount,
 			&i.CoverImageUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listActivePlans = `-- name: ListActivePlans :many
+SELECT
+  pl.id::text AS id,
+  pl.slug,
+  pl.title,
+  pl.subtitle,
+  pl.category,
+  pl.area,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  pl.saves_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count,
+  cover.cover_image_url,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name
+FROM place_lists pl
+JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
+LEFT JOIN LATERAL (
+  SELECT COALESCE(ple.image_url, p.cover_image_url) AS cover_image_url
+  FROM place_list_entries ple
+  JOIN places p ON p.id = ple.place_id
+  WHERE ple.list_id = pl.id
+    AND ple.is_active = true
+    AND COALESCE(ple.image_url, p.cover_image_url) IS NOT NULL
+  ORDER BY ple.stop_order
+  LIMIT 1
+) cover ON true
+WHERE pl.is_active = true
+  AND pl.list_type = 'user_plan'
+  AND pl.visibility = 'public'
+  AND ($1::text IS NULL OR c.slug = $1)
+ORDER BY pl.sort_order, pl.title
+LIMIT $2::int
+`
+
+type ListActivePlansParams struct {
+	CitySlug *string `json:"city_slug"`
+	LimitVal int32   `json:"limit_val"`
+}
+
+type ListActivePlansRow struct {
+	ID                 string  `json:"id"`
+	Slug               string  `json:"slug"`
+	Title              string  `json:"title"`
+	Subtitle           string  `json:"subtitle"`
+	Category           string  `json:"category"`
+	Area               string  `json:"area"`
+	CitySlug           string  `json:"city_slug"`
+	CityName           string  `json:"city_name"`
+	SavesCount         int32   `json:"saves_count"`
+	StopsCount         int32   `json:"stops_count"`
+	CoverImageUrl      *string `json:"cover_image_url"`
+	CreatorDisplayName *string `json:"creator_display_name"`
+}
+
+func (q *Queries) ListActivePlans(ctx context.Context, arg ListActivePlansParams) ([]ListActivePlansRow, error) {
+	rows, err := q.db.Query(ctx, listActivePlans, arg.CitySlug, arg.LimitVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListActivePlansRow
+	for rows.Next() {
+		var i ListActivePlansRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Slug,
+			&i.Title,
+			&i.Subtitle,
+			&i.Category,
+			&i.Area,
+			&i.CitySlug,
+			&i.CityName,
+			&i.SavesCount,
+			&i.StopsCount,
+			&i.CoverImageUrl,
+			&i.CreatorDisplayName,
 		); err != nil {
 			return nil, err
 		}
