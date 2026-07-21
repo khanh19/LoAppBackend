@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Seed Discover itineraries via POST /plans (CreatePlan).
+# Each stop must include `place_id` (LoApp UUID) or `google_place_id` (from POST /places/resolve).
+# Prefer resolving places via search in the app, then pass `place_id` or `google_place_id` here.
 # Usage:
 #   AUTH_TOKEN="<clerk-jwt>" ./scripts/create_plans.sh
 # Optional:

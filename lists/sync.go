@@ -290,12 +290,20 @@ func (s *Service) resolvePlaceForItem(ctx context.Context, q *dbgen.Queries, cit
 		PriceLevel:    resolved.PriceLevel,
 		RatingCached:  numericFromOptionalFloat(resolved.Rating),
 		CoverImageUrl: stringPtr(resolved.CoverImageURL),
+		PhotoNames:    photoNamesFromResolved(resolved),
 		Tags:          resolved.Tags,
 	})
 	if err != nil {
 		return "", "", err
 	}
 	return upsertedID, "added", nil
+}
+
+func photoNamesFromResolved(resolved *googleResolvedPlace) []string {
+	if resolved.PhotoName == "" {
+		return nil
+	}
+	return []string{resolved.PhotoName}
 }
 
 func resolveCity(ctx context.Context, q *dbgen.Queries, items []seedItem) (dbgen.GetCityByHintRow, error) {

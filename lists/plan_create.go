@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"encore.app/internal/dbgen"
+	"encore.app/places"
 	"encore.dev/beta/errs"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -73,7 +74,7 @@ func (s *Service) createPlan(ctx context.Context, userID string, req *CreatePlan
 	}
 
 	for _, stop := range normalized.Stops {
-		placeID, err := s.createOrUsePlanStopPlace(ctx, q, cityID, stop)
+		placeID, err := s.createOrUsePlanStopPlace(ctx, q, cityID, normalized.CitySlug, stop)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +103,7 @@ func (s *Service) createPlan(ctx context.Context, userID string, req *CreatePlan
 	return getPlaceListBySlug(ctx, s.db, normalized.Slug)
 }
 
-func (s *Service) createOrUsePlanStopPlace(ctx context.Context, q *dbgen.Queries, cityID pgtype.UUID, stop CreatePlanStopRequest) (string, error) {
+func (s *Service) createOrUsePlanStopPlace(ctx context.Context, q *dbgen.Queries, cityID pgtype.UUID, citySlug string, stop CreatePlanStopRequest) (string, error) {
 	if stop.PlaceID != nil {
 		placeID := strings.TrimSpace(*stop.PlaceID)
 		if _, err := uuidFromString(placeID); err != nil {
@@ -111,22 +112,21 @@ func (s *Service) createOrUsePlanStopPlace(ctx context.Context, q *dbgen.Queries
 		return placeID, nil
 	}
 
-	placeID, err := q.CreatePlanPlace(ctx, dbgen.CreatePlanPlaceParams{
-		CityID:        cityID,
-		GooglePlaceID: stop.GooglePlaceID,
-		Name:          stop.PlaceName,
-		Neighborhood:  stop.Neighborhood,
-		Address:       stop.Address,
-		Latitude:      numericFromOptionalFloat(stop.Latitude),
-		Longitude:     numericFromOptionalFloat(stop.Longitude),
-		CoverImageUrl: stop.ImageURL,
-		// places.tags is NOT NULL; nil []string encodes as SQL NULL.
-		Tags: stringSliceOrEmpty(stop.Tags),
-	})
-	if err != nil {
-		return "", errs.WrapCode(err, errs.Internal, "failed to create plan place")
+	if stop.GooglePlaceID != nil && strings.TrimSpace(*stop.GooglePlaceID) != "" {
+		resp, err := places.ResolvePlaceForPlan(ctx, &places.ResolvePlaceForPlanRequest{
+			GooglePlaceID: strings.TrimSpace(*stop.GooglePlaceID),
+			CitySlug:      citySlug,
+		})
+		if err != nil {
+			return "", errs.WrapCode(err, errs.InvalidArgument, "failed to resolve google place for stop")
+		}
+		return resp.PlaceID, nil
 	}
-	return placeID, nil
+
+	return "", &errs.Error{
+		Code:    errs.InvalidArgument,
+		Message: "each stop must include place_id or google_place_id from search resolve",
+	}
 }
 
 func normalizeCreatePlanRequest(req *CreatePlanRequest) (*CreatePlanRequest, error) {
@@ -214,6 +214,12 @@ func normalizeCreatePlanStop(stop CreatePlanStopRequest, fallbackStopOrder int) 
 	}
 	if stop.Longitude != nil && (*stop.Longitude < -180 || *stop.Longitude > 180) {
 		return stop, &errs.Error{Code: errs.InvalidArgument, Message: "longitude must be between -180 and 180"}
+	}
+	if stop.PlaceID == nil && stop.GooglePlaceID == nil {
+		return stop, &errs.Error{
+			Code:    errs.InvalidArgument,
+			Message: "stop must include place_id or google_place_id",
+		}
 	}
 	return stop, nil
 }

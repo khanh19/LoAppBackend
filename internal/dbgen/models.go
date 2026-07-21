@@ -60,24 +60,30 @@ type ListSyncRun struct {
 }
 
 type Place struct {
-	ID            pgtype.UUID        `json:"id"`
-	CityID        pgtype.UUID        `json:"city_id"`
-	GooglePlaceID *string            `json:"google_place_id"`
-	Source        string             `json:"source"`
-	Name          string             `json:"name"`
-	Slug          *string            `json:"slug"`
-	Neighborhood  *string            `json:"neighborhood"`
-	Address       *string            `json:"address"`
-	Latitude      pgtype.Numeric     `json:"latitude"`
-	Longitude     pgtype.Numeric     `json:"longitude"`
-	PriceLevel    *int16             `json:"price_level"`
-	RatingCached  pgtype.Numeric     `json:"rating_cached"`
-	CoverImageUrl *string            `json:"cover_image_url"`
-	Tags          []string           `json:"tags"`
-	LastSyncedAt  pgtype.Timestamptz `json:"last_synced_at"`
-	IsActive      bool               `json:"is_active"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	ID              pgtype.UUID        `json:"id"`
+	CityID          pgtype.UUID        `json:"city_id"`
+	GooglePlaceID   *string            `json:"google_place_id"`
+	Source          string             `json:"source"`
+	Name            string             `json:"name"`
+	Slug            *string            `json:"slug"`
+	Neighborhood    *string            `json:"neighborhood"`
+	Address         *string            `json:"address"`
+	Latitude        pgtype.Numeric     `json:"latitude"`
+	Longitude       pgtype.Numeric     `json:"longitude"`
+	PriceLevel      *int16             `json:"price_level"`
+	RatingCached    pgtype.Numeric     `json:"rating_cached"`
+	CoverImageUrl   *string            `json:"cover_image_url"`
+	Tags            []string           `json:"tags"`
+	LastSyncedAt    pgtype.Timestamptz `json:"last_synced_at"`
+	IsActive        bool               `json:"is_active"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	UserRatingCount *int32             `json:"user_rating_count"`
+	Phone           *string            `json:"phone"`
+	Website         *string            `json:"website"`
+	HoursJson       []byte             `json:"hours_json"`
+	PhotoNames      []string           `json:"photo_names"`
+	BusinessStatus  *string            `json:"business_status"`
 }
 
 type PlaceCategory struct {

@@ -28,6 +28,8 @@ type Querier interface {
 	FindUserByIdentity(ctx context.Context, arg FindUserByIdentityParams) (FindUserByIdentityRow, error)
 	FinishListSyncRun(ctx context.Context, arg FinishListSyncRunParams) error
 	GetCityByHint(ctx context.Context, arg GetCityByHintParams) (GetCityByHintRow, error)
+	GetPlaceByGooglePlaceID(ctx context.Context, googlePlaceID *string) (GetPlaceByGooglePlaceIDRow, error)
+	GetPlaceByID(ctx context.Context, id pgtype.UUID) (GetPlaceByIDRow, error)
 	GetPlaceListByID(ctx context.Context, id pgtype.UUID) (GetPlaceListByIDRow, error)
 	GetPlaceListBySlug(ctx context.Context, slug string) (GetPlaceListBySlugRow, error)
 	GetUserProfile(ctx context.Context, userID pgtype.UUID) (GetUserProfileRow, error)
@@ -51,6 +53,7 @@ type Querier interface {
 	UpdateLastLogin(ctx context.Context, arg UpdateLastLoginParams) (UpdateLastLoginRow, error)
 	UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlaceParams) (string, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) error
+	UpsertPlaceFromGoogle(ctx context.Context, arg UpsertPlaceFromGoogleParams) (string, error)
 	UpsertPlaceList(ctx context.Context, arg UpsertPlaceListParams) (string, error)
 	UpsertPlaceListEntry(ctx context.Context, arg UpsertPlaceListEntryParams) error
 	UpsertUserProfile(ctx context.Context, arg UpsertUserProfileParams) (UpsertUserProfileRow, error)

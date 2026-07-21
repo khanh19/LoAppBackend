@@ -378,6 +378,7 @@ INSERT INTO places (
   price_level,
   rating_cached,
   cover_image_url,
+  photo_names,
   tags,
   last_synced_at,
   is_active
@@ -394,6 +395,7 @@ VALUES (
   sqlc.arg(price_level),
   sqlc.arg(rating_cached),
   sqlc.arg(cover_image_url),
+  COALESCE(sqlc.narg(photo_names), '{}'::text[]),
   sqlc.arg(tags),
   now(),
   true
@@ -408,6 +410,10 @@ SET
   price_level = COALESCE(EXCLUDED.price_level, places.price_level),
   rating_cached = COALESCE(EXCLUDED.rating_cached, places.rating_cached),
   cover_image_url = COALESCE(EXCLUDED.cover_image_url, places.cover_image_url),
+  photo_names = CASE
+    WHEN cardinality(EXCLUDED.photo_names) > 0 THEN EXCLUDED.photo_names
+    ELSE places.photo_names
+  END,
   tags = CASE
     WHEN cardinality(EXCLUDED.tags) > 0 THEN EXCLUDED.tags
     ELSE places.tags

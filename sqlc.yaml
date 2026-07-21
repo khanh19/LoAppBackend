@@ -8,6 +8,7 @@ sql:
       - "db/queries/onboarding.sql"
       - "db/queries/events.sql"
       - "db/queries/lists.sql"
+      - "db/queries/places.sql"
     gen:
       go:
         package: "dbgen"
