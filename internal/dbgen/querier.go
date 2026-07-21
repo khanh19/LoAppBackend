@@ -48,9 +48,11 @@ type Querier interface {
 	ListExternalEvents(ctx context.Context, arg ListExternalEventsParams) ([]ListExternalEventsRow, error)
 	ListPlaceListEntriesByListID(ctx context.Context, listID pgtype.UUID) ([]ListPlaceListEntriesByListIDRow, error)
 	ListPlaceListEntrySeedNamesByListID(ctx context.Context, listID pgtype.UUID) ([]string, error)
+	ListPlanPlacesMissingCover(ctx context.Context, limitVal int32) ([]ListPlanPlacesMissingCoverRow, error)
 	ListRecentSyncRuns(ctx context.Context, limitVal int32) ([]ListRecentSyncRunsRow, error)
 	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]ListUpcomingEventsRow, error)
 	UpdateLastLogin(ctx context.Context, arg UpdateLastLoginParams) (UpdateLastLoginRow, error)
+	UpdatePlaceFromGoogleResolve(ctx context.Context, arg UpdatePlaceFromGoogleResolveParams) error
 	UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlaceParams) (string, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) error
 	UpsertPlaceFromGoogle(ctx context.Context, arg UpsertPlaceFromGoogleParams) (string, error)

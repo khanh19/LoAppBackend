@@ -35,6 +35,15 @@ func (s *Service) SyncPlaceLists(ctx context.Context) (*SyncPlaceListsResponse, 
 	return s.syncPlaceLists(ctx)
 }
 
+//encore:api private method=POST path=/lists/enrich-plan-places
+func (s *Service) EnrichPlanPlaces(ctx context.Context, params *EnrichPlanPlacesParams) (*EnrichPlanPlacesResponse, error) {
+	limit := 50
+	if params != nil && params.Limit > 0 {
+		limit = params.Limit
+	}
+	return s.enrichPlanPlacesMissingCover(ctx, limit)
+}
+
 //encore:api public method=GET path=/lists/details/:slug
 func (s *Service) GetPlaceList(ctx context.Context, slug string) (*GetPlaceListResponse, error) {
 	if strings.TrimSpace(slug) == "" {
