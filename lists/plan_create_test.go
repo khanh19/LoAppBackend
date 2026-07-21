@@ -39,14 +39,16 @@ func TestNormalizeCreatePlanRequestDefaults(t *testing.T) {
 		Visibility: "",
 		Stops: []CreatePlanStopRequest{
 			{
-				PlaceName:    " Bitexco Financial Tower ",
-				TimeLabel:    " 05:00 PM ",
-				ActivityType: " Meetup ",
-				Address:      strPtr(" 2 Hai Trieu "),
-				Tags:         []string{" View ", "view"},
+				PlaceName:     " Bitexco Financial Tower ",
+				GooglePlaceID: strPtr("google-place-bitexco"),
+				TimeLabel:     " 05:00 PM ",
+				ActivityType:  " Meetup ",
+				Address:       strPtr(" 2 Hai Trieu "),
+				Tags:          []string{" View ", "view"},
 			},
 			{
-				PlaceName: "Nguyen Hue Walking Street",
+				PlaceName:     "Nguyen Hue Walking Street",
+				GooglePlaceID: strPtr("google-place-nguyen-hue"),
 			},
 		},
 	}
@@ -80,8 +82,8 @@ func TestNormalizeCreatePlanRequestRejectsDuplicateStopOrders(t *testing.T) {
 		Title:    "Sunset Tour",
 		CitySlug: "hcmc",
 		Stops: []CreatePlanStopRequest{
-			{StopOrder: 1, PlaceName: "Stop One"},
-			{StopOrder: 1, PlaceName: "Stop Two"},
+			{StopOrder: 1, PlaceName: "Stop One", GooglePlaceID: strPtr("g1")},
+			{StopOrder: 1, PlaceName: "Stop Two", GooglePlaceID: strPtr("g2")},
 		},
 	})
 	if err == nil {
@@ -94,12 +96,25 @@ func TestNormalizeCreatePlanRequestRejectsDuplicatePlaceNames(t *testing.T) {
 		Title:    "Sunset Tour",
 		CitySlug: "hcmc",
 		Stops: []CreatePlanStopRequest{
-			{PlaceName: "Bitexco Financial Tower"},
-			{PlaceName: " bitexco financial tower "},
+			{PlaceName: "Bitexco Financial Tower", GooglePlaceID: strPtr("g-bitexco")},
+			{PlaceName: " bitexco financial tower ", GooglePlaceID: strPtr("g-bitexco-2")},
 		},
 	})
 	if err == nil {
 		t.Fatal("expected duplicate place name error")
+	}
+}
+
+func TestNormalizeCreatePlanRequestRejectsStopWithoutPlaceReference(t *testing.T) {
+	_, err := normalizeCreatePlanRequest(&CreatePlanRequest{
+		Title:    "Sunset Tour",
+		CitySlug: "hcmc",
+		Stops: []CreatePlanStopRequest{
+			{PlaceName: "Stop One"},
+		},
+	})
+	if err == nil {
+		t.Fatal("expected missing place reference error")
 	}
 }
 
@@ -109,7 +124,7 @@ func TestNormalizeCreatePlanRequestRejectsInvalidCoordinates(t *testing.T) {
 		Title:    "Sunset Tour",
 		CitySlug: "hcmc",
 		Stops: []CreatePlanStopRequest{
-			{PlaceName: "Stop One", Latitude: &lat},
+			{PlaceName: "Stop One", GooglePlaceID: strPtr("g-stop"), Latitude: &lat},
 		},
 	})
 	if err == nil {

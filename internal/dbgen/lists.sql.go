@@ -860,6 +860,7 @@ INSERT INTO places (
   price_level,
   rating_cached,
   cover_image_url,
+  photo_names,
   tags,
   last_synced_at,
   is_active
@@ -876,7 +877,8 @@ VALUES (
   $8,
   $9,
   $10,
-  $11,
+  COALESCE($11, '{}'::text[]),
+  $12,
   now(),
   true
 )
@@ -890,6 +892,10 @@ SET
   price_level = COALESCE(EXCLUDED.price_level, places.price_level),
   rating_cached = COALESCE(EXCLUDED.rating_cached, places.rating_cached),
   cover_image_url = COALESCE(EXCLUDED.cover_image_url, places.cover_image_url),
+  photo_names = CASE
+    WHEN cardinality(EXCLUDED.photo_names) > 0 THEN EXCLUDED.photo_names
+    ELSE places.photo_names
+  END,
   tags = CASE
     WHEN cardinality(EXCLUDED.tags) > 0 THEN EXCLUDED.tags
     ELSE places.tags
@@ -910,6 +916,7 @@ type UpsertGooglePlaceParams struct {
 	PriceLevel    *int16         `json:"price_level"`
 	RatingCached  pgtype.Numeric `json:"rating_cached"`
 	CoverImageUrl *string        `json:"cover_image_url"`
+	PhotoNames    interface{}    `json:"photo_names"`
 	Tags          []string       `json:"tags"`
 }
 
@@ -925,6 +932,7 @@ func (q *Queries) UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlacePa
 		arg.PriceLevel,
 		arg.RatingCached,
 		arg.CoverImageUrl,
+		arg.PhotoNames,
 		arg.Tags,
 	)
 	var id string
