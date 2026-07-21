@@ -357,6 +357,43 @@ WHERE is_active = true
 ORDER BY sort_order
 LIMIT 1;
 
+-- name: RelinkPlaceListEntries :exec
+UPDATE place_list_entries
+SET
+  place_id = sqlc.arg(new_place_id)::uuid,
+  updated_at = now()
+WHERE place_id = sqlc.arg(old_place_id)::uuid
+  AND NOT EXISTS (
+    SELECT 1
+    FROM place_list_entries other
+    WHERE other.list_id = place_list_entries.list_id
+      AND other.place_id = sqlc.arg(new_place_id)::uuid
+  );
+
+-- name: UpdatePlaceCoverOnly :exec
+UPDATE places
+SET
+  neighborhood = COALESCE(sqlc.narg(neighborhood), neighborhood),
+  address = COALESCE(sqlc.narg(address), address),
+  latitude = COALESCE(sqlc.narg(latitude), latitude),
+  longitude = COALESCE(sqlc.narg(longitude), longitude),
+  price_level = COALESCE(sqlc.narg(price_level), price_level),
+  rating_cached = COALESCE(sqlc.narg(rating_cached), rating_cached),
+  cover_image_url = COALESCE(sqlc.narg(cover_image_url), cover_image_url),
+  photo_names = CASE
+    WHEN cardinality(COALESCE(sqlc.narg(photo_names), '{}'::text[])) > 0
+      THEN COALESCE(sqlc.narg(photo_names), '{}'::text[])
+    ELSE photo_names
+  END,
+  tags = CASE
+    WHEN cardinality(COALESCE(sqlc.arg(tags), '{}'::text[])) > 0
+      THEN COALESCE(sqlc.arg(tags), '{}'::text[])
+    ELSE tags
+  END,
+  last_synced_at = now(),
+  updated_at = now()
+WHERE id = sqlc.arg(id)::uuid;
+
 -- name: ListPlanPlacesMissingCover :many
 SELECT
   p.id::text AS id,
