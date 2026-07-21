@@ -357,6 +357,53 @@ WHERE is_active = true
 ORDER BY sort_order
 LIMIT 1;
 
+-- name: ListPlanPlacesMissingCover :many
+SELECT
+  p.id::text AS id,
+  p.name,
+  p.city_id::text AS city_id,
+  c.slug AS city_slug,
+  c.latitude,
+  c.longitude
+FROM places p
+JOIN place_list_entries ple ON ple.place_id = p.id AND ple.is_active = true
+JOIN place_lists pl ON pl.id = ple.list_id
+JOIN cities c ON c.id = p.city_id
+WHERE pl.is_active = true
+  AND pl.list_type = 'user_plan'
+  AND p.is_active = true
+  AND (p.cover_image_url IS NULL OR btrim(p.cover_image_url) = '')
+GROUP BY p.id, p.name, p.city_id, c.slug, c.latitude, c.longitude
+ORDER BY p.name
+LIMIT sqlc.arg(limit_val)::integer;
+
+-- name: UpdatePlaceFromGoogleResolve :exec
+UPDATE places
+SET
+  google_place_id = sqlc.arg(google_place_id),
+  source = 'google',
+  name = sqlc.arg(name),
+  neighborhood = COALESCE(sqlc.narg(neighborhood), neighborhood),
+  address = COALESCE(sqlc.narg(address), address),
+  latitude = COALESCE(sqlc.narg(latitude), latitude),
+  longitude = COALESCE(sqlc.narg(longitude), longitude),
+  price_level = COALESCE(sqlc.narg(price_level), price_level),
+  rating_cached = COALESCE(sqlc.narg(rating_cached), rating_cached),
+  cover_image_url = COALESCE(sqlc.narg(cover_image_url), cover_image_url),
+  photo_names = CASE
+    WHEN cardinality(COALESCE(sqlc.narg(photo_names), '{}'::text[])) > 0
+      THEN COALESCE(sqlc.narg(photo_names), '{}'::text[])
+    ELSE photo_names
+  END,
+  tags = CASE
+    WHEN cardinality(COALESCE(sqlc.arg(tags), '{}'::text[])) > 0
+      THEN COALESCE(sqlc.arg(tags), '{}'::text[])
+    ELSE tags
+  END,
+  last_synced_at = now(),
+  updated_at = now()
+WHERE id = sqlc.arg(id)::uuid;
+
 -- name: FindPlaceByNameInCity :one
 SELECT id::text AS id
 FROM places

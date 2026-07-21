@@ -792,6 +792,63 @@ func (q *Queries) ListPlaceListEntrySeedNamesByListID(ctx context.Context, listI
 	return items, nil
 }
 
+const listPlanPlacesMissingCover = `-- name: ListPlanPlacesMissingCover :many
+SELECT
+  p.id::text AS id,
+  p.name,
+  p.city_id::text AS city_id,
+  c.slug AS city_slug,
+  c.latitude,
+  c.longitude
+FROM places p
+JOIN place_list_entries ple ON ple.place_id = p.id AND ple.is_active = true
+JOIN place_lists pl ON pl.id = ple.list_id
+JOIN cities c ON c.id = p.city_id
+WHERE pl.is_active = true
+  AND pl.list_type = 'user_plan'
+  AND p.is_active = true
+  AND (p.cover_image_url IS NULL OR btrim(p.cover_image_url) = '')
+GROUP BY p.id, p.name, p.city_id, c.slug, c.latitude, c.longitude
+ORDER BY p.name
+LIMIT $1::integer
+`
+
+type ListPlanPlacesMissingCoverRow struct {
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	CityID    string         `json:"city_id"`
+	CitySlug  string         `json:"city_slug"`
+	Latitude  pgtype.Numeric `json:"latitude"`
+	Longitude pgtype.Numeric `json:"longitude"`
+}
+
+func (q *Queries) ListPlanPlacesMissingCover(ctx context.Context, limitVal int32) ([]ListPlanPlacesMissingCoverRow, error) {
+	rows, err := q.db.Query(ctx, listPlanPlacesMissingCover, limitVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPlanPlacesMissingCoverRow
+	for rows.Next() {
+		var i ListPlanPlacesMissingCoverRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CityID,
+			&i.CitySlug,
+			&i.Latitude,
+			&i.Longitude,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listRecentSyncRuns = `-- name: ListRecentSyncRuns :many
 SELECT
   id::text AS id,
@@ -845,6 +902,67 @@ func (q *Queries) ListRecentSyncRuns(ctx context.Context, limitVal int32) ([]Lis
 		return nil, err
 	}
 	return items, nil
+}
+
+const updatePlaceFromGoogleResolve = `-- name: UpdatePlaceFromGoogleResolve :exec
+UPDATE places
+SET
+  google_place_id = $1,
+  source = 'google',
+  name = $2,
+  neighborhood = COALESCE($3, neighborhood),
+  address = COALESCE($4, address),
+  latitude = COALESCE($5, latitude),
+  longitude = COALESCE($6, longitude),
+  price_level = COALESCE($7, price_level),
+  rating_cached = COALESCE($8, rating_cached),
+  cover_image_url = COALESCE($9, cover_image_url),
+  photo_names = CASE
+    WHEN cardinality(COALESCE($10, '{}'::text[])) > 0
+      THEN COALESCE($10, '{}'::text[])
+    ELSE photo_names
+  END,
+  tags = CASE
+    WHEN cardinality(COALESCE($11, '{}'::text[])) > 0
+      THEN COALESCE($11, '{}'::text[])
+    ELSE tags
+  END,
+  last_synced_at = now(),
+  updated_at = now()
+WHERE id = $12::uuid
+`
+
+type UpdatePlaceFromGoogleResolveParams struct {
+	GooglePlaceID *string        `json:"google_place_id"`
+	Name          string         `json:"name"`
+	Neighborhood  *string        `json:"neighborhood"`
+	Address       *string        `json:"address"`
+	Latitude      pgtype.Numeric `json:"latitude"`
+	Longitude     pgtype.Numeric `json:"longitude"`
+	PriceLevel    *int16         `json:"price_level"`
+	RatingCached  pgtype.Numeric `json:"rating_cached"`
+	CoverImageUrl *string        `json:"cover_image_url"`
+	PhotoNames    interface{}    `json:"photo_names"`
+	Tags          interface{}    `json:"tags"`
+	ID            pgtype.UUID    `json:"id"`
+}
+
+func (q *Queries) UpdatePlaceFromGoogleResolve(ctx context.Context, arg UpdatePlaceFromGoogleResolveParams) error {
+	_, err := q.db.Exec(ctx, updatePlaceFromGoogleResolve,
+		arg.GooglePlaceID,
+		arg.Name,
+		arg.Neighborhood,
+		arg.Address,
+		arg.Latitude,
+		arg.Longitude,
+		arg.PriceLevel,
+		arg.RatingCached,
+		arg.CoverImageUrl,
+		arg.PhotoNames,
+		arg.Tags,
+		arg.ID,
+	)
+	return err
 }
 
 const upsertGooglePlace = `-- name: UpsertGooglePlace :one
