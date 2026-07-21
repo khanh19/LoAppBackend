@@ -2,6 +2,7 @@ package lists
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -111,14 +112,12 @@ func (s *Service) enrichOnePlanPlace(ctx context.Context, q *dbgen.Queries, row 
 		lat, lng = cityCoords(dbgen.GetCityByHintRow{Slug: row.CitySlug})
 	}
 
-	query := strings.TrimSpace(row.Name)
-	if row.CitySlug != "" {
-		query = query + " " + row.CitySlug
-	}
-
-	resolved, err := s.google.resolvePlace(ctx, query, lat, lng)
+	resolved, err := s.resolvePlaceWithFallbacks(ctx, row.Name, row.CitySlug, lat, lng)
 	if err != nil {
 		return err
+	}
+	if strings.TrimSpace(resolved.CoverImageURL) == "" && resolved.PhotoName == "" {
+		return fmt.Errorf("google returned place %q without a photo", resolved.Name)
 	}
 
 	placeUUID, err := uuidFromString(row.ID)
@@ -145,30 +144,121 @@ func (s *Service) enrichOnePlanPlace(ctx context.Context, q *dbgen.Queries, row 
 		Tags:          resolved.Tags,
 		ID:            placeUUID,
 	})
-	if err != nil {
-		// Another place already owns this google_place_id — upsert that row instead.
-		if isUniqueViolation(err, "places_google_place_id_key") {
-			cityUUID, parseErr := uuidFromString(row.CityID)
-			if parseErr != nil {
-				return err
-			}
-			_, upsertErr := q.UpsertGooglePlace(ctx, dbgen.UpsertGooglePlaceParams{
-				CityID:        cityUUID,
-				GooglePlaceID: stringPtr(resolved.GooglePlaceID),
-				Name:          resolved.Name,
-				Neighborhood:  stringPtr(resolved.Neighborhood),
-				Address:       stringPtr(resolved.Address),
-				Latitude:      numericFromFloat(resolved.Latitude),
-				Longitude:     numericFromFloat(resolved.Longitude),
-				PriceLevel:    resolved.PriceLevel,
-				RatingCached:  numericFromOptionalFloat(resolved.Rating),
-				CoverImageUrl: stringPtr(resolved.CoverImageURL),
-				PhotoNames:    photoNames,
-				Tags:          resolved.Tags,
-			})
-			return upsertErr
-		}
+	if err == nil {
+		return nil
+	}
+
+	// Another place already owns this google_place_id — upsert canonical row
+	// and re-link plan entries, or at least copy the cover onto this place.
+	if !isUniqueViolation(err, "places_google_place_id_key") {
 		return err
 	}
-	return nil
+
+	cityUUID, parseErr := uuidFromString(row.CityID)
+	if parseErr != nil {
+		return err
+	}
+	canonicalID, upsertErr := q.UpsertGooglePlace(ctx, dbgen.UpsertGooglePlaceParams{
+		CityID:        cityUUID,
+		GooglePlaceID: stringPtr(resolved.GooglePlaceID),
+		Name:          resolved.Name,
+		Neighborhood:  stringPtr(resolved.Neighborhood),
+		Address:       stringPtr(resolved.Address),
+		Latitude:      numericFromFloat(resolved.Latitude),
+		Longitude:     numericFromFloat(resolved.Longitude),
+		PriceLevel:    resolved.PriceLevel,
+		RatingCached:  numericFromOptionalFloat(resolved.Rating),
+		CoverImageUrl: stringPtr(resolved.CoverImageURL),
+		PhotoNames:    photoNames,
+		Tags:          resolved.Tags,
+	})
+	if upsertErr != nil {
+		return upsertErr
+	}
+
+	newUUID, parseErr := uuidFromString(canonicalID)
+	if parseErr != nil {
+		return parseErr
+	}
+	_ = q.RelinkPlaceListEntries(ctx, dbgen.RelinkPlaceListEntriesParams{
+		NewPlaceID: newUUID,
+		OldPlaceID: placeUUID,
+	})
+
+	// Always copy cover onto the original place too, so any remaining
+	// entries that couldn't remapped still show a thumb.
+	return q.UpdatePlaceCoverOnly(ctx, dbgen.UpdatePlaceCoverOnlyParams{
+		Neighborhood:  stringPtr(resolved.Neighborhood),
+		Address:       stringPtr(resolved.Address),
+		Latitude:      numericFromFloat(resolved.Latitude),
+		Longitude:     numericFromFloat(resolved.Longitude),
+		PriceLevel:    resolved.PriceLevel,
+		RatingCached:  numericFromOptionalFloat(resolved.Rating),
+		CoverImageUrl: stringPtr(resolved.CoverImageURL),
+		PhotoNames:    photoNames,
+		Tags:          resolved.Tags,
+		ID:            placeUUID,
+	})
+}
+
+func (s *Service) resolvePlaceWithFallbacks(ctx context.Context, name, citySlug string, lat, lng float64) (*googleResolvedPlace, error) {
+	name = strings.TrimSpace(name)
+	queries := buildEnrichSearchQueries(name, citySlug)
+
+	var lastErr error
+	for _, query := range queries {
+		resolved, err := s.google.resolvePlace(ctx, query, lat, lng)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		if resolved != nil {
+			return resolved, nil
+		}
+	}
+	if lastErr != nil {
+		return nil, lastErr
+	}
+	return nil, fmt.Errorf("no google place found for %q", name)
+}
+
+func buildEnrichSearchQueries(name, citySlug string) []string {
+	cityLabels := citySearchLabels(citySlug)
+	out := make([]string, 0, 1+len(cityLabels))
+	seen := make(map[string]struct{}, 1+len(cityLabels))
+
+	add := func(q string) {
+		q = strings.TrimSpace(q)
+		if q == "" {
+			return
+		}
+		key := strings.ToLower(q)
+		if _, ok := seen[key]; ok {
+			return
+		}
+		seen[key] = struct{}{}
+		out = append(out, q)
+	}
+
+	for _, label := range cityLabels {
+		add(name + " " + label)
+	}
+	add(name)
+	return out
+}
+
+func citySearchLabels(citySlug string) []string {
+	switch strings.ToLower(strings.TrimSpace(citySlug)) {
+	case "hcmc", "ho chi minh city", "saigon":
+		return []string{"Ho Chi Minh City", "Saigon", "District 1 Ho Chi Minh City"}
+	case "hanoi", "ha noi":
+		return []string{"Hanoi", "Ha Noi"}
+	case "danang", "da nang":
+		return []string{"Da Nang", "Danang"}
+	default:
+		if strings.TrimSpace(citySlug) == "" {
+			return []string{"Ho Chi Minh City"}
+		}
+		return []string{citySlug}
+	}
 }

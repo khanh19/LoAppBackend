@@ -51,7 +51,9 @@ type Querier interface {
 	ListPlanPlacesMissingCover(ctx context.Context, limitVal int32) ([]ListPlanPlacesMissingCoverRow, error)
 	ListRecentSyncRuns(ctx context.Context, limitVal int32) ([]ListRecentSyncRunsRow, error)
 	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]ListUpcomingEventsRow, error)
+	RelinkPlaceListEntries(ctx context.Context, arg RelinkPlaceListEntriesParams) error
 	UpdateLastLogin(ctx context.Context, arg UpdateLastLoginParams) (UpdateLastLoginRow, error)
+	UpdatePlaceCoverOnly(ctx context.Context, arg UpdatePlaceCoverOnlyParams) error
 	UpdatePlaceFromGoogleResolve(ctx context.Context, arg UpdatePlaceFromGoogleResolveParams) error
 	UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlaceParams) (string, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) error

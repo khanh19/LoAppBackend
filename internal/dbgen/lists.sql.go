@@ -904,6 +904,84 @@ func (q *Queries) ListRecentSyncRuns(ctx context.Context, limitVal int32) ([]Lis
 	return items, nil
 }
 
+const relinkPlaceListEntries = `-- name: RelinkPlaceListEntries :exec
+UPDATE place_list_entries
+SET
+  place_id = $1::uuid,
+  updated_at = now()
+WHERE place_id = $2::uuid
+  AND NOT EXISTS (
+    SELECT 1
+    FROM place_list_entries other
+    WHERE other.list_id = place_list_entries.list_id
+      AND other.place_id = $1::uuid
+  )
+`
+
+type RelinkPlaceListEntriesParams struct {
+	NewPlaceID pgtype.UUID `json:"new_place_id"`
+	OldPlaceID pgtype.UUID `json:"old_place_id"`
+}
+
+func (q *Queries) RelinkPlaceListEntries(ctx context.Context, arg RelinkPlaceListEntriesParams) error {
+	_, err := q.db.Exec(ctx, relinkPlaceListEntries, arg.NewPlaceID, arg.OldPlaceID)
+	return err
+}
+
+const updatePlaceCoverOnly = `-- name: UpdatePlaceCoverOnly :exec
+UPDATE places
+SET
+  neighborhood = COALESCE($1, neighborhood),
+  address = COALESCE($2, address),
+  latitude = COALESCE($3, latitude),
+  longitude = COALESCE($4, longitude),
+  price_level = COALESCE($5, price_level),
+  rating_cached = COALESCE($6, rating_cached),
+  cover_image_url = COALESCE($7, cover_image_url),
+  photo_names = CASE
+    WHEN cardinality(COALESCE($8, '{}'::text[])) > 0
+      THEN COALESCE($8, '{}'::text[])
+    ELSE photo_names
+  END,
+  tags = CASE
+    WHEN cardinality(COALESCE($9, '{}'::text[])) > 0
+      THEN COALESCE($9, '{}'::text[])
+    ELSE tags
+  END,
+  last_synced_at = now(),
+  updated_at = now()
+WHERE id = $10::uuid
+`
+
+type UpdatePlaceCoverOnlyParams struct {
+	Neighborhood  *string        `json:"neighborhood"`
+	Address       *string        `json:"address"`
+	Latitude      pgtype.Numeric `json:"latitude"`
+	Longitude     pgtype.Numeric `json:"longitude"`
+	PriceLevel    *int16         `json:"price_level"`
+	RatingCached  pgtype.Numeric `json:"rating_cached"`
+	CoverImageUrl *string        `json:"cover_image_url"`
+	PhotoNames    interface{}    `json:"photo_names"`
+	Tags          interface{}    `json:"tags"`
+	ID            pgtype.UUID    `json:"id"`
+}
+
+func (q *Queries) UpdatePlaceCoverOnly(ctx context.Context, arg UpdatePlaceCoverOnlyParams) error {
+	_, err := q.db.Exec(ctx, updatePlaceCoverOnly,
+		arg.Neighborhood,
+		arg.Address,
+		arg.Latitude,
+		arg.Longitude,
+		arg.PriceLevel,
+		arg.RatingCached,
+		arg.CoverImageUrl,
+		arg.PhotoNames,
+		arg.Tags,
+		arg.ID,
+	)
+	return err
+}
+
 const updatePlaceFromGoogleResolve = `-- name: UpdatePlaceFromGoogleResolve :exec
 UPDATE places
 SET
