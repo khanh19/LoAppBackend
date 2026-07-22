@@ -24,7 +24,7 @@ const (
 	detailsProFieldMask = "id,displayName,formattedAddress,shortFormattedAddress,addressComponents,location,rating,userRatingCount,priceLevel,regularOpeningHours,nationalPhoneNumber,websiteUri,businessStatus,types,primaryTypeDisplayName"
 	detailsPhotosFieldMask = detailsProFieldMask + ",photos"
 
-	autocompletePrimaryTypes = "restaurant,cafe,bar,bakery,meal_takeaway,meal_delivery,food"
+	autocompletePrimaryTypes = "restaurant,cafe,bar,bakery,food"
 )
 
 type googlePlacesClient struct {
