@@ -36,7 +36,7 @@ func getPlaceByID(ctx context.Context, db *pgxpool.Pool, id string) (*PlaceDetai
 }
 
 func mapPlaceRow(row dbgen.GetPlaceByIDRow) *PlaceDetail {
-	return mapSharedPlaceRow(
+	detail := mapSharedPlaceRow(
 		row.ID,
 		row.GooglePlaceID,
 		row.Name,
@@ -58,10 +58,13 @@ func mapPlaceRow(row dbgen.GetPlaceByIDRow) *PlaceDetail {
 		row.CityName,
 		row.LastSyncedAt,
 	)
+	detail.VenueCategory = row.VenueCategory
+	detail.VenueArchetype = row.VenueArchetype
+	return detail
 }
 
 func mapGooglePlaceRow(row dbgen.GetPlaceByGooglePlaceIDRow) *PlaceDetail {
-	return mapSharedPlaceRow(
+	detail := mapSharedPlaceRow(
 		row.ID,
 		row.GooglePlaceID,
 		row.Name,
@@ -83,6 +86,9 @@ func mapGooglePlaceRow(row dbgen.GetPlaceByGooglePlaceIDRow) *PlaceDetail {
 		row.CityName,
 		row.LastSyncedAt,
 	)
+	detail.VenueCategory = row.VenueCategory
+	detail.VenueArchetype = row.VenueArchetype
+	return detail
 }
 
 func mapSharedPlaceRow(

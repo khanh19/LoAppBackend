@@ -26,7 +26,11 @@ func mapGooglePlace(place *googlePlace, includePhotos bool) *googleResolvedPlace
 		Website:       place.WebsiteURI,
 		BusinessStatus: place.BusinessStatus,
 		Tags:          buildPlaceTags(place),
+		GoogleTypes:   append([]string(nil), place.Types...),
 	}
+	cat, arch := inferVenueCategoryAndArchetype(place.Types, resolved.PriceLevel)
+	resolved.VenueCategory = cat
+	resolved.VenueArchetype = arch
 	if place.UserRatingCount != nil {
 		v := int32(*place.UserRatingCount)
 		resolved.UserRatingCount = &v
@@ -129,6 +133,63 @@ func humanizePlaceType(t string) string {
 		parts[i] = string(runes)
 	}
 	return strings.Join(parts, " ")
+}
+
+func inferVenueCategoryAndArchetype(types []string, priceLevel *int16) (*string, *string) {
+	joined := strings.ToLower(strings.Join(types, " "))
+	var category string
+	switch {
+	case strings.Contains(joined, "cafe") || strings.Contains(joined, "coffee") || strings.Contains(joined, "bakery"):
+		category = "cafe"
+	case strings.Contains(joined, "night_club") || strings.Contains(joined, "nightclub"):
+		category = "club"
+	case strings.Contains(joined, "bar") || strings.Contains(joined, "pub") || strings.Contains(joined, "wine_bar"):
+		category = "bar"
+	case strings.Contains(joined, "restaurant") || strings.Contains(joined, "meal_takeaway") || strings.Contains(joined, "food"):
+		category = "restaurant"
+	default:
+		return nil, nil
+	}
+
+	archetype := ""
+	switch category {
+	case "restaurant":
+		switch {
+		case priceLevel != nil && *priceLevel == 1:
+			archetype = "street_food"
+		case priceLevel != nil && *priceLevel == 2:
+			archetype = "casual"
+		case priceLevel != nil && *priceLevel == 3:
+			archetype = "midrange"
+		case priceLevel != nil && *priceLevel >= 4:
+			archetype = "fine_dining"
+		case strings.Contains(joined, "meal_takeaway") || strings.Contains(joined, "fast_food"):
+			archetype = "street_food"
+		default:
+			archetype = "casual"
+		}
+	case "cafe":
+		if priceLevel != nil && *priceLevel >= 3 {
+			archetype = "chain"
+		} else {
+			archetype = "specialty_coffee"
+		}
+	case "bar":
+		switch {
+		case strings.Contains(joined, "wine"):
+			archetype = "cocktail_bar"
+		case priceLevel != nil && *priceLevel >= 3:
+			archetype = "cocktail_bar"
+		case priceLevel != nil && *priceLevel == 1:
+			archetype = "pub"
+		default:
+			archetype = "craft_beer"
+		}
+	case "club":
+		archetype = "nightclub"
+	}
+
+	return &category, &archetype
 }
 
 func cityHintAlt(cityHint string) string {
