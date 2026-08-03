@@ -59,6 +59,21 @@ type ListSyncRun struct {
 	Details        []byte             `json:"details"`
 }
 
+type PairwiseComparison struct {
+	ID            pgtype.UUID        `json:"id"`
+	UserID        pgtype.UUID        `json:"user_id"`
+	StampID       pgtype.UUID        `json:"stamp_id"`
+	PlaceAID      pgtype.UUID        `json:"place_a_id"`
+	PlaceBID      pgtype.UUID        `json:"place_b_id"`
+	WinnerPlaceID pgtype.UUID        `json:"winner_place_id"`
+	VenueCategory string             `json:"venue_category"`
+	Band          string             `json:"band"`
+	Tier          int32              `json:"tier"`
+	Comparability pgtype.Numeric     `json:"comparability"`
+	Surface       string             `json:"surface"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
 type Place struct {
 	ID              pgtype.UUID        `json:"id"`
 	CityID          pgtype.UUID        `json:"city_id"`
@@ -84,6 +99,9 @@ type Place struct {
 	HoursJson       []byte             `json:"hours_json"`
 	PhotoNames      []string           `json:"photo_names"`
 	BusinessStatus  *string            `json:"business_status"`
+	VenueCategory   *string            `json:"venue_category"`
+	VenueArchetype  *string            `json:"venue_archetype"`
+	GoogleTypes     []string           `json:"google_types"`
 }
 
 type PlaceCategory struct {
@@ -134,6 +152,21 @@ type PlaceVibe struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type PlacementSession struct {
+	ID              pgtype.UUID        `json:"id"`
+	UserID          pgtype.UUID        `json:"user_id"`
+	StampID         pgtype.UUID        `json:"stamp_id"`
+	PlaceID         pgtype.UUID        `json:"place_id"`
+	VenueCategory   string             `json:"venue_category"`
+	Band            string             `json:"band"`
+	LoIndex         int32              `json:"lo_index"`
+	HiIndex         int32              `json:"hi_index"`
+	ComparisonsDone int32              `json:"comparisons_done"`
+	IsComplete      bool               `json:"is_complete"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
 type PurposeCategory struct {
 	ID        pgtype.UUID        `json:"id"`
 	Slug      string             `json:"slug"`
@@ -142,6 +175,58 @@ type PurposeCategory struct {
 	SortOrder int32              `json:"sort_order"`
 	IsActive  bool               `json:"is_active"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type RankingConfig struct {
+	Key       string             `json:"key"`
+	Value     []byte             `json:"value"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Stamp struct {
+	ID                pgtype.UUID        `json:"id"`
+	UserID            pgtype.UUID        `json:"user_id"`
+	PlaceID           pgtype.UUID        `json:"place_id"`
+	VenueCategory     string             `json:"venue_category"`
+	Verdict           string             `json:"verdict"`
+	Quality           string             `json:"quality"`
+	Note              string             `json:"note"`
+	VisitCount        int32              `json:"visit_count"`
+	VerificationLevel string             `json:"verification_level"`
+	Weight            pgtype.Numeric     `json:"weight"`
+	DeviceLatitude    pgtype.Numeric     `json:"device_latitude"`
+	DeviceLongitude   pgtype.Numeric     `json:"device_longitude"`
+	IsActive          bool               `json:"is_active"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+}
+
+type StampPhoto struct {
+	ID          pgtype.UUID        `json:"id"`
+	StampID     pgtype.UUID        `json:"stamp_id"`
+	StoragePath string             `json:"storage_path"`
+	Label       string             `json:"label"`
+	SortOrder   int32              `json:"sort_order"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type StampTag struct {
+	StampID   pgtype.UUID        `json:"stamp_id"`
+	TagType   string             `json:"tag_type"`
+	TagSlug   string             `json:"tag_slug"`
+	Position  int32              `json:"position"`
+	IsCustom  bool               `json:"is_custom"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type TagTaxonomy struct {
+	Slug          string             `json:"slug"`
+	TagType       string             `json:"tag_type"`
+	Label         string             `json:"label"`
+	VenueCategory *string            `json:"venue_category"`
+	IsActive      bool               `json:"is_active"`
+	SortOrder     int32              `json:"sort_order"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
 type User struct {
@@ -189,6 +274,29 @@ type UserLikedPlace struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type UserPlaceFamiliarity struct {
+	UserID    pgtype.UUID        `json:"user_id"`
+	PlaceID   pgtype.UUID        `json:"place_id"`
+	Status    string             `json:"status"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type UserPoolEntry struct {
+	UserID              pgtype.UUID        `json:"user_id"`
+	PlaceID             pgtype.UUID        `json:"place_id"`
+	VenueCategory       string             `json:"venue_category"`
+	Band                string             `json:"band"`
+	RankKey             pgtype.Numeric     `json:"rank_key"`
+	Score               pgtype.Numeric     `json:"score"`
+	PlacementConfidence pgtype.Numeric     `json:"placement_confidence"`
+	ComparisonsCount    int32              `json:"comparisons_count"`
+	ContradictionCount  int32              `json:"contradiction_count"`
+	IsProvisional       bool               `json:"is_provisional"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
 type UserProfile struct {
 	UserID              pgtype.UUID        `json:"user_id"`
 	FirstName           string             `json:"first_name"`
@@ -216,6 +324,49 @@ type UserVibe struct {
 	VibeID    pgtype.UUID        `json:"vibe_id"`
 	Weight    pgtype.Numeric     `json:"weight"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type VenueScoreHistory struct {
+	ID               int64              `json:"id"`
+	PlaceID          pgtype.UUID        `json:"place_id"`
+	SnapshotDate     pgtype.Date        `json:"snapshot_date"`
+	StampCount       int32              `json:"stamp_count"`
+	WeightedStampSum pgtype.Numeric     `json:"weighted_stamp_sum"`
+	SentimentScore   pgtype.Numeric     `json:"sentiment_score"`
+	QualityScore     pgtype.Numeric     `json:"quality_score"`
+	PairwiseStrength pgtype.Numeric     `json:"pairwise_strength"`
+	CompositeScore   pgtype.Numeric     `json:"composite_score"`
+	FinalScore       pgtype.Numeric     `json:"final_score"`
+	DisplayState     string             `json:"display_state"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}
+
+type VenueStampAggregate struct {
+	PlaceID          pgtype.UUID        `json:"place_id"`
+	StampCount       int32              `json:"stamp_count"`
+	WeightedStampSum pgtype.Numeric     `json:"weighted_stamp_sum"`
+	SentimentScore   pgtype.Numeric     `json:"sentiment_score"`
+	QualityScore     pgtype.Numeric     `json:"quality_score"`
+	PairwiseStrength pgtype.Numeric     `json:"pairwise_strength"`
+	PairwiseCount    int32              `json:"pairwise_count"`
+	CompositeScore   pgtype.Numeric     `json:"composite_score"`
+	FinalScore       pgtype.Numeric     `json:"final_score"`
+	DisplayState     string             `json:"display_state"`
+	VibeConflict     bool               `json:"vibe_conflict"`
+	QualityConflict  bool               `json:"quality_conflict"`
+	ConflictNote     *string            `json:"conflict_note"`
+	VelocityScore    pgtype.Numeric     `json:"velocity_score"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+}
+
+type VenueTagAggregate struct {
+	PlaceID       pgtype.UUID        `json:"place_id"`
+	TagType       string             `json:"tag_type"`
+	TagSlug       string             `json:"tag_slug"`
+	WeightedCount pgtype.Numeric     `json:"weighted_count"`
+	RawCount      int32              `json:"raw_count"`
+	Percentage    pgtype.Numeric     `json:"percentage"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Vibe struct {

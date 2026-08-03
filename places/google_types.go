@@ -15,6 +15,9 @@ type googleResolvedPlace struct {
 	BusinessStatus  string
 	HoursJSON       []byte
 	Tags            []string
+	GoogleTypes     []string
+	VenueCategory   *string
+	VenueArchetype  *string
 	PhotoNames      []string
 	PhotoName       string
 	CoverImageURL   string

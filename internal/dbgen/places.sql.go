@@ -35,6 +35,9 @@ SELECT
   p.business_status,
   p.cover_image_url,
   p.tags,
+  p.venue_category,
+  p.venue_archetype,
+  p.google_types,
   p.last_synced_at,
   p.is_active
 FROM places p
@@ -66,6 +69,9 @@ type GetPlaceByGooglePlaceIDRow struct {
 	BusinessStatus  *string            `json:"business_status"`
 	CoverImageUrl   *string            `json:"cover_image_url"`
 	Tags            []string           `json:"tags"`
+	VenueCategory   *string            `json:"venue_category"`
+	VenueArchetype  *string            `json:"venue_archetype"`
+	GoogleTypes     []string           `json:"google_types"`
 	LastSyncedAt    pgtype.Timestamptz `json:"last_synced_at"`
 	IsActive        bool               `json:"is_active"`
 }
@@ -96,6 +102,9 @@ func (q *Queries) GetPlaceByGooglePlaceID(ctx context.Context, googlePlaceID *st
 		&i.BusinessStatus,
 		&i.CoverImageUrl,
 		&i.Tags,
+		&i.VenueCategory,
+		&i.VenueArchetype,
+		&i.GoogleTypes,
 		&i.LastSyncedAt,
 		&i.IsActive,
 	)
@@ -126,6 +135,9 @@ SELECT
   p.business_status,
   p.cover_image_url,
   p.tags,
+  p.venue_category,
+  p.venue_archetype,
+  p.google_types,
   p.last_synced_at,
   p.is_active
 FROM places p
@@ -157,6 +169,9 @@ type GetPlaceByIDRow struct {
 	BusinessStatus  *string            `json:"business_status"`
 	CoverImageUrl   *string            `json:"cover_image_url"`
 	Tags            []string           `json:"tags"`
+	VenueCategory   *string            `json:"venue_category"`
+	VenueArchetype  *string            `json:"venue_archetype"`
+	GoogleTypes     []string           `json:"google_types"`
 	LastSyncedAt    pgtype.Timestamptz `json:"last_synced_at"`
 	IsActive        bool               `json:"is_active"`
 }
@@ -187,6 +202,9 @@ func (q *Queries) GetPlaceByID(ctx context.Context, id pgtype.UUID) (GetPlaceByI
 		&i.BusinessStatus,
 		&i.CoverImageUrl,
 		&i.Tags,
+		&i.VenueCategory,
+		&i.VenueArchetype,
+		&i.GoogleTypes,
 		&i.LastSyncedAt,
 		&i.IsActive,
 	)
@@ -213,6 +231,9 @@ INSERT INTO places (
   business_status,
   cover_image_url,
   tags,
+  google_types,
+  venue_category,
+  venue_archetype,
   last_synced_at,
   is_active
 )
@@ -235,6 +256,9 @@ VALUES (
   $15,
   $16,
   COALESCE($17, '{}'::text[]),
+  COALESCE($18, '{}'::text[]),
+  $19,
+  $20,
   now(),
   true
 )
@@ -261,6 +285,12 @@ SET
     WHEN cardinality(EXCLUDED.tags) > 0 THEN EXCLUDED.tags
     ELSE places.tags
   END,
+  google_types = CASE
+    WHEN cardinality(EXCLUDED.google_types) > 0 THEN EXCLUDED.google_types
+    ELSE places.google_types
+  END,
+  venue_category = COALESCE(EXCLUDED.venue_category, places.venue_category),
+  venue_archetype = COALESCE(EXCLUDED.venue_archetype, places.venue_archetype),
   last_synced_at = now(),
   updated_at = now()
 RETURNING id::text AS id
@@ -284,6 +314,9 @@ type UpsertPlaceFromGoogleParams struct {
 	BusinessStatus  *string        `json:"business_status"`
 	CoverImageUrl   *string        `json:"cover_image_url"`
 	Tags            interface{}    `json:"tags"`
+	GoogleTypes     interface{}    `json:"google_types"`
+	VenueCategory   *string        `json:"venue_category"`
+	VenueArchetype  *string        `json:"venue_archetype"`
 }
 
 func (q *Queries) UpsertPlaceFromGoogle(ctx context.Context, arg UpsertPlaceFromGoogleParams) (string, error) {
@@ -305,6 +338,9 @@ func (q *Queries) UpsertPlaceFromGoogle(ctx context.Context, arg UpsertPlaceFrom
 		arg.BusinessStatus,
 		arg.CoverImageUrl,
 		arg.Tags,
+		arg.GoogleTypes,
+		arg.VenueCategory,
+		arg.VenueArchetype,
 	)
 	var id string
 	err := row.Scan(&id)

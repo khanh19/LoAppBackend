@@ -9,6 +9,7 @@ sql:
       - "db/queries/events.sql"
       - "db/queries/lists.sql"
       - "db/queries/places.sql"
+      - "db/queries/stamps.sql"
     gen:
       go:
         package: "dbgen"

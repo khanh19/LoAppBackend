@@ -21,10 +21,33 @@ type PlaceDetail struct {
 	CoverImageURL   *string         `json:"cover_image_url"`
 	PhotoURLs       []string        `json:"photo_urls"`
 	Tags            []string        `json:"tags"`
+	VenueCategory   *string         `json:"venue_category"`
+	VenueArchetype  *string         `json:"venue_archetype"`
 	CitySlug        string          `json:"city_slug"`
 	CityName        string          `json:"city_name"`
 	LastSyncedAt    string          `json:"last_synced_at"`
 	IsStale         bool            `json:"is_stale"`
+	StampSummary    *StampSummary   `json:"stamp_summary,omitempty"`
+}
+
+// StampSummary is embedded on place detail; mirrors stamps.StampSummary fields.
+type StampSummary struct {
+	StampCount      int            `json:"stamp_count"`
+	FinalScore      *float64       `json:"final_score"`
+	DisplayState    string         `json:"display_state"`
+	SentimentScore  *float64       `json:"sentiment_score"`
+	QualityScore    *float64       `json:"quality_score"`
+	VibeConflict    bool           `json:"vibe_conflict"`
+	QualityConflict bool           `json:"quality_conflict"`
+	ConflictNote    *string        `json:"conflict_note"`
+	Companions      []TagAggregate `json:"companions"`
+	Vibes           []TagAggregate `json:"vibes"`
+}
+
+type TagAggregate struct {
+	Slug       string  `json:"slug"`
+	Percentage float64 `json:"percentage"`
+	RawCount   int     `json:"raw_count"`
 }
 
 type GetPlaceResponse struct {

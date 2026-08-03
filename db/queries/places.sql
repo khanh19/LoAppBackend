@@ -22,6 +22,9 @@ SELECT
   p.business_status,
   p.cover_image_url,
   p.tags,
+  p.venue_category,
+  p.venue_archetype,
+  p.google_types,
   p.last_synced_at,
   p.is_active
 FROM places p
@@ -53,6 +56,9 @@ SELECT
   p.business_status,
   p.cover_image_url,
   p.tags,
+  p.venue_category,
+  p.venue_archetype,
+  p.google_types,
   p.last_synced_at,
   p.is_active
 FROM places p
@@ -80,6 +86,9 @@ INSERT INTO places (
   business_status,
   cover_image_url,
   tags,
+  google_types,
+  venue_category,
+  venue_archetype,
   last_synced_at,
   is_active
 )
@@ -102,6 +111,9 @@ VALUES (
   sqlc.narg(business_status),
   sqlc.narg(cover_image_url),
   COALESCE(sqlc.arg(tags), '{}'::text[]),
+  COALESCE(sqlc.arg(google_types), '{}'::text[]),
+  sqlc.narg(venue_category),
+  sqlc.narg(venue_archetype),
   now(),
   true
 )
@@ -128,6 +140,12 @@ SET
     WHEN cardinality(EXCLUDED.tags) > 0 THEN EXCLUDED.tags
     ELSE places.tags
   END,
+  google_types = CASE
+    WHEN cardinality(EXCLUDED.google_types) > 0 THEN EXCLUDED.google_types
+    ELSE places.google_types
+  END,
+  venue_category = COALESCE(EXCLUDED.venue_category, places.venue_category),
+  venue_archetype = COALESCE(EXCLUDED.venue_archetype, places.venue_archetype),
   last_synced_at = now(),
   updated_at = now()
 RETURNING id::text AS id;

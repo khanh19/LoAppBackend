@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"encore.app/internal/dbgen"
+	"encore.app/stamps"
 	"encore.dev/beta/errs"
 	"github.com/jackc/pgx/v5"
 )
@@ -26,7 +27,40 @@ func (s *Service) GetPlace(ctx context.Context, id string) (*GetPlaceResponse, e
 		s.maybeRefreshPlace(ctx, id)
 	}
 
+	if summary, err := stamps.GetStampSummary(ctx, &stamps.GetStampSummaryRequest{PlaceID: id}); err == nil && summary != nil {
+		place.StampSummary = mapStampSummary(summary)
+	}
+
 	return &GetPlaceResponse{Place: *place}, nil
+}
+
+func mapStampSummary(summary *stamps.StampSummary) *StampSummary {
+	if summary == nil {
+		return nil
+	}
+	out := &StampSummary{
+		StampCount:      summary.StampCount,
+		FinalScore:      summary.FinalScore,
+		DisplayState:    summary.DisplayState,
+		SentimentScore:  summary.SentimentScore,
+		QualityScore:    summary.QualityScore,
+		VibeConflict:    summary.VibeConflict,
+		QualityConflict: summary.QualityConflict,
+		ConflictNote:    summary.ConflictNote,
+		Companions:      make([]TagAggregate, 0, len(summary.Companions)),
+		Vibes:           make([]TagAggregate, 0, len(summary.Vibes)),
+	}
+	for _, c := range summary.Companions {
+		out.Companions = append(out.Companions, TagAggregate{
+			Slug: c.Slug, Percentage: c.Percentage, RawCount: c.RawCount,
+		})
+	}
+	for _, v := range summary.Vibes {
+		out.Vibes = append(out.Vibes, TagAggregate{
+			Slug: v.Slug, Percentage: v.Percentage, RawCount: v.RawCount,
+		})
+	}
+	return out
 }
 
 //encore:api public method=GET path=/places/:id/photo

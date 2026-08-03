@@ -13,54 +13,92 @@ import (
 type Querier interface {
 	CompleteUserOnboarding(ctx context.Context, userID pgtype.UUID) (string, error)
 	CountExternalEvents(ctx context.Context, citySlug *string) (int64, error)
+	CountPlacePairwise(ctx context.Context, placeID pgtype.UUID) (int32, error)
+	CountPlacePairwiseWins(ctx context.Context, placeID pgtype.UUID) (int32, error)
+	CountRecentPairwisePair(ctx context.Context, arg CountRecentPairwisePairParams) (int32, error)
 	CreateListSyncRun(ctx context.Context) (string, error)
+	CreatePlacementSession(ctx context.Context, arg CreatePlacementSessionParams) (CreatePlacementSessionRow, error)
 	CreatePlan(ctx context.Context, arg CreatePlanParams) (string, error)
 	CreatePlanEntry(ctx context.Context, arg CreatePlanEntryParams) error
 	CreatePlanPlace(ctx context.Context, arg CreatePlanPlaceParams) (string, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeactivatePlaceListEntriesNotInSeedNames(ctx context.Context, arg DeactivatePlaceListEntriesNotInSeedNamesParams) (int64, error)
+	DeleteStampTags(ctx context.Context, stampID pgtype.UUID) error
 	DeleteUserExploreCities(ctx context.Context, userID pgtype.UUID) error
 	DeleteUserLikedPlacesBySource(ctx context.Context, arg DeleteUserLikedPlacesBySourceParams) error
 	DeleteUserPurposeCategories(ctx context.Context, userID pgtype.UUID) error
 	DeleteUserVibes(ctx context.Context, userID pgtype.UUID) error
+	DeleteVenueTagAggregates(ctx context.Context, placeID pgtype.UUID) error
 	FindPlaceByNameInCity(ctx context.Context, arg FindPlaceByNameInCityParams) (string, error)
 	FindUserByEmail(ctx context.Context, primaryEmail *string) (FindUserByEmailRow, error)
 	FindUserByIdentity(ctx context.Context, arg FindUserByIdentityParams) (FindUserByIdentityRow, error)
 	FinishListSyncRun(ctx context.Context, arg FinishListSyncRunParams) error
+	GetActivePlacementSession(ctx context.Context, stampID pgtype.UUID) (GetActivePlacementSessionRow, error)
+	GetActiveStampByUserPlace(ctx context.Context, arg GetActiveStampByUserPlaceParams) (GetActiveStampByUserPlaceRow, error)
 	GetCityByHint(ctx context.Context, arg GetCityByHintParams) (GetCityByHintRow, error)
+	GetFamiliarity(ctx context.Context, arg GetFamiliarityParams) (GetFamiliarityRow, error)
 	GetPlaceByGooglePlaceID(ctx context.Context, googlePlaceID *string) (GetPlaceByGooglePlaceIDRow, error)
 	GetPlaceByID(ctx context.Context, id pgtype.UUID) (GetPlaceByIDRow, error)
 	GetPlaceListByID(ctx context.Context, id pgtype.UUID) (GetPlaceListByIDRow, error)
 	GetPlaceListBySlug(ctx context.Context, slug string) (GetPlaceListBySlugRow, error)
+	GetRankingConfig(ctx context.Context, key string) (RankingConfig, error)
+	GetStampByID(ctx context.Context, id pgtype.UUID) (GetStampByIDRow, error)
+	GetStampPlaceContext(ctx context.Context, id pgtype.UUID) (GetStampPlaceContextRow, error)
+	GetUserPoolEntry(ctx context.Context, arg GetUserPoolEntryParams) (GetUserPoolEntryRow, error)
 	GetUserProfile(ctx context.Context, userID pgtype.UUID) (GetUserProfileRow, error)
+	GetVenueStampAggregate(ctx context.Context, placeID pgtype.UUID) (GetVenueStampAggregateRow, error)
 	HasUserProfile(ctx context.Context, userID pgtype.UUID) (bool, error)
+	InsertPairwiseComparison(ctx context.Context, arg InsertPairwiseComparisonParams) (string, error)
+	InsertStampPhoto(ctx context.Context, arg InsertStampPhotoParams) (InsertStampPhotoRow, error)
+	InsertStampTag(ctx context.Context, arg InsertStampTagParams) error
 	InsertUserExploreCity(ctx context.Context, arg InsertUserExploreCityParams) error
 	InsertUserLikedPlace(ctx context.Context, arg InsertUserLikedPlaceParams) error
 	InsertUserPurposeCategory(ctx context.Context, arg InsertUserPurposeCategoryParams) error
 	InsertUserVibe(ctx context.Context, arg InsertUserVibeParams) error
+	InsertVenueScoreHistory(ctx context.Context) error
 	IsUsernameTakenByAnotherUser(ctx context.Context, arg IsUsernameTakenByAnotherUserParams) (bool, error)
 	ListActiveCities(ctx context.Context) ([]ListActiveCitiesRow, error)
 	ListActivePlaceLists(ctx context.Context) ([]ListActivePlaceListsRow, error)
 	ListActivePlans(ctx context.Context, arg ListActivePlansParams) ([]ListActivePlansRow, error)
 	ListActivePurposeCategories(ctx context.Context) ([]ListActivePurposeCategoriesRow, error)
 	ListActiveVibes(ctx context.Context) ([]ListActiveVibesRow, error)
+	ListAllActivePlaceIDsWithStamps(ctx context.Context) ([]string, error)
+	ListCuratedPlacesForProbe(ctx context.Context, arg ListCuratedPlacesForProbeParams) ([]ListCuratedPlacesForProbeRow, error)
 	ListCuratedVenuesByCity(ctx context.Context, cityID pgtype.UUID) ([]ListCuratedVenuesByCityRow, error)
 	ListExternalEvents(ctx context.Context, arg ListExternalEventsParams) ([]ListExternalEventsRow, error)
+	ListLikedPlacesForPairwise(ctx context.Context, arg ListLikedPlacesForPairwiseParams) ([]ListLikedPlacesForPairwiseRow, error)
+	ListLowConfidencePoolEntries(ctx context.Context, arg ListLowConfidencePoolEntriesParams) ([]ListLowConfidencePoolEntriesRow, error)
 	ListPlaceListEntriesByListID(ctx context.Context, listID pgtype.UUID) ([]ListPlaceListEntriesByListIDRow, error)
 	ListPlaceListEntrySeedNamesByListID(ctx context.Context, listID pgtype.UUID) ([]string, error)
+	ListPlaceStampsForAggregate(ctx context.Context, placeID pgtype.UUID) ([]ListPlaceStampsForAggregateRow, error)
+	ListPlaceTagVotes(ctx context.Context, placeID pgtype.UUID) ([]ListPlaceTagVotesRow, error)
 	ListPlanPlacesMissingCover(ctx context.Context, limitVal int32) ([]ListPlanPlacesMissingCoverRow, error)
+	ListRankingConfig(ctx context.Context) ([]RankingConfig, error)
 	ListRecentSyncRuns(ctx context.Context, limitVal int32) ([]ListRecentSyncRunsRow, error)
+	ListStampPhotos(ctx context.Context, stampID pgtype.UUID) ([]ListStampPhotosRow, error)
+	ListStampTags(ctx context.Context, stampID pgtype.UUID) ([]ListStampTagsRow, error)
 	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]ListUpcomingEventsRow, error)
+	ListUserPoolBand(ctx context.Context, arg ListUserPoolBandParams) ([]ListUserPoolBandRow, error)
+	ListUserPoolByCategory(ctx context.Context, arg ListUserPoolByCategoryParams) ([]ListUserPoolByCategoryRow, error)
+	ListVenueTagAggregates(ctx context.Context, placeID pgtype.UUID) ([]ListVenueTagAggregatesRow, error)
 	RelinkPlaceListEntries(ctx context.Context, arg RelinkPlaceListEntriesParams) error
+	SumBandComparability(ctx context.Context, arg SumBandComparabilityParams) (float64, error)
 	UpdateLastLogin(ctx context.Context, arg UpdateLastLoginParams) (UpdateLastLoginRow, error)
 	UpdatePlaceCoverOnly(ctx context.Context, arg UpdatePlaceCoverOnlyParams) error
 	UpdatePlaceFromGoogleResolve(ctx context.Context, arg UpdatePlaceFromGoogleResolveParams) error
+	UpdatePlacementSession(ctx context.Context, arg UpdatePlacementSessionParams) (UpdatePlacementSessionRow, error)
+	UpdateUserPoolEntryScores(ctx context.Context, arg UpdateUserPoolEntryScoresParams) error
+	UpsertFamiliarity(ctx context.Context, arg UpsertFamiliarityParams) error
 	UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlaceParams) (string, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) error
 	UpsertPlaceFromGoogle(ctx context.Context, arg UpsertPlaceFromGoogleParams) (string, error)
 	UpsertPlaceList(ctx context.Context, arg UpsertPlaceListParams) (string, error)
 	UpsertPlaceListEntry(ctx context.Context, arg UpsertPlaceListEntryParams) error
+	UpsertStamp(ctx context.Context, arg UpsertStampParams) (UpsertStampRow, error)
+	UpsertUserPoolEntry(ctx context.Context, arg UpsertUserPoolEntryParams) (UpsertUserPoolEntryRow, error)
 	UpsertUserProfile(ctx context.Context, arg UpsertUserProfileParams) (UpsertUserProfileRow, error)
+	UpsertVenueStampAggregate(ctx context.Context, arg UpsertVenueStampAggregateParams) error
+	UpsertVenueTagAggregate(ctx context.Context, arg UpsertVenueTagAggregateParams) error
 }
 
 var _ Querier = (*Queries)(nil)

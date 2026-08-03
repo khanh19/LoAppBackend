@@ -112,6 +112,9 @@ func upsertParamsFromResolved(cityID pgtype.UUID, resolved *googleResolvedPlace)
 		BusinessStatus: stringPtr(resolved.BusinessStatus),
 		CoverImageUrl: stringPtr(resolved.CoverImageURL),
 		Tags:          resolved.Tags,
+		GoogleTypes:   resolved.GoogleTypes,
+		VenueCategory: resolved.VenueCategory,
+		VenueArchetype: resolved.VenueArchetype,
 	}
 	if len(resolved.HoursJSON) > 0 {
 		params.HoursJson = resolved.HoursJSON
@@ -123,6 +126,9 @@ func upsertParamsFromResolved(cityID pgtype.UUID, resolved *googleResolvedPlace)
 		params.Tags = resolved.Tags
 	} else {
 		params.Tags = []string{}
+	}
+	if len(resolved.GoogleTypes) == 0 {
+		params.GoogleTypes = []string{}
 	}
 	return params
 }
