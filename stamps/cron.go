@@ -5,15 +5,22 @@ import (
 
 	"encore.app/internal/dbgen"
 	"encore.dev/beta/errs"
-	"encore.dev/cron"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-var _ = cron.NewJob("stamps-nightly-recompute", cron.JobConfig{
-	Title:    "Recompute venue stamp aggregates and snapshot scores",
-	Every:    24 * cron.Hour,
-	Endpoint: NightlyRecompute,
-})
+// Cron disabled on Encore free tier: Cloud Scheduler job quota is exhausted
+// (JOBS-per-project-per-region in us-east4). Venue aggregates still update on
+// stamp/pairwise writes; this job only does nightly drift recompute + history.
+//
+// Re-add once the app has its own GCP / paid Encore cloud (or Scheduler quota):
+//
+//	import "encore.dev/cron"
+//
+//	var _ = cron.NewJob("stamps-nightly-recompute", cron.JobConfig{
+//		Title:    "Recompute venue stamp aggregates and snapshot scores",
+//		Every:    24 * cron.Hour,
+//		Endpoint: NightlyRecompute,
+//	})
 
 //encore:api private
 func (s *Service) NightlyRecompute(ctx context.Context) error {
