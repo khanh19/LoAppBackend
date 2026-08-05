@@ -38,6 +38,54 @@ func (s *Service) Callback(ctx context.Context, req *CallbackRequest) (*Callback
 	return s.callbackResponseFromToken(ctx, token)
 }
 
+//encore:api public method=POST path=/auth/refresh
+func (s *Service) Refresh(ctx context.Context, req *RefreshRequest) (*RefreshResponse, error) {
+	if req == nil || strings.TrimSpace(req.RefreshToken) == "" {
+		return nil, &errs.Error{
+			Code:    errs.InvalidArgument,
+			Message: "refresh_token is required",
+		}
+	}
+
+	token, err := s.auth.RefreshTokens(ctx, strings.TrimSpace(req.RefreshToken))
+	if err != nil {
+		return nil, &errs.Error{
+			Code:    errs.Unauthenticated,
+			Message: "invalid refresh token",
+			Meta:    errs.Metadata{"cause": err.Error()},
+		}
+	}
+
+	idToken, err := s.auth.VerifyIDToken(ctx, token)
+	if err != nil {
+		return nil, &errs.Error{
+			Code:    errs.Unauthenticated,
+			Message: "failed to verify refreshed id token",
+		}
+	}
+
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok || rawIDToken == "" {
+		return nil, &errs.Error{
+			Code:    errs.Internal,
+			Message: "missing id_token in refresh response",
+		}
+	}
+
+	refreshToken := strings.TrimSpace(token.RefreshToken)
+	if refreshToken == "" {
+		// Auth0 may omit refresh_token when rotation is disabled and the
+		// original token remains valid — keep the caller's token in that case.
+		refreshToken = strings.TrimSpace(req.RefreshToken)
+	}
+
+	return &RefreshResponse{
+		Token:        rawIDToken,
+		RefreshToken: refreshToken,
+		ExpiresAt:    idToken.Expiry.Unix(),
+	}, nil
+}
+
 //encore:api public method=GET path=/auth/logout
 func (s *Service) Logout(ctx context.Context) (*LogoutResponse, error) {
 	logoutURL, err := url.Parse("https://" + cfg.Domain() + "/v2/logout")

@@ -50,7 +50,7 @@ func TestStartEmailOTPSendsAuth0PasswordlessRequest(t *testing.T) {
 	if got.Send != "code" {
 		t.Errorf("send = %q", got.Send)
 	}
-	if got.AuthParams.Scope != "openid profile email" {
+	if got.AuthParams.Scope != "openid profile email offline_access" {
 		t.Errorf("scope = %q", got.AuthParams.Scope)
 	}
 	if gotForwardedFor != "203.0.113.7" {

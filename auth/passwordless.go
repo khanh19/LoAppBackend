@@ -77,7 +77,7 @@ func (a *Authenticator) StartEmailOTP(ctx context.Context, email, forwardedFor s
 		Email:        email,
 		Send:         "code",
 		AuthParams: passwordlessStartAuthData{
-			Scope: "openid profile email",
+			Scope: "openid profile email offline_access",
 		},
 	}
 
@@ -92,7 +92,7 @@ func (a *Authenticator) ExchangeEmailOTP(ctx context.Context, email, code, forwa
 		Username:     email,
 		OTP:          code,
 		Realm:        "email",
-		Scope:        "openid profile email",
+		Scope:        "openid profile email offline_access",
 	}
 
 	var resp passwordlessTokenResponse

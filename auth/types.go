@@ -11,8 +11,20 @@ type CallbackRequest struct {
 
 type CallbackResponse struct {
 	Token            string `json:"token"`
+	RefreshToken     string `json:"refresh_token,omitempty"`
+	ExpiresAt        int64  `json:"expires_at,omitempty"` // unix seconds (ID token exp)
 	OnboardingStatus string `json:"onboarding_status"`
 	ProfileExists    bool   `json:"profile_exists"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type RefreshResponse struct {
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	ExpiresAt    int64  `json:"expires_at,omitempty"`
 }
 
 type OTPStartRequest struct {
