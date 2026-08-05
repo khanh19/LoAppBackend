@@ -844,6 +844,112 @@ func (q *Queries) ListCuratedPlacesForProbe(ctx context.Context, arg ListCurated
 	return items, nil
 }
 
+const listFeedStamps = `-- name: ListFeedStamps :many
+SELECT
+  s.id::text AS stamp_id,
+  s.user_id::text AS user_id,
+  up.first_name,
+  up.last_name,
+  up.username,
+  up.avatar_url,
+  p.id::text AS place_id,
+  p.name AS place_name,
+  p.cover_image_url AS place_image_url,
+  s.venue_category,
+  s.verdict,
+  pe.band,
+  pe.score AS personal_score,
+  s.note,
+  COALESCE(ph.storage_path, '') AS photo_storage_path,
+  s.created_at
+FROM stamps s
+JOIN places p ON p.id = s.place_id AND p.is_active = true
+JOIN user_profiles up ON up.user_id = s.user_id
+LEFT JOIN user_pool_entries pe
+  ON pe.user_id = s.user_id AND pe.place_id = s.place_id
+LEFT JOIN LATERAL (
+  SELECT sp.storage_path
+  FROM stamp_photos sp
+  WHERE sp.stamp_id = s.id
+  ORDER BY sp.sort_order, sp.created_at
+  LIMIT 1
+) ph ON true
+WHERE s.is_active = true
+  AND (
+    s.user_id = $1::uuid
+    OR s.user_id IN (
+      SELECT uf.following_user_id
+      FROM user_follows uf
+      WHERE uf.follower_user_id = $1::uuid
+    )
+  )
+ORDER BY s.created_at DESC
+LIMIT $3::int
+OFFSET $2::int
+`
+
+type ListFeedStampsParams struct {
+	ViewerID  pgtype.UUID `json:"viewer_id"`
+	OffsetVal int32       `json:"offset_val"`
+	LimitVal  int32       `json:"limit_val"`
+}
+
+type ListFeedStampsRow struct {
+	StampID          string             `json:"stamp_id"`
+	UserID           string             `json:"user_id"`
+	FirstName        string             `json:"first_name"`
+	LastName         string             `json:"last_name"`
+	Username         string             `json:"username"`
+	AvatarUrl        *string            `json:"avatar_url"`
+	PlaceID          string             `json:"place_id"`
+	PlaceName        string             `json:"place_name"`
+	PlaceImageUrl    *string            `json:"place_image_url"`
+	VenueCategory    string             `json:"venue_category"`
+	Verdict          string             `json:"verdict"`
+	Band             *string            `json:"band"`
+	PersonalScore    pgtype.Numeric     `json:"personal_score"`
+	Note             string             `json:"note"`
+	PhotoStoragePath string             `json:"photo_storage_path"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) ListFeedStamps(ctx context.Context, arg ListFeedStampsParams) ([]ListFeedStampsRow, error) {
+	rows, err := q.db.Query(ctx, listFeedStamps, arg.ViewerID, arg.OffsetVal, arg.LimitVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListFeedStampsRow
+	for rows.Next() {
+		var i ListFeedStampsRow
+		if err := rows.Scan(
+			&i.StampID,
+			&i.UserID,
+			&i.FirstName,
+			&i.LastName,
+			&i.Username,
+			&i.AvatarUrl,
+			&i.PlaceID,
+			&i.PlaceName,
+			&i.PlaceImageUrl,
+			&i.VenueCategory,
+			&i.Verdict,
+			&i.Band,
+			&i.PersonalScore,
+			&i.Note,
+			&i.PhotoStoragePath,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listLikedPlacesForPairwise = `-- name: ListLikedPlacesForPairwise :many
 SELECT
   p.id::text AS id,

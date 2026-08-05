@@ -1,5 +1,7 @@
 package stamps
 
+import "time"
+
 type CreateStampRequest struct {
 	PlaceID     string   `json:"place_id"`
 	Verdict     string   `json:"verdict"`
@@ -111,17 +113,48 @@ type ConfirmPhotoResponse struct {
 	Label       string `json:"label"`
 }
 
+type FeedQuery struct {
+	Limit  int `query:"limit"`
+	Offset int `query:"offset"`
+}
+
+type FeedStampItem struct {
+	StampID       string    `json:"stamp_id"`
+	UserID        string    `json:"user_id"`
+	DisplayName   string    `json:"display_name"`
+	Username      string    `json:"username"`
+	AvatarURL     *string   `json:"avatar_url"`
+	PlaceID       string    `json:"place_id"`
+	PlaceName     string    `json:"place_name"`
+	PlaceImageURL *string   `json:"place_image_url"`
+	VenueCategory string    `json:"venue_category"`
+	Verdict       string    `json:"verdict"`
+	Band          *string   `json:"band"`
+	PersonalScore *float64  `json:"personal_score"`
+	Note          string    `json:"note"`
+	PhotoURL      *string   `json:"photo_url"`
+	IsMine        bool      `json:"is_mine"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+type FeedResponse struct {
+	Items   []FeedStampItem `json:"items"`
+	Limit   int             `json:"limit"`
+	Offset  int             `json:"offset"`
+	HasMore bool            `json:"has_more"`
+}
+
 type StampSummary struct {
-	StampCount        int                `json:"stamp_count"`
-	FinalScore        *float64           `json:"final_score"`
-	DisplayState      string             `json:"display_state"`
-	SentimentScore    *float64           `json:"sentiment_score"`
-	QualityScore      *float64           `json:"quality_score"`
-	VibeConflict      bool               `json:"vibe_conflict"`
-	QualityConflict   bool               `json:"quality_conflict"`
-	ConflictNote      *string            `json:"conflict_note"`
-	Companions        []TagAggregate     `json:"companions"`
-	Vibes             []TagAggregate     `json:"vibes"`
+	StampCount      int            `json:"stamp_count"`
+	FinalScore      *float64       `json:"final_score"`
+	DisplayState    string         `json:"display_state"`
+	SentimentScore  *float64       `json:"sentiment_score"`
+	QualityScore    *float64       `json:"quality_score"`
+	VibeConflict    bool           `json:"vibe_conflict"`
+	QualityConflict bool           `json:"quality_conflict"`
+	ConflictNote    *string        `json:"conflict_note"`
+	Companions      []TagAggregate `json:"companions"`
+	Vibes           []TagAggregate `json:"vibes"`
 }
 
 type TagAggregate struct {
