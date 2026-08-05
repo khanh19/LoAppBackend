@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"encore.app/users"
 	"encore.dev/beta/errs"
@@ -62,6 +63,8 @@ func (s *Service) callbackResponseFromToken(ctx context.Context, token *oauth2.T
 
 	return &CallbackResponse{
 		Token:            rawIDToken,
+		RefreshToken:     strings.TrimSpace(token.RefreshToken),
+		ExpiresAt:        idToken.Expiry.Unix(),
 		OnboardingStatus: upserted.OnboardingState,
 		ProfileExists:    upserted.ProfileExists,
 	}, nil

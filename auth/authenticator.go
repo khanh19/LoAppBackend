@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"time"
 
 	"encore.dev/config"
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -47,7 +48,12 @@ func New() (*Authenticator, error) {
 		ClientSecret: secrets.Auth0ClientSecret,
 		RedirectURL:  cfg.CallbackURL(),
 		Endpoint:     provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+		Scopes: []string{
+			oidc.ScopeOpenID,
+			"profile",
+			"email",
+			oidc.ScopeOfflineAccess,
+		},
 	}
 
 	return &Authenticator{
@@ -70,6 +76,50 @@ func (a *Authenticator) VerifyIDToken(ctx context.Context, token *oauth2.Token) 
 	}
 
 	return a.Verifier(oidcConfig).Verify(ctx, rawIDToken)
+}
+
+type refreshTokenRequest struct {
+	GrantType    string `json:"grant_type"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret,omitempty"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type refreshTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	IDToken      string `json:"id_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
+}
+
+// RefreshTokens exchanges a refresh token for a new Auth0 token set (including id_token).
+func (a *Authenticator) RefreshTokens(ctx context.Context, refreshToken string) (*oauth2.Token, error) {
+	req := refreshTokenRequest{
+		GrantType:    "refresh_token",
+		ClientID:     a.ClientID,
+		ClientSecret: a.ClientSecret,
+		RefreshToken: refreshToken,
+	}
+
+	var resp refreshTokenResponse
+	if err := a.postAuth0JSON(ctx, "/oauth/token", req, "", &resp); err != nil {
+		return nil, err
+	}
+	if resp.IDToken == "" {
+		return nil, errors.New("auth0 refresh response missing id_token")
+	}
+
+	token := &oauth2.Token{
+		AccessToken:  resp.AccessToken,
+		RefreshToken: resp.RefreshToken,
+		TokenType:    resp.TokenType,
+	}
+	if resp.ExpiresIn > 0 {
+		token.Expiry = time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second)
+	}
+
+	return token.WithExtra(map[string]interface{}{"id_token": resp.IDToken}), nil
 }
 
 func generateRandomState() (string, error) {
