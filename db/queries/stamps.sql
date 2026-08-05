@@ -684,3 +684,46 @@ WHERE user_id = sqlc.arg(user_id)::uuid
     OR (place_a_id = sqlc.arg(place_b_id)::uuid AND place_b_id = sqlc.arg(place_a_id)::uuid)
   )
   AND created_at > now() - interval '30 days';
+
+-- name: ListFeedStamps :many
+SELECT
+  s.id::text AS stamp_id,
+  s.user_id::text AS user_id,
+  up.first_name,
+  up.last_name,
+  up.username,
+  up.avatar_url,
+  p.id::text AS place_id,
+  p.name AS place_name,
+  p.cover_image_url AS place_image_url,
+  s.venue_category,
+  s.verdict,
+  pe.band,
+  pe.score AS personal_score,
+  s.note,
+  COALESCE(ph.storage_path, '') AS photo_storage_path,
+  s.created_at
+FROM stamps s
+JOIN places p ON p.id = s.place_id AND p.is_active = true
+JOIN user_profiles up ON up.user_id = s.user_id
+LEFT JOIN user_pool_entries pe
+  ON pe.user_id = s.user_id AND pe.place_id = s.place_id
+LEFT JOIN LATERAL (
+  SELECT sp.storage_path
+  FROM stamp_photos sp
+  WHERE sp.stamp_id = s.id
+  ORDER BY sp.sort_order, sp.created_at
+  LIMIT 1
+) ph ON true
+WHERE s.is_active = true
+  AND (
+    s.user_id = sqlc.arg(viewer_id)::uuid
+    OR s.user_id IN (
+      SELECT uf.following_user_id
+      FROM user_follows uf
+      WHERE uf.follower_user_id = sqlc.arg(viewer_id)::uuid
+    )
+  )
+ORDER BY s.created_at DESC
+LIMIT sqlc.arg(limit_val)::int
+OFFSET sqlc.arg(offset_val)::int;

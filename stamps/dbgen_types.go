@@ -2,6 +2,7 @@ package stamps
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -34,6 +35,25 @@ func numericToFloat(v pgtype.Numeric) float64 {
 		return 0
 	}
 	return f.Float64
+}
+
+func numericToFloatPtr(v pgtype.Numeric) *float64 {
+	if !v.Valid {
+		return nil
+	}
+	f, err := v.Float64Value()
+	if err != nil || !f.Valid {
+		return nil
+	}
+	out := f.Float64
+	return &out
+}
+
+func timestamptzValue(v pgtype.Timestamptz) time.Time {
+	if !v.Valid {
+		return time.Time{}
+	}
+	return v.Time.UTC()
 }
 
 func stringPtr(v string) *string {
