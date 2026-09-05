@@ -97,19 +97,14 @@ func (s *Service) GetPlacePhoto(ctx context.Context, id string, params *GetPlace
 		return nil, errs.WrapCode(err, errs.Internal, "failed to load place")
 	}
 
-	if len(row.PhotoNames) > index && row.PhotoNames[index] != "" {
-		photoURL, err := s.google.fetchPhotoURL(ctx, row.PhotoNames[index], maxWidth)
-		if err != nil {
-			return nil, errs.WrapCode(err, errs.Internal, "failed to fetch place photo")
-		}
-		return &GetPlacePhotoResponse{PhotoURL: photoURL}, nil
+	photoURL, err := s.resolvePlacePhotoURL(ctx, id, row, index, maxWidth)
+	if err != nil {
+		return nil, errs.WrapCode(err, errs.Internal, "failed to fetch place photo")
 	}
-
-	if row.CoverImageUrl != nil && *row.CoverImageUrl != "" {
-		return &GetPlacePhotoResponse{PhotoURL: *row.CoverImageUrl}, nil
+	if photoURL == "" {
+		return nil, &errs.Error{Code: errs.NotFound, Message: "no photo available for place"}
 	}
-
-	return nil, &errs.Error{Code: errs.NotFound, Message: "no photo available for place"}
+	return &GetPlacePhotoResponse{PhotoURL: photoURL}, nil
 }
 
 //encore:api public method=POST path=/places/autocomplete

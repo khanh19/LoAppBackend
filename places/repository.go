@@ -115,6 +115,10 @@ func mapSharedPlaceRow(
 ) *PlaceDetail {
 	lastSynced := timestamptzToTime(lastSyncedAt)
 	isStale := isProStale(lastSynced)
+	persistentCoverImageURL := coverImageURL
+	if coverImageURL != nil && isGoogleUserContentURL(*coverImageURL) {
+		persistentCoverImageURL = nil
+	}
 
 	detail := &PlaceDetail{
 		ID:              id,
@@ -131,7 +135,7 @@ func mapSharedPlaceRow(
 		Phone:           phone,
 		Website:         website,
 		BusinessStatus:  businessStatus,
-		CoverImageURL:   coverImageURL,
+		CoverImageURL:   persistentCoverImageURL,
 		Tags:            tags,
 		CitySlug:        citySlug,
 		CityName:        cityName,
@@ -141,8 +145,8 @@ func mapSharedPlaceRow(
 	if len(hoursJSON) > 0 {
 		detail.HoursJSON = json.RawMessage(hoursJSON)
 	}
-	if coverImageURL != nil && *coverImageURL != "" {
-		detail.PhotoURLs = []string{*coverImageURL}
+	if persistentCoverImageURL != nil && *persistentCoverImageURL != "" {
+		detail.PhotoURLs = []string{*persistentCoverImageURL}
 	}
 	_ = photoNames
 	return detail

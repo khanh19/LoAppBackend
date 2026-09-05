@@ -38,12 +38,6 @@ func (c *googlePlacesClient) resolvePlace(ctx context.Context, query string, lat
 	}
 
 	resolved := mapGooglePlace(place)
-	if resolved.PhotoName != "" {
-		photoURL, err := c.fetchPhotoURL(ctx, resolved.PhotoName)
-		if err == nil && photoURL != "" {
-			resolved.CoverImageURL = photoURL
-		}
-	}
 	return resolved, nil
 }
 
