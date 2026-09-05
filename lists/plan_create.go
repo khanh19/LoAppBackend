@@ -207,6 +207,9 @@ func normalizeCreatePlanStop(stop CreatePlanStopRequest, fallbackStopOrder int) 
 	stop.Address = trimStringPtr(stop.Address)
 	stop.Neighborhood = trimStringPtr(stop.Neighborhood)
 	stop.ImageURL = trimStringPtr(stop.ImageURL)
+	if stop.ImageURL != nil && strings.Contains(*stop.ImageURL, "googleusercontent.com") {
+		stop.ImageURL = nil
+	}
 	stop.Tags = normalizeStringSlice(stop.Tags)
 
 	if stop.Latitude != nil && (*stop.Latitude < -90 || *stop.Latitude > 90) {

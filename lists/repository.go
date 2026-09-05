@@ -31,7 +31,8 @@ func listPlaceLists(ctx context.Context, db *pgxpool.Pool) ([]PlaceListSummary, 
 			CitySlug:      row.CitySlug,
 			CityName:      row.CityName,
 			EntryCount:    row.EntryCount,
-			CoverImageURL: row.CoverImageUrl,
+			CoverPlaceID:  stringPtr(row.CoverPlaceID),
+			CoverImageURL: stringPtr(row.CoverImageUrl),
 		})
 	}
 	return lists, nil
@@ -59,7 +60,8 @@ func listPlans(ctx context.Context, db *pgxpool.Pool, citySlug string, limit int
 			CityName:           row.CityName,
 			SavesCount:         row.SavesCount,
 			StopsCount:         row.StopsCount,
-			CoverImageURL:      row.CoverImageUrl,
+			CoverPlaceID:       stringPtr(row.CoverPlaceID),
+			CoverImageURL:      stringPtr(row.CoverImageUrl),
 			CreatorDisplayName: row.CreatorDisplayName,
 		})
 	}
@@ -129,7 +131,7 @@ func getPlaceListBySlug(ctx context.Context, db *pgxpool.Pool, slug string) (*Pl
 			Note:          row.Note,
 			TimeLabel:     row.TimeLabel,
 			ActivityType:  row.ActivityType,
-			ImageURL:      row.ImageUrl,
+			ImageURL:      stringPtr(row.ImageUrl),
 			PlaceID:       row.PlaceID,
 			Name:          row.PlaceName,
 			GooglePlaceID: row.GooglePlaceID,
@@ -139,7 +141,7 @@ func getPlaceListBySlug(ctx context.Context, db *pgxpool.Pool, slug string) (*Pl
 			Longitude:     numericToFloat(row.Longitude),
 			Rating:        numericToFloat(row.RatingCached),
 			PriceLevel:    row.PriceLevel,
-			CoverImageURL: row.CoverImageUrl,
+			CoverImageURL: stringPtr(row.CoverImageUrl),
 			Tags:          row.Tags,
 		})
 	}

@@ -75,18 +75,19 @@ type PairwiseComparison struct {
 }
 
 type Place struct {
-	ID              pgtype.UUID        `json:"id"`
-	CityID          pgtype.UUID        `json:"city_id"`
-	GooglePlaceID   *string            `json:"google_place_id"`
-	Source          string             `json:"source"`
-	Name            string             `json:"name"`
-	Slug            *string            `json:"slug"`
-	Neighborhood    *string            `json:"neighborhood"`
-	Address         *string            `json:"address"`
-	Latitude        pgtype.Numeric     `json:"latitude"`
-	Longitude       pgtype.Numeric     `json:"longitude"`
-	PriceLevel      *int16             `json:"price_level"`
-	RatingCached    pgtype.Numeric     `json:"rating_cached"`
+	ID            pgtype.UUID    `json:"id"`
+	CityID        pgtype.UUID    `json:"city_id"`
+	GooglePlaceID *string        `json:"google_place_id"`
+	Source        string         `json:"source"`
+	Name          string         `json:"name"`
+	Slug          *string        `json:"slug"`
+	Neighborhood  *string        `json:"neighborhood"`
+	Address       *string        `json:"address"`
+	Latitude      pgtype.Numeric `json:"latitude"`
+	Longitude     pgtype.Numeric `json:"longitude"`
+	PriceLevel    *int16         `json:"price_level"`
+	RatingCached  pgtype.Numeric `json:"rating_cached"`
+	// Non-Google persistent image URL only. Google Photo Media photoUri values must not be stored here.
 	CoverImageUrl   *string            `json:"cover_image_url"`
 	Tags            []string           `json:"tags"`
 	LastSyncedAt    pgtype.Timestamptz `json:"last_synced_at"`
@@ -97,11 +98,12 @@ type Place struct {
 	Phone           *string            `json:"phone"`
 	Website         *string            `json:"website"`
 	HoursJson       []byte             `json:"hours_json"`
-	PhotoNames      []string           `json:"photo_names"`
-	BusinessStatus  *string            `json:"business_status"`
-	VenueCategory   *string            `json:"venue_category"`
-	VenueArchetype  *string            `json:"venue_archetype"`
-	GoogleTypes     []string           `json:"google_types"`
+	// Refreshable Google Places photo resource names. A name may expire; refresh it from Place Details using google_place_id.
+	PhotoNames     []string `json:"photo_names"`
+	BusinessStatus *string  `json:"business_status"`
+	VenueCategory  *string  `json:"venue_category"`
+	VenueArchetype *string  `json:"venue_archetype"`
+	GoogleTypes    []string `json:"google_types"`
 }
 
 type PlaceCategory struct {

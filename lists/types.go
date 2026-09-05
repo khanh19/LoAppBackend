@@ -10,6 +10,7 @@ type PlaceListSummary struct {
 	CitySlug      string   `json:"city_slug"`
 	CityName      string   `json:"city_name"`
 	EntryCount    int32    `json:"entry_count"`
+	CoverPlaceID  *string  `json:"cover_place_id"`
 	CoverImageURL *string  `json:"cover_image_url"`
 }
 
@@ -115,6 +116,7 @@ type PlanSummary struct {
 	CityName           string  `json:"city_name"`
 	SavesCount         int32   `json:"saves_count"`
 	StopsCount         int32   `json:"stops_count"`
+	CoverPlaceID       *string `json:"cover_place_id"`
 	CoverImageURL      *string `json:"cover_image_url"`
 	CreatorDisplayName *string `json:"creator_display_name"`
 }

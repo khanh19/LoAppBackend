@@ -16,12 +16,12 @@ var secrets struct {
 }
 
 const (
-	googlePlacesSearchURL      = "https://places.googleapis.com/v1/places:searchText"
+	googlePlacesSearchURL       = "https://places.googleapis.com/v1/places:searchText"
 	googlePlacesAutocompleteURL = "https://places.googleapis.com/v1/places:autocomplete"
-	googlePlacesDetailsURL     = "https://places.googleapis.com/v1/places/"
-	googlePhotoMediaURL        = "https://places.googleapis.com/v1/"
+	googlePlacesDetailsURL      = "https://places.googleapis.com/v1/places/"
+	googlePhotoMediaURL         = "https://places.googleapis.com/v1/"
 
-	detailsProFieldMask = "id,displayName,formattedAddress,shortFormattedAddress,addressComponents,location,rating,userRatingCount,priceLevel,regularOpeningHours,nationalPhoneNumber,websiteUri,businessStatus,types,primaryTypeDisplayName"
+	detailsProFieldMask    = "id,displayName,formattedAddress,shortFormattedAddress,addressComponents,location,rating,userRatingCount,priceLevel,regularOpeningHours,nationalPhoneNumber,websiteUri,businessStatus,types,primaryTypeDisplayName"
 	detailsPhotosFieldMask = detailsProFieldMask + ",photos"
 
 	autocompletePrimaryTypes = "restaurant,cafe,bar,bakery,food"
@@ -96,12 +96,6 @@ func (c *googlePlacesClient) getPlaceDetails(ctx context.Context, googlePlaceID,
 	}
 
 	resolved := mapGooglePlace(&place, includePhotos)
-	if includePhotos && resolved.PhotoName != "" {
-		photoURL, err := c.fetchPhotoURL(ctx, resolved.PhotoName, 800)
-		if err == nil && photoURL != "" {
-			resolved.CoverImageURL = photoURL
-		}
-	}
 	return resolved, nil
 }
 
