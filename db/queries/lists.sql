@@ -726,6 +726,9 @@ SELECT
   p.neighborhood,
   p.address,
   p.cover_image_url,
+  p.price_level,
+  p.tags,
+  p.rating_cached,
   c.slug AS city_slug,
   c.name AS city_name,
   pb.created_at
