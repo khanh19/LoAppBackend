@@ -106,6 +106,12 @@ type Place struct {
 	GoogleTypes    []string `json:"google_types"`
 }
 
+type PlaceBookmark struct {
+	UserID    pgtype.UUID        `json:"user_id"`
+	PlaceID   pgtype.UUID        `json:"place_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type PlaceCategory struct {
 	PlaceID    pgtype.UUID        `json:"place_id"`
 	CategoryID pgtype.UUID        `json:"category_id"`
@@ -167,6 +173,12 @@ type PlacementSession struct {
 	IsComplete      bool               `json:"is_complete"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
+type PlanBookmark struct {
+	UserID    pgtype.UUID        `json:"user_id"`
+	ListID    pgtype.UUID        `json:"list_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type PurposeCategory struct {
@@ -282,6 +294,21 @@ type UserPlaceFamiliarity struct {
 	Status    string             `json:"status"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type UserPlaceList struct {
+	ID          pgtype.UUID        `json:"id"`
+	OwnerUserID pgtype.UUID        `json:"owner_user_id"`
+	Title       string             `json:"title"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+type UserPlaceListItem struct {
+	ListID    pgtype.UUID        `json:"list_id"`
+	PlaceID   pgtype.UUID        `json:"place_id"`
+	Position  int32              `json:"position"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type UserPoolEntry struct {

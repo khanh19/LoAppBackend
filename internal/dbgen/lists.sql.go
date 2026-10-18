@@ -11,6 +11,95 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addUserPlaceListItem = `-- name: AddUserPlaceListItem :exec
+INSERT INTO user_place_list_items (list_id, place_id, position)
+VALUES (
+  $1::uuid,
+  $2::uuid,
+  COALESCE(
+    (
+      SELECT MAX(position) + 1
+      FROM user_place_list_items
+      WHERE list_id = $1::uuid
+    ),
+    0
+  )
+)
+ON CONFLICT (list_id, place_id) DO NOTHING
+`
+
+type AddUserPlaceListItemParams struct {
+	ListID  pgtype.UUID `json:"list_id"`
+	PlaceID pgtype.UUID `json:"place_id"`
+}
+
+func (q *Queries) AddUserPlaceListItem(ctx context.Context, arg AddUserPlaceListItemParams) error {
+	_, err := q.db.Exec(ctx, addUserPlaceListItem, arg.ListID, arg.PlaceID)
+	return err
+}
+
+const countBookmarkedPlans = `-- name: CountBookmarkedPlans :one
+SELECT COUNT(*)::integer AS count
+FROM plan_bookmarks pb
+JOIN place_lists pl ON pl.id = pb.list_id AND pl.is_active = true AND pl.list_type = 'user_plan'
+WHERE pb.user_id = $1::uuid
+  AND (
+    $2::text IS NULL
+    OR btrim($2::text) = ''
+    OR pl.title ILIKE '%' || btrim($2::text) || '%'
+  )
+`
+
+type CountBookmarkedPlansParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Q      *string     `json:"q"`
+}
+
+func (q *Queries) CountBookmarkedPlans(ctx context.Context, arg CountBookmarkedPlansParams) (int32, error) {
+	row := q.db.QueryRow(ctx, countBookmarkedPlans, arg.UserID, arg.Q)
+	var count int32
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countMyPlans = `-- name: CountMyPlans :one
+SELECT COUNT(*)::integer AS count
+FROM place_lists pl
+WHERE pl.is_active = true
+  AND pl.list_type = 'user_plan'
+  AND pl.creator_user_id = $1::uuid
+  AND (
+    $2::text IS NULL
+    OR btrim($2::text) = ''
+    OR pl.title ILIKE '%' || btrim($2::text) || '%'
+  )
+`
+
+type CountMyPlansParams struct {
+	CreatorUserID pgtype.UUID `json:"creator_user_id"`
+	Q             *string     `json:"q"`
+}
+
+func (q *Queries) CountMyPlans(ctx context.Context, arg CountMyPlansParams) (int32, error) {
+	row := q.db.QueryRow(ctx, countMyPlans, arg.CreatorUserID, arg.Q)
+	var count int32
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countPlaceBookmarks = `-- name: CountPlaceBookmarks :one
+SELECT COUNT(*)::integer AS count
+FROM place_bookmarks
+WHERE user_id = $1::uuid
+`
+
+func (q *Queries) CountPlaceBookmarks(ctx context.Context, userID pgtype.UUID) (int32, error) {
+	row := q.db.QueryRow(ctx, countPlaceBookmarks, userID)
+	var count int32
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createListSyncRun = `-- name: CreateListSyncRun :one
 INSERT INTO list_sync_runs (status)
 VALUES ('running')
@@ -213,6 +302,36 @@ func (q *Queries) CreatePlanPlace(ctx context.Context, arg CreatePlanPlaceParams
 	return id, err
 }
 
+const createUserPlaceList = `-- name: CreateUserPlaceList :one
+INSERT INTO user_place_lists (owner_user_id, title)
+VALUES ($1::uuid, $2)
+RETURNING id::text AS id, title, created_at, updated_at
+`
+
+type CreateUserPlaceListParams struct {
+	OwnerUserID pgtype.UUID `json:"owner_user_id"`
+	Title       string      `json:"title"`
+}
+
+type CreateUserPlaceListRow struct {
+	ID        string             `json:"id"`
+	Title     string             `json:"title"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) CreateUserPlaceList(ctx context.Context, arg CreateUserPlaceListParams) (CreateUserPlaceListRow, error) {
+	row := q.db.QueryRow(ctx, createUserPlaceList, arg.OwnerUserID, arg.Title)
+	var i CreateUserPlaceListRow
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const deactivatePlaceListEntriesNotInSeedNames = `-- name: DeactivatePlaceListEntriesNotInSeedNames :execrows
 UPDATE place_list_entries
 SET
@@ -230,6 +349,74 @@ type DeactivatePlaceListEntriesNotInSeedNamesParams struct {
 
 func (q *Queries) DeactivatePlaceListEntriesNotInSeedNames(ctx context.Context, arg DeactivatePlaceListEntriesNotInSeedNamesParams) (int64, error) {
 	result, err := q.db.Exec(ctx, deactivatePlaceListEntriesNotInSeedNames, arg.ListID, arg.SeedNames)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const decrementPlanSavesCount = `-- name: DecrementPlanSavesCount :exec
+UPDATE place_lists
+SET saves_count = GREATEST(saves_count - 1, 0), updated_at = now()
+WHERE id = $1::uuid
+`
+
+func (q *Queries) DecrementPlanSavesCount(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, decrementPlanSavesCount, id)
+	return err
+}
+
+const deletePlaceBookmark = `-- name: DeletePlaceBookmark :execrows
+DELETE FROM place_bookmarks
+WHERE user_id = $1::uuid
+  AND place_id = $2::uuid
+`
+
+type DeletePlaceBookmarkParams struct {
+	UserID  pgtype.UUID `json:"user_id"`
+	PlaceID pgtype.UUID `json:"place_id"`
+}
+
+func (q *Queries) DeletePlaceBookmark(ctx context.Context, arg DeletePlaceBookmarkParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deletePlaceBookmark, arg.UserID, arg.PlaceID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const deletePlanBookmark = `-- name: DeletePlanBookmark :execrows
+DELETE FROM plan_bookmarks
+WHERE user_id = $1::uuid
+  AND list_id = $2::uuid
+`
+
+type DeletePlanBookmarkParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	ListID pgtype.UUID `json:"list_id"`
+}
+
+func (q *Queries) DeletePlanBookmark(ctx context.Context, arg DeletePlanBookmarkParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deletePlanBookmark, arg.UserID, arg.ListID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const deleteUserPlaceList = `-- name: DeleteUserPlaceList :execrows
+DELETE FROM user_place_lists
+WHERE id = $1::uuid
+  AND owner_user_id = $2::uuid
+`
+
+type DeleteUserPlaceListParams struct {
+	ID          pgtype.UUID `json:"id"`
+	OwnerUserID pgtype.UUID `json:"owner_user_id"`
+}
+
+func (q *Queries) DeleteUserPlaceList(ctx context.Context, arg DeleteUserPlaceListParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteUserPlaceList, arg.ID, arg.OwnerUserID)
 	if err != nil {
 		return 0, err
 	}
@@ -506,6 +693,120 @@ func (q *Queries) GetPlaceListBySlug(ctx context.Context, slug string) (GetPlace
 	return i, err
 }
 
+const getPlanIDBySlug = `-- name: GetPlanIDBySlug :one
+SELECT id::text AS id, saves_count
+FROM place_lists
+WHERE slug = $1
+  AND is_active = true
+  AND list_type = 'user_plan'
+`
+
+type GetPlanIDBySlugRow struct {
+	ID         string `json:"id"`
+	SavesCount int32  `json:"saves_count"`
+}
+
+func (q *Queries) GetPlanIDBySlug(ctx context.Context, slug string) (GetPlanIDBySlugRow, error) {
+	row := q.db.QueryRow(ctx, getPlanIDBySlug, slug)
+	var i GetPlanIDBySlugRow
+	err := row.Scan(&i.ID, &i.SavesCount)
+	return i, err
+}
+
+const getUserPlaceListByID = `-- name: GetUserPlaceListByID :one
+SELECT
+  upl.id::text AS id,
+  upl.owner_user_id::text AS owner_user_id,
+  upl.title,
+  upl.created_at,
+  upl.updated_at,
+  (
+    SELECT COUNT(*)::integer
+    FROM user_place_list_items upli
+    WHERE upli.list_id = upl.id
+  ) AS item_count,
+  COALESCE(cover.cover_image_url, '')::text AS cover_image_url
+FROM user_place_lists upl
+LEFT JOIN LATERAL (
+  SELECT
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END AS cover_image_url
+  FROM user_place_list_items upli
+  JOIN places p ON p.id = upli.place_id AND p.is_active = true
+  WHERE upli.list_id = upl.id
+    AND (
+      cardinality(p.photo_names) > 0
+      OR (
+        p.cover_image_url IS NOT NULL
+        AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      )
+    )
+  ORDER BY upli.position, upli.created_at
+  LIMIT 1
+) cover ON true
+WHERE upl.id = $1::uuid
+`
+
+type GetUserPlaceListByIDRow struct {
+	ID            string             `json:"id"`
+	OwnerUserID   string             `json:"owner_user_id"`
+	Title         string             `json:"title"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	ItemCount     int32              `json:"item_count"`
+	CoverImageUrl string             `json:"cover_image_url"`
+}
+
+func (q *Queries) GetUserPlaceListByID(ctx context.Context, id pgtype.UUID) (GetUserPlaceListByIDRow, error) {
+	row := q.db.QueryRow(ctx, getUserPlaceListByID, id)
+	var i GetUserPlaceListByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.OwnerUserID,
+		&i.Title,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ItemCount,
+		&i.CoverImageUrl,
+	)
+	return i, err
+}
+
+const hasPlanBookmark = `-- name: HasPlanBookmark :one
+SELECT EXISTS (
+  SELECT 1
+  FROM plan_bookmarks
+  WHERE user_id = $1::uuid
+    AND list_id = $2::uuid
+)::boolean AS exists
+`
+
+type HasPlanBookmarkParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	ListID pgtype.UUID `json:"list_id"`
+}
+
+func (q *Queries) HasPlanBookmark(ctx context.Context, arg HasPlanBookmarkParams) (bool, error) {
+	row := q.db.QueryRow(ctx, hasPlanBookmark, arg.UserID, arg.ListID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const incrementPlanSavesCount = `-- name: IncrementPlanSavesCount :exec
+UPDATE place_lists
+SET saves_count = saves_count + 1, updated_at = now()
+WHERE id = $1::uuid
+`
+
+func (q *Queries) IncrementPlanSavesCount(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, incrementPlanSavesCount, id)
+	return err
+}
+
 const listActivePlaceLists = `-- name: ListActivePlaceLists :many
 SELECT
   pl.id::text AS id,
@@ -704,6 +1005,366 @@ func (q *Queries) ListActivePlans(ctx context.Context, arg ListActivePlansParams
 			&i.CoverPlaceID,
 			&i.CoverImageUrl,
 			&i.CreatorDisplayName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listBookmarkedPlans = `-- name: ListBookmarkedPlans :many
+SELECT
+  pl.id::text AS id,
+  pl.slug,
+  pl.title,
+  pl.subtitle,
+  pl.category,
+  pl.area,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  pl.saves_count,
+  pl.visibility,
+  pb.created_at AS bookmarked_at,
+  pl.created_at,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count,
+  COALESCE(cover.cover_place_id, '')::text AS cover_place_id,
+  COALESCE(cover.cover_image_url, '')::text AS cover_image_url,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
+  COALESCE(up.username::text, ''::text)::text AS creator_username,
+  up.avatar_url AS creator_avatar_url
+FROM plan_bookmarks pb
+JOIN place_lists pl ON pl.id = pb.list_id AND pl.is_active = true AND pl.list_type = 'user_plan'
+JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
+LEFT JOIN LATERAL (
+  SELECT
+    p.id::text AS cover_place_id,
+    CASE
+      WHEN ple.image_url NOT ILIKE '%googleusercontent.com%' THEN ple.image_url
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%' THEN p.cover_image_url
+      ELSE NULL
+    END AS cover_image_url
+  FROM place_list_entries ple
+  JOIN places p ON p.id = ple.place_id
+  WHERE ple.list_id = pl.id
+    AND ple.is_active = true
+    AND (
+      cardinality(p.photo_names) > 0
+      OR (
+        ple.image_url IS NOT NULL
+        AND ple.image_url NOT ILIKE '%googleusercontent.com%'
+      )
+      OR (
+        p.cover_image_url IS NOT NULL
+        AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      )
+    )
+  ORDER BY ple.stop_order
+  LIMIT 1
+) cover ON true
+WHERE pb.user_id = $1::uuid
+  AND (
+    $2::text IS NULL
+    OR btrim($2::text) = ''
+    OR pl.title ILIKE '%' || btrim($2::text) || '%'
+  )
+ORDER BY
+  CASE WHEN $3::text = 'name' THEN lower(pl.title) END ASC,
+  CASE WHEN $3::text <> 'name' THEN pb.created_at END DESC
+LIMIT $5::int
+OFFSET $4::int
+`
+
+type ListBookmarkedPlansParams struct {
+	UserID    pgtype.UUID `json:"user_id"`
+	Q         *string     `json:"q"`
+	Sort      string      `json:"sort"`
+	OffsetVal int32       `json:"offset_val"`
+	LimitVal  int32       `json:"limit_val"`
+}
+
+type ListBookmarkedPlansRow struct {
+	ID                 string             `json:"id"`
+	Slug               string             `json:"slug"`
+	Title              string             `json:"title"`
+	Subtitle           string             `json:"subtitle"`
+	Category           string             `json:"category"`
+	Area               string             `json:"area"`
+	CitySlug           string             `json:"city_slug"`
+	CityName           string             `json:"city_name"`
+	SavesCount         int32              `json:"saves_count"`
+	Visibility         string             `json:"visibility"`
+	BookmarkedAt       pgtype.Timestamptz `json:"bookmarked_at"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	StopsCount         int32              `json:"stops_count"`
+	CoverPlaceID       string             `json:"cover_place_id"`
+	CoverImageUrl      string             `json:"cover_image_url"`
+	CreatorDisplayName *string            `json:"creator_display_name"`
+	CreatorUsername    string             `json:"creator_username"`
+	CreatorAvatarUrl   *string            `json:"creator_avatar_url"`
+}
+
+func (q *Queries) ListBookmarkedPlans(ctx context.Context, arg ListBookmarkedPlansParams) ([]ListBookmarkedPlansRow, error) {
+	rows, err := q.db.Query(ctx, listBookmarkedPlans,
+		arg.UserID,
+		arg.Q,
+		arg.Sort,
+		arg.OffsetVal,
+		arg.LimitVal,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListBookmarkedPlansRow
+	for rows.Next() {
+		var i ListBookmarkedPlansRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Slug,
+			&i.Title,
+			&i.Subtitle,
+			&i.Category,
+			&i.Area,
+			&i.CitySlug,
+			&i.CityName,
+			&i.SavesCount,
+			&i.Visibility,
+			&i.BookmarkedAt,
+			&i.CreatedAt,
+			&i.StopsCount,
+			&i.CoverPlaceID,
+			&i.CoverImageUrl,
+			&i.CreatorDisplayName,
+			&i.CreatorUsername,
+			&i.CreatorAvatarUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMyPlans = `-- name: ListMyPlans :many
+SELECT
+  pl.id::text AS id,
+  pl.slug,
+  pl.title,
+  pl.subtitle,
+  pl.category,
+  pl.area,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  pl.saves_count,
+  pl.visibility,
+  pl.created_at,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count,
+  COALESCE(cover.cover_place_id, '')::text AS cover_place_id,
+  COALESCE(cover.cover_image_url, '')::text AS cover_image_url,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
+  COALESCE(up.username::text, ''::text)::text AS creator_username,
+  up.avatar_url AS creator_avatar_url
+FROM place_lists pl
+JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
+LEFT JOIN LATERAL (
+  SELECT
+    p.id::text AS cover_place_id,
+    CASE
+      WHEN ple.image_url NOT ILIKE '%googleusercontent.com%' THEN ple.image_url
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%' THEN p.cover_image_url
+      ELSE NULL
+    END AS cover_image_url
+  FROM place_list_entries ple
+  JOIN places p ON p.id = ple.place_id
+  WHERE ple.list_id = pl.id
+    AND ple.is_active = true
+    AND (
+      cardinality(p.photo_names) > 0
+      OR (
+        ple.image_url IS NOT NULL
+        AND ple.image_url NOT ILIKE '%googleusercontent.com%'
+      )
+      OR (
+        p.cover_image_url IS NOT NULL
+        AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      )
+    )
+  ORDER BY ple.stop_order
+  LIMIT 1
+) cover ON true
+WHERE pl.is_active = true
+  AND pl.list_type = 'user_plan'
+  AND pl.creator_user_id = $1::uuid
+  AND (
+    $2::text IS NULL
+    OR btrim($2::text) = ''
+    OR pl.title ILIKE '%' || btrim($2::text) || '%'
+  )
+ORDER BY
+  CASE WHEN $3::text = 'name' THEN lower(pl.title) END ASC,
+  CASE WHEN $3::text <> 'name' THEN pl.created_at END DESC
+LIMIT $5::int
+OFFSET $4::int
+`
+
+type ListMyPlansParams struct {
+	CreatorUserID pgtype.UUID `json:"creator_user_id"`
+	Q             *string     `json:"q"`
+	Sort          string      `json:"sort"`
+	OffsetVal     int32       `json:"offset_val"`
+	LimitVal      int32       `json:"limit_val"`
+}
+
+type ListMyPlansRow struct {
+	ID                 string             `json:"id"`
+	Slug               string             `json:"slug"`
+	Title              string             `json:"title"`
+	Subtitle           string             `json:"subtitle"`
+	Category           string             `json:"category"`
+	Area               string             `json:"area"`
+	CitySlug           string             `json:"city_slug"`
+	CityName           string             `json:"city_name"`
+	SavesCount         int32              `json:"saves_count"`
+	Visibility         string             `json:"visibility"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	StopsCount         int32              `json:"stops_count"`
+	CoverPlaceID       string             `json:"cover_place_id"`
+	CoverImageUrl      string             `json:"cover_image_url"`
+	CreatorDisplayName *string            `json:"creator_display_name"`
+	CreatorUsername    string             `json:"creator_username"`
+	CreatorAvatarUrl   *string            `json:"creator_avatar_url"`
+}
+
+func (q *Queries) ListMyPlans(ctx context.Context, arg ListMyPlansParams) ([]ListMyPlansRow, error) {
+	rows, err := q.db.Query(ctx, listMyPlans,
+		arg.CreatorUserID,
+		arg.Q,
+		arg.Sort,
+		arg.OffsetVal,
+		arg.LimitVal,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListMyPlansRow
+	for rows.Next() {
+		var i ListMyPlansRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Slug,
+			&i.Title,
+			&i.Subtitle,
+			&i.Category,
+			&i.Area,
+			&i.CitySlug,
+			&i.CityName,
+			&i.SavesCount,
+			&i.Visibility,
+			&i.CreatedAt,
+			&i.StopsCount,
+			&i.CoverPlaceID,
+			&i.CoverImageUrl,
+			&i.CreatorDisplayName,
+			&i.CreatorUsername,
+			&i.CreatorAvatarUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPlaceBookmarks = `-- name: ListPlaceBookmarks :many
+SELECT
+  p.id::text AS place_id,
+  p.name,
+  p.neighborhood,
+  p.address,
+  (
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END
+  )::text AS cover_image_url,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  pb.created_at
+FROM place_bookmarks pb
+JOIN places p ON p.id = pb.place_id AND p.is_active = true
+JOIN cities c ON c.id = p.city_id
+WHERE pb.user_id = $1::uuid
+  AND (
+    $2::text IS NULL
+    OR btrim($2::text) = ''
+    OR p.name ILIKE '%' || btrim($2::text) || '%'
+  )
+ORDER BY
+  CASE WHEN $3::text = 'name' THEN lower(p.name) END ASC,
+  CASE WHEN $3::text <> 'name' THEN pb.created_at END DESC
+`
+
+type ListPlaceBookmarksParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Q      *string     `json:"q"`
+	Sort   string      `json:"sort"`
+}
+
+type ListPlaceBookmarksRow struct {
+	PlaceID       string             `json:"place_id"`
+	Name          string             `json:"name"`
+	Neighborhood  *string            `json:"neighborhood"`
+	Address       *string            `json:"address"`
+	CoverImageUrl string             `json:"cover_image_url"`
+	CitySlug      string             `json:"city_slug"`
+	CityName      string             `json:"city_name"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) ListPlaceBookmarks(ctx context.Context, arg ListPlaceBookmarksParams) ([]ListPlaceBookmarksRow, error) {
+	rows, err := q.db.Query(ctx, listPlaceBookmarks, arg.UserID, arg.Q, arg.Sort)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPlaceBookmarksRow
+	for rows.Next() {
+		var i ListPlaceBookmarksRow
+		if err := rows.Scan(
+			&i.PlaceID,
+			&i.Name,
+			&i.Neighborhood,
+			&i.Address,
+			&i.CoverImageUrl,
+			&i.CitySlug,
+			&i.CityName,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -952,6 +1613,254 @@ func (q *Queries) ListRecentSyncRuns(ctx context.Context, limitVal int32) ([]Lis
 	return items, nil
 }
 
+const listUserPlaceListItems = `-- name: ListUserPlaceListItems :many
+SELECT
+  p.id::text AS place_id,
+  p.name,
+  p.neighborhood,
+  p.address,
+  (
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END
+  )::text AS cover_image_url,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  upli.position,
+  upli.created_at
+FROM user_place_list_items upli
+JOIN places p ON p.id = upli.place_id AND p.is_active = true
+JOIN cities c ON c.id = p.city_id
+WHERE upli.list_id = $1::uuid
+ORDER BY upli.position, upli.created_at
+`
+
+type ListUserPlaceListItemsRow struct {
+	PlaceID       string             `json:"place_id"`
+	Name          string             `json:"name"`
+	Neighborhood  *string            `json:"neighborhood"`
+	Address       *string            `json:"address"`
+	CoverImageUrl string             `json:"cover_image_url"`
+	CitySlug      string             `json:"city_slug"`
+	CityName      string             `json:"city_name"`
+	Position      int32              `json:"position"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) ListUserPlaceListItems(ctx context.Context, listID pgtype.UUID) ([]ListUserPlaceListItemsRow, error) {
+	rows, err := q.db.Query(ctx, listUserPlaceListItems, listID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserPlaceListItemsRow
+	for rows.Next() {
+		var i ListUserPlaceListItemsRow
+		if err := rows.Scan(
+			&i.PlaceID,
+			&i.Name,
+			&i.Neighborhood,
+			&i.Address,
+			&i.CoverImageUrl,
+			&i.CitySlug,
+			&i.CityName,
+			&i.Position,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserPlaceLists = `-- name: ListUserPlaceLists :many
+
+SELECT
+  upl.id::text AS id,
+  upl.title,
+  upl.created_at,
+  upl.updated_at,
+  (
+    SELECT COUNT(*)::integer
+    FROM user_place_list_items upli
+    WHERE upli.list_id = upl.id
+  ) AS item_count,
+  COALESCE(cover.cover_image_url, '')::text AS cover_image_url
+FROM user_place_lists upl
+LEFT JOIN LATERAL (
+  SELECT
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END AS cover_image_url
+  FROM user_place_list_items upli
+  JOIN places p ON p.id = upli.place_id AND p.is_active = true
+  WHERE upli.list_id = upl.id
+    AND (
+      cardinality(p.photo_names) > 0
+      OR (
+        p.cover_image_url IS NOT NULL
+        AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      )
+    )
+  ORDER BY upli.position, upli.created_at
+  LIMIT 1
+) cover ON true
+WHERE upl.owner_user_id = $1::uuid
+  AND (
+    $2::text IS NULL
+    OR btrim($2::text) = ''
+    OR upl.title ILIKE '%' || btrim($2::text) || '%'
+  )
+ORDER BY
+  CASE WHEN $3::text = 'name' THEN lower(upl.title) END ASC,
+  CASE WHEN $3::text <> 'name' THEN upl.updated_at END DESC
+`
+
+type ListUserPlaceListsParams struct {
+	OwnerUserID pgtype.UUID `json:"owner_user_id"`
+	Q           *string     `json:"q"`
+	Sort        string      `json:"sort"`
+}
+
+type ListUserPlaceListsRow struct {
+	ID            string             `json:"id"`
+	Title         string             `json:"title"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	ItemCount     int32              `json:"item_count"`
+	CoverImageUrl string             `json:"cover_image_url"`
+}
+
+// ---------------------------------------------------------------------------
+// User library: place playlists, place bookmarks, plan bookmarks, my plans
+// ---------------------------------------------------------------------------
+func (q *Queries) ListUserPlaceLists(ctx context.Context, arg ListUserPlaceListsParams) ([]ListUserPlaceListsRow, error) {
+	rows, err := q.db.Query(ctx, listUserPlaceLists, arg.OwnerUserID, arg.Q, arg.Sort)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserPlaceListsRow
+	for rows.Next() {
+		var i ListUserPlaceListsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ItemCount,
+			&i.CoverImageUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserStampedPlaces = `-- name: ListUserStampedPlaces :many
+SELECT
+  p.id::text AS place_id,
+  p.name,
+  p.neighborhood,
+  p.address,
+  (
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END
+  )::text AS cover_image_url,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  MAX(s.created_at)::timestamptz AS stamped_at
+FROM stamps s
+JOIN places p ON p.id = s.place_id AND p.is_active = true
+JOIN cities c ON c.id = p.city_id
+WHERE s.user_id = $1::uuid
+  AND s.is_active = true
+  AND (
+    $2::text IS NULL
+    OR btrim($2::text) = ''
+    OR p.name ILIKE '%' || btrim($2::text) || '%'
+  )
+GROUP BY p.id, p.name, p.neighborhood, p.address, p.cover_image_url, c.slug, c.name
+ORDER BY
+  CASE WHEN $3::text = 'name' THEN lower(p.name) END ASC,
+  CASE WHEN $3::text <> 'name' THEN MAX(s.created_at) END DESC
+`
+
+type ListUserStampedPlacesParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Q      *string     `json:"q"`
+	Sort   string      `json:"sort"`
+}
+
+type ListUserStampedPlacesRow struct {
+	PlaceID       string             `json:"place_id"`
+	Name          string             `json:"name"`
+	Neighborhood  *string            `json:"neighborhood"`
+	Address       *string            `json:"address"`
+	CoverImageUrl string             `json:"cover_image_url"`
+	CitySlug      string             `json:"city_slug"`
+	CityName      string             `json:"city_name"`
+	StampedAt     pgtype.Timestamptz `json:"stamped_at"`
+}
+
+func (q *Queries) ListUserStampedPlaces(ctx context.Context, arg ListUserStampedPlacesParams) ([]ListUserStampedPlacesRow, error) {
+	rows, err := q.db.Query(ctx, listUserStampedPlaces, arg.UserID, arg.Q, arg.Sort)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserStampedPlacesRow
+	for rows.Next() {
+		var i ListUserStampedPlacesRow
+		if err := rows.Scan(
+			&i.PlaceID,
+			&i.Name,
+			&i.Neighborhood,
+			&i.Address,
+			&i.CoverImageUrl,
+			&i.CitySlug,
+			&i.CityName,
+			&i.StampedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const placeExists = `-- name: PlaceExists :one
+SELECT id::text AS id
+FROM places
+WHERE id = $1::uuid
+  AND is_active = true
+`
+
+func (q *Queries) PlaceExists(ctx context.Context, id pgtype.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, placeExists, id)
+	var id_2 string
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
 const relinkPlaceListEntries = `-- name: RelinkPlaceListEntries :exec
 UPDATE place_list_entries
 SET
@@ -973,6 +1882,36 @@ type RelinkPlaceListEntriesParams struct {
 
 func (q *Queries) RelinkPlaceListEntries(ctx context.Context, arg RelinkPlaceListEntriesParams) error {
 	_, err := q.db.Exec(ctx, relinkPlaceListEntries, arg.NewPlaceID, arg.OldPlaceID)
+	return err
+}
+
+const removeUserPlaceListItem = `-- name: RemoveUserPlaceListItem :execrows
+DELETE FROM user_place_list_items
+WHERE list_id = $1::uuid
+  AND place_id = $2::uuid
+`
+
+type RemoveUserPlaceListItemParams struct {
+	ListID  pgtype.UUID `json:"list_id"`
+	PlaceID pgtype.UUID `json:"place_id"`
+}
+
+func (q *Queries) RemoveUserPlaceListItem(ctx context.Context, arg RemoveUserPlaceListItemParams) (int64, error) {
+	result, err := q.db.Exec(ctx, removeUserPlaceListItem, arg.ListID, arg.PlaceID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const touchUserPlaceList = `-- name: TouchUserPlaceList :exec
+UPDATE user_place_lists
+SET updated_at = now()
+WHERE id = $1::uuid
+`
+
+func (q *Queries) TouchUserPlaceList(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, touchUserPlaceList, id)
 	return err
 }
 
@@ -1184,6 +2123,22 @@ func (q *Queries) UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlacePa
 	return id, err
 }
 
+const upsertPlaceBookmark = `-- name: UpsertPlaceBookmark :exec
+INSERT INTO place_bookmarks (user_id, place_id)
+VALUES ($1::uuid, $2::uuid)
+ON CONFLICT (user_id, place_id) DO NOTHING
+`
+
+type UpsertPlaceBookmarkParams struct {
+	UserID  pgtype.UUID `json:"user_id"`
+	PlaceID pgtype.UUID `json:"place_id"`
+}
+
+func (q *Queries) UpsertPlaceBookmark(ctx context.Context, arg UpsertPlaceBookmarkParams) error {
+	_, err := q.db.Exec(ctx, upsertPlaceBookmark, arg.UserID, arg.PlaceID)
+	return err
+}
+
 const upsertPlaceList = `-- name: UpsertPlaceList :one
 INSERT INTO place_lists (
   slug,
@@ -1290,5 +2245,21 @@ func (q *Queries) UpsertPlaceListEntry(ctx context.Context, arg UpsertPlaceListE
 		arg.StopOrder,
 		arg.Note,
 	)
+	return err
+}
+
+const upsertPlanBookmark = `-- name: UpsertPlanBookmark :exec
+INSERT INTO plan_bookmarks (user_id, list_id)
+VALUES ($1::uuid, $2::uuid)
+ON CONFLICT (user_id, list_id) DO NOTHING
+`
+
+type UpsertPlanBookmarkParams struct {
+	UserID pgtype.UUID `json:"user_id"`
+	ListID pgtype.UUID `json:"list_id"`
+}
+
+func (q *Queries) UpsertPlanBookmark(ctx context.Context, arg UpsertPlanBookmarkParams) error {
+	_, err := q.db.Exec(ctx, upsertPlanBookmark, arg.UserID, arg.ListID)
 	return err
 }

@@ -159,3 +159,90 @@ type SyncEntryResult struct {
 	PlaceID  string `json:"place_id,omitempty"`
 	Error    string `json:"error,omitempty"`
 }
+
+// --- User library (List tab) ---
+
+type LibraryQueryParams struct {
+	Q      string `query:"q"`
+	Sort   string `query:"sort"`
+	Limit  int    `query:"limit"`
+	Offset int    `query:"offset"`
+}
+
+type UserPlaceListSummary struct {
+	ID            string  `json:"id"`
+	Title         string  `json:"title"`
+	ItemCount     int32   `json:"item_count"`
+	CoverImageURL *string `json:"cover_image_url"`
+	CreatedAt     string  `json:"created_at"`
+	UpdatedAt     string  `json:"updated_at"`
+}
+
+type ListUserPlaceListsResponse struct {
+	Lists              []UserPlaceListSummary `json:"lists"`
+	BookmarkedCount    int32                  `json:"bookmarked_count"`
+}
+
+type CreateUserPlaceListRequest struct {
+	Title string `json:"title"`
+}
+
+type CreateUserPlaceListResponse struct {
+	List UserPlaceListSummary `json:"list"`
+}
+
+type LibraryPlaceItem struct {
+	PlaceID       string  `json:"place_id"`
+	Name          string  `json:"name"`
+	Neighborhood  *string `json:"neighborhood"`
+	Address       *string `json:"address"`
+	CoverImageURL *string `json:"cover_image_url"`
+	CitySlug      string  `json:"city_slug"`
+	CityName      string  `json:"city_name"`
+	CreatedAt     string  `json:"created_at"`
+}
+
+type GetUserPlaceListResponse struct {
+	List  UserPlaceListSummary `json:"list"`
+	Items []LibraryPlaceItem   `json:"items"`
+}
+
+type AddPlaceToListRequest struct {
+	PlaceID string `json:"place_id"`
+}
+
+type ListLibraryPlacesResponse struct {
+	Places []LibraryPlaceItem `json:"places"`
+}
+
+type LibraryPlanSummary struct {
+	ID                 string  `json:"id"`
+	Slug               string  `json:"slug"`
+	Title              string  `json:"title"`
+	Subtitle           string  `json:"subtitle"`
+	Category           string  `json:"category"`
+	Area               string  `json:"area"`
+	CitySlug           string  `json:"city_slug"`
+	CityName           string  `json:"city_name"`
+	SavesCount         int32   `json:"saves_count"`
+	StopsCount         int32   `json:"stops_count"`
+	Visibility         string  `json:"visibility"`
+	CoverPlaceID       *string `json:"cover_place_id"`
+	CoverImageURL      *string `json:"cover_image_url"`
+	CreatorDisplayName *string `json:"creator_display_name"`
+	CreatorUsername    string  `json:"creator_username"`
+	CreatorAvatarURL   *string `json:"creator_avatar_url"`
+	CreatedAt          string  `json:"created_at"`
+	BookmarkedAt       *string `json:"bookmarked_at,omitempty"`
+}
+
+type ListLibraryPlansResponse struct {
+	Plans  []LibraryPlanSummary `json:"plans"`
+	Total  int32                `json:"total"`
+	Limit  int                  `json:"limit"`
+	Offset int                  `json:"offset"`
+}
+
+type BookmarkStatusResponse struct {
+	Bookmarked bool `json:"bookmarked"`
+}

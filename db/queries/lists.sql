@@ -579,3 +579,420 @@ SELECT
 FROM list_sync_runs
 ORDER BY started_at DESC
 LIMIT sqlc.arg(limit_val)::integer;
+
+-- ---------------------------------------------------------------------------
+-- User library: place playlists, place bookmarks, plan bookmarks, my plans
+-- ---------------------------------------------------------------------------
+
+-- name: ListUserPlaceLists :many
+SELECT
+  upl.id::text AS id,
+  upl.title,
+  upl.created_at,
+  upl.updated_at,
+  (
+    SELECT COUNT(*)::integer
+    FROM user_place_list_items upli
+    WHERE upli.list_id = upl.id
+  ) AS item_count,
+  COALESCE(cover.cover_image_url, '')::text AS cover_image_url
+FROM user_place_lists upl
+LEFT JOIN LATERAL (
+  SELECT
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END AS cover_image_url
+  FROM user_place_list_items upli
+  JOIN places p ON p.id = upli.place_id AND p.is_active = true
+  WHERE upli.list_id = upl.id
+    AND (
+      cardinality(p.photo_names) > 0
+      OR (
+        p.cover_image_url IS NOT NULL
+        AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      )
+    )
+  ORDER BY upli.position, upli.created_at
+  LIMIT 1
+) cover ON true
+WHERE upl.owner_user_id = sqlc.arg(owner_user_id)::uuid
+  AND (
+    sqlc.narg(q)::text IS NULL
+    OR btrim(sqlc.narg(q)::text) = ''
+    OR upl.title ILIKE '%' || btrim(sqlc.narg(q)::text) || '%'
+  )
+ORDER BY
+  CASE WHEN sqlc.arg(sort)::text = 'name' THEN lower(upl.title) END ASC,
+  CASE WHEN sqlc.arg(sort)::text <> 'name' THEN upl.updated_at END DESC;
+
+-- name: CreateUserPlaceList :one
+INSERT INTO user_place_lists (owner_user_id, title)
+VALUES (sqlc.arg(owner_user_id)::uuid, sqlc.arg(title))
+RETURNING id::text AS id, title, created_at, updated_at;
+
+-- name: GetUserPlaceListByID :one
+SELECT
+  upl.id::text AS id,
+  upl.owner_user_id::text AS owner_user_id,
+  upl.title,
+  upl.created_at,
+  upl.updated_at,
+  (
+    SELECT COUNT(*)::integer
+    FROM user_place_list_items upli
+    WHERE upli.list_id = upl.id
+  ) AS item_count,
+  COALESCE(cover.cover_image_url, '')::text AS cover_image_url
+FROM user_place_lists upl
+LEFT JOIN LATERAL (
+  SELECT
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END AS cover_image_url
+  FROM user_place_list_items upli
+  JOIN places p ON p.id = upli.place_id AND p.is_active = true
+  WHERE upli.list_id = upl.id
+    AND (
+      cardinality(p.photo_names) > 0
+      OR (
+        p.cover_image_url IS NOT NULL
+        AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      )
+    )
+  ORDER BY upli.position, upli.created_at
+  LIMIT 1
+) cover ON true
+WHERE upl.id = sqlc.arg(id)::uuid;
+
+-- name: DeleteUserPlaceList :execrows
+DELETE FROM user_place_lists
+WHERE id = sqlc.arg(id)::uuid
+  AND owner_user_id = sqlc.arg(owner_user_id)::uuid;
+
+-- name: ListUserPlaceListItems :many
+SELECT
+  p.id::text AS place_id,
+  p.name,
+  p.neighborhood,
+  p.address,
+  (
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END
+  )::text AS cover_image_url,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  upli.position,
+  upli.created_at
+FROM user_place_list_items upli
+JOIN places p ON p.id = upli.place_id AND p.is_active = true
+JOIN cities c ON c.id = p.city_id
+WHERE upli.list_id = sqlc.arg(list_id)::uuid
+ORDER BY upli.position, upli.created_at;
+
+-- name: AddUserPlaceListItem :exec
+INSERT INTO user_place_list_items (list_id, place_id, position)
+VALUES (
+  sqlc.arg(list_id)::uuid,
+  sqlc.arg(place_id)::uuid,
+  COALESCE(
+    (
+      SELECT MAX(position) + 1
+      FROM user_place_list_items
+      WHERE list_id = sqlc.arg(list_id)::uuid
+    ),
+    0
+  )
+)
+ON CONFLICT (list_id, place_id) DO NOTHING;
+
+-- name: RemoveUserPlaceListItem :execrows
+DELETE FROM user_place_list_items
+WHERE list_id = sqlc.arg(list_id)::uuid
+  AND place_id = sqlc.arg(place_id)::uuid;
+
+-- name: TouchUserPlaceList :exec
+UPDATE user_place_lists
+SET updated_at = now()
+WHERE id = sqlc.arg(id)::uuid;
+
+-- name: CountPlaceBookmarks :one
+SELECT COUNT(*)::integer AS count
+FROM place_bookmarks
+WHERE user_id = sqlc.arg(user_id)::uuid;
+
+-- name: ListPlaceBookmarks :many
+SELECT
+  p.id::text AS place_id,
+  p.name,
+  p.neighborhood,
+  p.address,
+  (
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END
+  )::text AS cover_image_url,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  pb.created_at
+FROM place_bookmarks pb
+JOIN places p ON p.id = pb.place_id AND p.is_active = true
+JOIN cities c ON c.id = p.city_id
+WHERE pb.user_id = sqlc.arg(user_id)::uuid
+  AND (
+    sqlc.narg(q)::text IS NULL
+    OR btrim(sqlc.narg(q)::text) = ''
+    OR p.name ILIKE '%' || btrim(sqlc.narg(q)::text) || '%'
+  )
+ORDER BY
+  CASE WHEN sqlc.arg(sort)::text = 'name' THEN lower(p.name) END ASC,
+  CASE WHEN sqlc.arg(sort)::text <> 'name' THEN pb.created_at END DESC;
+
+-- name: UpsertPlaceBookmark :exec
+INSERT INTO place_bookmarks (user_id, place_id)
+VALUES (sqlc.arg(user_id)::uuid, sqlc.arg(place_id)::uuid)
+ON CONFLICT (user_id, place_id) DO NOTHING;
+
+-- name: DeletePlaceBookmark :execrows
+DELETE FROM place_bookmarks
+WHERE user_id = sqlc.arg(user_id)::uuid
+  AND place_id = sqlc.arg(place_id)::uuid;
+
+-- name: PlaceExists :one
+SELECT id::text AS id
+FROM places
+WHERE id = sqlc.arg(id)::uuid
+  AND is_active = true;
+
+-- name: ListUserStampedPlaces :many
+SELECT
+  p.id::text AS place_id,
+  p.name,
+  p.neighborhood,
+  p.address,
+  (
+    CASE
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+        THEN p.cover_image_url
+      ELSE NULL
+    END
+  )::text AS cover_image_url,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  MAX(s.created_at)::timestamptz AS stamped_at
+FROM stamps s
+JOIN places p ON p.id = s.place_id AND p.is_active = true
+JOIN cities c ON c.id = p.city_id
+WHERE s.user_id = sqlc.arg(user_id)::uuid
+  AND s.is_active = true
+  AND (
+    sqlc.narg(q)::text IS NULL
+    OR btrim(sqlc.narg(q)::text) = ''
+    OR p.name ILIKE '%' || btrim(sqlc.narg(q)::text) || '%'
+  )
+GROUP BY p.id, p.name, p.neighborhood, p.address, p.cover_image_url, c.slug, c.name
+ORDER BY
+  CASE WHEN sqlc.arg(sort)::text = 'name' THEN lower(p.name) END ASC,
+  CASE WHEN sqlc.arg(sort)::text <> 'name' THEN MAX(s.created_at) END DESC;
+
+-- name: ListMyPlans :many
+SELECT
+  pl.id::text AS id,
+  pl.slug,
+  pl.title,
+  pl.subtitle,
+  pl.category,
+  pl.area,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  pl.saves_count,
+  pl.visibility,
+  pl.created_at,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count,
+  COALESCE(cover.cover_place_id, '')::text AS cover_place_id,
+  COALESCE(cover.cover_image_url, '')::text AS cover_image_url,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
+  COALESCE(up.username::text, ''::text)::text AS creator_username,
+  up.avatar_url AS creator_avatar_url
+FROM place_lists pl
+JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
+LEFT JOIN LATERAL (
+  SELECT
+    p.id::text AS cover_place_id,
+    CASE
+      WHEN ple.image_url NOT ILIKE '%googleusercontent.com%' THEN ple.image_url
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%' THEN p.cover_image_url
+      ELSE NULL
+    END AS cover_image_url
+  FROM place_list_entries ple
+  JOIN places p ON p.id = ple.place_id
+  WHERE ple.list_id = pl.id
+    AND ple.is_active = true
+    AND (
+      cardinality(p.photo_names) > 0
+      OR (
+        ple.image_url IS NOT NULL
+        AND ple.image_url NOT ILIKE '%googleusercontent.com%'
+      )
+      OR (
+        p.cover_image_url IS NOT NULL
+        AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      )
+    )
+  ORDER BY ple.stop_order
+  LIMIT 1
+) cover ON true
+WHERE pl.is_active = true
+  AND pl.list_type = 'user_plan'
+  AND pl.creator_user_id = sqlc.arg(creator_user_id)::uuid
+  AND (
+    sqlc.narg(q)::text IS NULL
+    OR btrim(sqlc.narg(q)::text) = ''
+    OR pl.title ILIKE '%' || btrim(sqlc.narg(q)::text) || '%'
+  )
+ORDER BY
+  CASE WHEN sqlc.arg(sort)::text = 'name' THEN lower(pl.title) END ASC,
+  CASE WHEN sqlc.arg(sort)::text <> 'name' THEN pl.created_at END DESC
+LIMIT sqlc.arg(limit_val)::int
+OFFSET sqlc.arg(offset_val)::int;
+
+-- name: CountMyPlans :one
+SELECT COUNT(*)::integer AS count
+FROM place_lists pl
+WHERE pl.is_active = true
+  AND pl.list_type = 'user_plan'
+  AND pl.creator_user_id = sqlc.arg(creator_user_id)::uuid
+  AND (
+    sqlc.narg(q)::text IS NULL
+    OR btrim(sqlc.narg(q)::text) = ''
+    OR pl.title ILIKE '%' || btrim(sqlc.narg(q)::text) || '%'
+  );
+
+-- name: ListBookmarkedPlans :many
+SELECT
+  pl.id::text AS id,
+  pl.slug,
+  pl.title,
+  pl.subtitle,
+  pl.category,
+  pl.area,
+  c.slug AS city_slug,
+  c.name AS city_name,
+  pl.saves_count,
+  pl.visibility,
+  pb.created_at AS bookmarked_at,
+  pl.created_at,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count,
+  COALESCE(cover.cover_place_id, '')::text AS cover_place_id,
+  COALESCE(cover.cover_image_url, '')::text AS cover_image_url,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
+  COALESCE(up.username::text, ''::text)::text AS creator_username,
+  up.avatar_url AS creator_avatar_url
+FROM plan_bookmarks pb
+JOIN place_lists pl ON pl.id = pb.list_id AND pl.is_active = true AND pl.list_type = 'user_plan'
+JOIN cities c ON c.id = pl.city_id
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
+LEFT JOIN LATERAL (
+  SELECT
+    p.id::text AS cover_place_id,
+    CASE
+      WHEN ple.image_url NOT ILIKE '%googleusercontent.com%' THEN ple.image_url
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%' THEN p.cover_image_url
+      ELSE NULL
+    END AS cover_image_url
+  FROM place_list_entries ple
+  JOIN places p ON p.id = ple.place_id
+  WHERE ple.list_id = pl.id
+    AND ple.is_active = true
+    AND (
+      cardinality(p.photo_names) > 0
+      OR (
+        ple.image_url IS NOT NULL
+        AND ple.image_url NOT ILIKE '%googleusercontent.com%'
+      )
+      OR (
+        p.cover_image_url IS NOT NULL
+        AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      )
+    )
+  ORDER BY ple.stop_order
+  LIMIT 1
+) cover ON true
+WHERE pb.user_id = sqlc.arg(user_id)::uuid
+  AND (
+    sqlc.narg(q)::text IS NULL
+    OR btrim(sqlc.narg(q)::text) = ''
+    OR pl.title ILIKE '%' || btrim(sqlc.narg(q)::text) || '%'
+  )
+ORDER BY
+  CASE WHEN sqlc.arg(sort)::text = 'name' THEN lower(pl.title) END ASC,
+  CASE WHEN sqlc.arg(sort)::text <> 'name' THEN pb.created_at END DESC
+LIMIT sqlc.arg(limit_val)::int
+OFFSET sqlc.arg(offset_val)::int;
+
+-- name: CountBookmarkedPlans :one
+SELECT COUNT(*)::integer AS count
+FROM plan_bookmarks pb
+JOIN place_lists pl ON pl.id = pb.list_id AND pl.is_active = true AND pl.list_type = 'user_plan'
+WHERE pb.user_id = sqlc.arg(user_id)::uuid
+  AND (
+    sqlc.narg(q)::text IS NULL
+    OR btrim(sqlc.narg(q)::text) = ''
+    OR pl.title ILIKE '%' || btrim(sqlc.narg(q)::text) || '%'
+  );
+
+-- name: GetPlanIDBySlug :one
+SELECT id::text AS id, saves_count
+FROM place_lists
+WHERE slug = sqlc.arg(slug)
+  AND is_active = true
+  AND list_type = 'user_plan';
+
+-- name: UpsertPlanBookmark :exec
+INSERT INTO plan_bookmarks (user_id, list_id)
+VALUES (sqlc.arg(user_id)::uuid, sqlc.arg(list_id)::uuid)
+ON CONFLICT (user_id, list_id) DO NOTHING;
+
+-- name: DeletePlanBookmark :execrows
+DELETE FROM plan_bookmarks
+WHERE user_id = sqlc.arg(user_id)::uuid
+  AND list_id = sqlc.arg(list_id)::uuid;
+
+-- name: IncrementPlanSavesCount :exec
+UPDATE place_lists
+SET saves_count = saves_count + 1, updated_at = now()
+WHERE id = sqlc.arg(id)::uuid;
+
+-- name: DecrementPlanSavesCount :exec
+UPDATE place_lists
+SET saves_count = GREATEST(saves_count - 1, 0), updated_at = now()
+WHERE id = sqlc.arg(id)::uuid;
+
+-- name: HasPlanBookmark :one
+SELECT EXISTS (
+  SELECT 1
+  FROM plan_bookmarks
+  WHERE user_id = sqlc.arg(user_id)::uuid
+    AND list_id = sqlc.arg(list_id)::uuid
+)::boolean AS exists;

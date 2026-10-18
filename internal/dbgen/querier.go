@@ -11,8 +11,12 @@ import (
 )
 
 type Querier interface {
+	AddUserPlaceListItem(ctx context.Context, arg AddUserPlaceListItemParams) error
 	CompleteUserOnboarding(ctx context.Context, userID pgtype.UUID) (string, error)
+	CountBookmarkedPlans(ctx context.Context, arg CountBookmarkedPlansParams) (int32, error)
 	CountExternalEvents(ctx context.Context, citySlug *string) (int64, error)
+	CountMyPlans(ctx context.Context, arg CountMyPlansParams) (int32, error)
+	CountPlaceBookmarks(ctx context.Context, userID pgtype.UUID) (int32, error)
 	CountPlacePairwise(ctx context.Context, placeID pgtype.UUID) (int32, error)
 	CountPlacePairwiseWins(ctx context.Context, placeID pgtype.UUID) (int32, error)
 	CountRecentPairwisePair(ctx context.Context, arg CountRecentPairwisePairParams) (int32, error)
@@ -22,10 +26,15 @@ type Querier interface {
 	CreatePlanEntry(ctx context.Context, arg CreatePlanEntryParams) error
 	CreatePlanPlace(ctx context.Context, arg CreatePlanPlaceParams) (string, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	CreateUserPlaceList(ctx context.Context, arg CreateUserPlaceListParams) (CreateUserPlaceListRow, error)
 	DeactivatePlaceListEntriesNotInSeedNames(ctx context.Context, arg DeactivatePlaceListEntriesNotInSeedNamesParams) (int64, error)
+	DecrementPlanSavesCount(ctx context.Context, id pgtype.UUID) error
+	DeletePlaceBookmark(ctx context.Context, arg DeletePlaceBookmarkParams) (int64, error)
+	DeletePlanBookmark(ctx context.Context, arg DeletePlanBookmarkParams) (int64, error)
 	DeleteStampTags(ctx context.Context, stampID pgtype.UUID) error
 	DeleteUserExploreCities(ctx context.Context, userID pgtype.UUID) error
 	DeleteUserLikedPlacesBySource(ctx context.Context, arg DeleteUserLikedPlacesBySourceParams) error
+	DeleteUserPlaceList(ctx context.Context, arg DeleteUserPlaceListParams) (int64, error)
 	DeleteUserPurposeCategories(ctx context.Context, userID pgtype.UUID) error
 	DeleteUserVibes(ctx context.Context, userID pgtype.UUID) error
 	DeleteVenueTagAggregates(ctx context.Context, placeID pgtype.UUID) error
@@ -41,13 +50,17 @@ type Querier interface {
 	GetPlaceByID(ctx context.Context, id pgtype.UUID) (GetPlaceByIDRow, error)
 	GetPlaceListByID(ctx context.Context, id pgtype.UUID) (GetPlaceListByIDRow, error)
 	GetPlaceListBySlug(ctx context.Context, slug string) (GetPlaceListBySlugRow, error)
+	GetPlanIDBySlug(ctx context.Context, slug string) (GetPlanIDBySlugRow, error)
 	GetRankingConfig(ctx context.Context, key string) (RankingConfig, error)
 	GetStampByID(ctx context.Context, id pgtype.UUID) (GetStampByIDRow, error)
 	GetStampPlaceContext(ctx context.Context, id pgtype.UUID) (GetStampPlaceContextRow, error)
+	GetUserPlaceListByID(ctx context.Context, id pgtype.UUID) (GetUserPlaceListByIDRow, error)
 	GetUserPoolEntry(ctx context.Context, arg GetUserPoolEntryParams) (GetUserPoolEntryRow, error)
 	GetUserProfile(ctx context.Context, userID pgtype.UUID) (GetUserProfileRow, error)
 	GetVenueStampAggregate(ctx context.Context, placeID pgtype.UUID) (GetVenueStampAggregateRow, error)
+	HasPlanBookmark(ctx context.Context, arg HasPlanBookmarkParams) (bool, error)
 	HasUserProfile(ctx context.Context, userID pgtype.UUID) (bool, error)
+	IncrementPlanSavesCount(ctx context.Context, id pgtype.UUID) error
 	InsertPairwiseComparison(ctx context.Context, arg InsertPairwiseComparisonParams) (string, error)
 	InsertStampPhoto(ctx context.Context, arg InsertStampPhotoParams) (InsertStampPhotoRow, error)
 	InsertStampTag(ctx context.Context, arg InsertStampTagParams) error
@@ -63,12 +76,15 @@ type Querier interface {
 	ListActivePurposeCategories(ctx context.Context) ([]ListActivePurposeCategoriesRow, error)
 	ListActiveVibes(ctx context.Context) ([]ListActiveVibesRow, error)
 	ListAllActivePlaceIDsWithStamps(ctx context.Context) ([]string, error)
+	ListBookmarkedPlans(ctx context.Context, arg ListBookmarkedPlansParams) ([]ListBookmarkedPlansRow, error)
 	ListCuratedPlacesForProbe(ctx context.Context, arg ListCuratedPlacesForProbeParams) ([]ListCuratedPlacesForProbeRow, error)
 	ListCuratedVenuesByCity(ctx context.Context, cityID pgtype.UUID) ([]ListCuratedVenuesByCityRow, error)
 	ListExternalEvents(ctx context.Context, arg ListExternalEventsParams) ([]ListExternalEventsRow, error)
 	ListFeedStamps(ctx context.Context, arg ListFeedStampsParams) ([]ListFeedStampsRow, error)
 	ListLikedPlacesForPairwise(ctx context.Context, arg ListLikedPlacesForPairwiseParams) ([]ListLikedPlacesForPairwiseRow, error)
 	ListLowConfidencePoolEntries(ctx context.Context, arg ListLowConfidencePoolEntriesParams) ([]ListLowConfidencePoolEntriesRow, error)
+	ListMyPlans(ctx context.Context, arg ListMyPlansParams) ([]ListMyPlansRow, error)
+	ListPlaceBookmarks(ctx context.Context, arg ListPlaceBookmarksParams) ([]ListPlaceBookmarksRow, error)
 	ListPlaceListEntriesByListID(ctx context.Context, listID pgtype.UUID) ([]ListPlaceListEntriesByListIDRow, error)
 	ListPlaceListEntrySeedNamesByListID(ctx context.Context, listID pgtype.UUID) ([]string, error)
 	ListPlaceStampsForAggregate(ctx context.Context, placeID pgtype.UUID) ([]ListPlaceStampsForAggregateRow, error)
@@ -79,11 +95,20 @@ type Querier interface {
 	ListStampPhotos(ctx context.Context, stampID pgtype.UUID) ([]ListStampPhotosRow, error)
 	ListStampTags(ctx context.Context, stampID pgtype.UUID) ([]ListStampTagsRow, error)
 	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]ListUpcomingEventsRow, error)
+	ListUserPlaceListItems(ctx context.Context, listID pgtype.UUID) ([]ListUserPlaceListItemsRow, error)
+	// ---------------------------------------------------------------------------
+	// User library: place playlists, place bookmarks, plan bookmarks, my plans
+	// ---------------------------------------------------------------------------
+	ListUserPlaceLists(ctx context.Context, arg ListUserPlaceListsParams) ([]ListUserPlaceListsRow, error)
 	ListUserPoolBand(ctx context.Context, arg ListUserPoolBandParams) ([]ListUserPoolBandRow, error)
 	ListUserPoolByCategory(ctx context.Context, arg ListUserPoolByCategoryParams) ([]ListUserPoolByCategoryRow, error)
+	ListUserStampedPlaces(ctx context.Context, arg ListUserStampedPlacesParams) ([]ListUserStampedPlacesRow, error)
 	ListVenueTagAggregates(ctx context.Context, placeID pgtype.UUID) ([]ListVenueTagAggregatesRow, error)
+	PlaceExists(ctx context.Context, id pgtype.UUID) (string, error)
 	RelinkPlaceListEntries(ctx context.Context, arg RelinkPlaceListEntriesParams) error
+	RemoveUserPlaceListItem(ctx context.Context, arg RemoveUserPlaceListItemParams) (int64, error)
 	SumBandComparability(ctx context.Context, arg SumBandComparabilityParams) (float64, error)
+	TouchUserPlaceList(ctx context.Context, id pgtype.UUID) error
 	UpdateLastLogin(ctx context.Context, arg UpdateLastLoginParams) (UpdateLastLoginRow, error)
 	UpdatePlaceCoverOnly(ctx context.Context, arg UpdatePlaceCoverOnlyParams) error
 	UpdatePlaceFromGoogleResolve(ctx context.Context, arg UpdatePlaceFromGoogleResolveParams) error
@@ -92,9 +117,11 @@ type Querier interface {
 	UpsertFamiliarity(ctx context.Context, arg UpsertFamiliarityParams) error
 	UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlaceParams) (string, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) error
+	UpsertPlaceBookmark(ctx context.Context, arg UpsertPlaceBookmarkParams) error
 	UpsertPlaceFromGoogle(ctx context.Context, arg UpsertPlaceFromGoogleParams) (string, error)
 	UpsertPlaceList(ctx context.Context, arg UpsertPlaceListParams) (string, error)
 	UpsertPlaceListEntry(ctx context.Context, arg UpsertPlaceListEntryParams) error
+	UpsertPlanBookmark(ctx context.Context, arg UpsertPlanBookmarkParams) error
 	UpsertStamp(ctx context.Context, arg UpsertStampParams) (UpsertStampRow, error)
 	UpsertUserPoolEntry(ctx context.Context, arg UpsertUserPoolEntryParams) (UpsertUserPoolEntryRow, error)
 	UpsertUserProfile(ctx context.Context, arg UpsertUserProfileParams) (UpsertUserProfileRow, error)
