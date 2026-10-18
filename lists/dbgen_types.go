@@ -2,6 +2,7 @@ package lists
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -41,4 +42,16 @@ func stringValue(v *string) string {
 		return ""
 	}
 	return *v
+}
+
+// libraryCoverURL drops ephemeral Google CDN URLs and empty covers.
+func libraryCoverURL(cover *string) *string {
+	if cover == nil {
+		return nil
+	}
+	v := strings.TrimSpace(*cover)
+	if v == "" || strings.Contains(strings.ToLower(v), "googleusercontent.com") {
+		return nil
+	}
+	return &v
 }

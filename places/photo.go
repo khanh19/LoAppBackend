@@ -77,26 +77,31 @@ func (s *Service) resolvePlacePhotoURL(
 	row dbgen.GetPlaceByIDRow,
 	index, maxWidth int,
 ) (string, error) {
-	if url, err := s.photoURLFromNames(ctx, row.PhotoNames, index, maxWidth); err != nil {
-		// Google photo names can expire. Refresh Place Details below and retry
-		// with the newly issued resource name.
-	} else if url != "" {
+	url, mediaErr := s.photoURLFromNames(ctx, row.PhotoNames, index, maxWidth)
+	if mediaErr == nil && url != "" {
 		return url, nil
 	}
 
-	row, err := s.refreshPhotoNames(ctx, placeID, row)
+	// Stored photo names expire. Refresh once, then fall back to a durable cover
+	// instead of failing the image request.
+	refreshed, err := s.refreshPhotoNames(ctx, placeID, row)
 	if err != nil {
+		if cover := storedCoverURL(row.CoverImageUrl); cover != "" {
+			return cover, nil
+		}
 		return "", err
 	}
 
-	if url, err := s.photoURLFromNames(ctx, row.PhotoNames, index, maxWidth); err != nil {
-		return "", err
-	} else if url != "" {
-		return url, nil
+	// Skip a second media call when Google handed back the same rejected name.
+	if mediaErr == nil || !samePhotoName(row.PhotoNames, refreshed.PhotoNames, index) {
+		url, mediaErr = s.photoURLFromNames(ctx, refreshed.PhotoNames, index, maxWidth)
+		if mediaErr == nil && url != "" {
+			return url, nil
+		}
 	}
 
-	if row.CoverImageUrl != nil && !isGoogleUserContentURL(*row.CoverImageUrl) {
-		return *row.CoverImageUrl, nil
+	if cover := storedCoverURL(refreshed.CoverImageUrl); cover != "" {
+		return cover, nil
 	}
 	return "", nil
 }
@@ -156,4 +161,22 @@ func hasPhotoName(photoNames []string, index int) bool {
 
 func isGoogleUserContentURL(url string) bool {
 	return strings.Contains(url, "googleusercontent.com")
+}
+
+func storedCoverURL(cover *string) string {
+	if cover == nil {
+		return ""
+	}
+	v := strings.TrimSpace(*cover)
+	if v == "" || isGoogleUserContentURL(v) {
+		return ""
+	}
+	return v
+}
+
+func samePhotoName(before, after []string, index int) bool {
+	if !hasPhotoName(before, index) || !hasPhotoName(after, index) {
+		return false
+	}
+	return strings.TrimSpace(before[index]) == strings.TrimSpace(after[index])
 }

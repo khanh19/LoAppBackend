@@ -193,14 +193,12 @@ SELECT
   p.longitude,
   p.rating_cached,
   p.price_level,
-  COALESCE(
-    CASE
-      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
-        THEN p.cover_image_url
-      ELSE NULL
-    END,
-    ''
-  )::text AS cover_image_url,
+  CASE
+    WHEN p.cover_image_url IS NOT NULL
+      AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      THEN p.cover_image_url
+    ELSE ''
+  END AS cover_image_url,
   p.tags
 FROM place_list_entries ple
 JOIN places p ON p.id = ple.place_id
@@ -679,13 +677,7 @@ SELECT
   p.name,
   p.neighborhood,
   p.address,
-  (
-    CASE
-      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
-        THEN p.cover_image_url
-      ELSE NULL
-    END
-  )::text AS cover_image_url,
+  p.cover_image_url,
   c.slug AS city_slug,
   c.name AS city_name,
   upli.position,
@@ -733,13 +725,7 @@ SELECT
   p.name,
   p.neighborhood,
   p.address,
-  (
-    CASE
-      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
-        THEN p.cover_image_url
-      ELSE NULL
-    END
-  )::text AS cover_image_url,
+  p.cover_image_url,
   c.slug AS city_slug,
   c.name AS city_name,
   pb.created_at
@@ -778,13 +764,7 @@ SELECT
   p.name,
   p.neighborhood,
   p.address,
-  (
-    CASE
-      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
-        THEN p.cover_image_url
-      ELSE NULL
-    END
-  )::text AS cover_image_url,
+  p.cover_image_url,
   c.slug AS city_slug,
   c.name AS city_name,
   MAX(s.created_at)::timestamptz AS stamped_at
@@ -800,8 +780,8 @@ WHERE s.user_id = sqlc.arg(user_id)::uuid
   )
 GROUP BY p.id, p.name, p.neighborhood, p.address, p.cover_image_url, c.slug, c.name
 ORDER BY
-  CASE WHEN sqlc.arg(sort)::text = 'name' THEN lower(p.name) END ASC,
-  CASE WHEN sqlc.arg(sort)::text <> 'name' THEN MAX(s.created_at) END DESC;
+  CASE WHEN sqlc.arg(sort)::text = 'name' THEN lower(p.name) ELSE NULL END ASC NULLS LAST,
+  CASE WHEN sqlc.arg(sort)::text = 'name' THEN NULL ELSE MAX(s.created_at) END DESC NULLS LAST;
 
 -- name: ListMyPlans :many
 SELECT

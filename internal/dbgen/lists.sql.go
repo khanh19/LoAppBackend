@@ -1306,13 +1306,7 @@ SELECT
   p.name,
   p.neighborhood,
   p.address,
-  (
-    CASE
-      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
-        THEN p.cover_image_url
-      ELSE NULL
-    END
-  )::text AS cover_image_url,
+  p.cover_image_url,
   c.slug AS city_slug,
   c.name AS city_name,
   pb.created_at
@@ -1341,7 +1335,7 @@ type ListPlaceBookmarksRow struct {
 	Name          string             `json:"name"`
 	Neighborhood  *string            `json:"neighborhood"`
 	Address       *string            `json:"address"`
-	CoverImageUrl string             `json:"cover_image_url"`
+	CoverImageUrl *string            `json:"cover_image_url"`
 	CitySlug      string             `json:"city_slug"`
 	CityName      string             `json:"city_name"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
@@ -1400,14 +1394,12 @@ SELECT
   p.longitude,
   p.rating_cached,
   p.price_level,
-  COALESCE(
-    CASE
-      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
-        THEN p.cover_image_url
-      ELSE NULL
-    END,
-    ''
-  )::text AS cover_image_url,
+  CASE
+    WHEN p.cover_image_url IS NOT NULL
+      AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      THEN p.cover_image_url
+    ELSE ''
+  END AS cover_image_url,
   p.tags
 FROM place_list_entries ple
 JOIN places p ON p.id = ple.place_id
@@ -1619,13 +1611,7 @@ SELECT
   p.name,
   p.neighborhood,
   p.address,
-  (
-    CASE
-      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
-        THEN p.cover_image_url
-      ELSE NULL
-    END
-  )::text AS cover_image_url,
+  p.cover_image_url,
   c.slug AS city_slug,
   c.name AS city_name,
   upli.position,
@@ -1642,7 +1628,7 @@ type ListUserPlaceListItemsRow struct {
 	Name          string             `json:"name"`
 	Neighborhood  *string            `json:"neighborhood"`
 	Address       *string            `json:"address"`
-	CoverImageUrl string             `json:"cover_image_url"`
+	CoverImageUrl *string            `json:"cover_image_url"`
 	CitySlug      string             `json:"city_slug"`
 	CityName      string             `json:"city_name"`
 	Position      int32              `json:"position"`
@@ -1775,13 +1761,7 @@ SELECT
   p.name,
   p.neighborhood,
   p.address,
-  (
-    CASE
-      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%'
-        THEN p.cover_image_url
-      ELSE NULL
-    END
-  )::text AS cover_image_url,
+  p.cover_image_url,
   c.slug AS city_slug,
   c.name AS city_name,
   MAX(s.created_at)::timestamptz AS stamped_at
@@ -1797,8 +1777,8 @@ WHERE s.user_id = $1::uuid
   )
 GROUP BY p.id, p.name, p.neighborhood, p.address, p.cover_image_url, c.slug, c.name
 ORDER BY
-  CASE WHEN $3::text = 'name' THEN lower(p.name) END ASC,
-  CASE WHEN $3::text <> 'name' THEN MAX(s.created_at) END DESC
+  CASE WHEN $3::text = 'name' THEN lower(p.name) ELSE NULL END ASC NULLS LAST,
+  CASE WHEN $3::text = 'name' THEN NULL ELSE MAX(s.created_at) END DESC NULLS LAST
 `
 
 type ListUserStampedPlacesParams struct {
@@ -1812,7 +1792,7 @@ type ListUserStampedPlacesRow struct {
 	Name          string             `json:"name"`
 	Neighborhood  *string            `json:"neighborhood"`
 	Address       *string            `json:"address"`
-	CoverImageUrl string             `json:"cover_image_url"`
+	CoverImageUrl *string            `json:"cover_image_url"`
 	CitySlug      string             `json:"city_slug"`
 	CityName      string             `json:"city_name"`
 	StampedAt     pgtype.Timestamptz `json:"stamped_at"`
