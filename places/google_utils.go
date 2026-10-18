@@ -136,20 +136,11 @@ func humanizePlaceType(t string) string {
 }
 
 func inferVenueCategoryAndArchetype(types []string, priceLevel *int16) (*string, *string) {
-	joined := strings.ToLower(strings.Join(types, " "))
-	var category string
-	switch {
-	case strings.Contains(joined, "cafe") || strings.Contains(joined, "coffee") || strings.Contains(joined, "bakery"):
-		category = "cafe"
-	case strings.Contains(joined, "night_club") || strings.Contains(joined, "nightclub"):
-		category = "club"
-	case strings.Contains(joined, "bar") || strings.Contains(joined, "pub") || strings.Contains(joined, "wine_bar"):
-		category = "bar"
-	case strings.Contains(joined, "restaurant") || strings.Contains(joined, "meal_takeaway") || strings.Contains(joined, "food"):
-		category = "restaurant"
-	default:
+	category := stampCategory(types)
+	if category == "" {
 		return nil, nil
 	}
+	joined := strings.ToLower(strings.Join(types, " "))
 
 	archetype := ""
 	switch category {
@@ -190,6 +181,63 @@ func inferVenueCategoryAndArchetype(types []string, priceLevel *int16) (*string,
 	}
 
 	return &category, &archetype
+}
+
+// stampCategory maps Google place types onto the venue categories that can be
+// stamped. Museums, parks, malls, and shops stay uncategorized so they can be
+// added to a plan without becoming stampable. Matching is by whole type, so a
+// barber shop is not treated as a bar.
+func stampCategory(types []string) string {
+	best := ""
+	bestRank := len(stampCategoryOrder) + 1
+	for _, raw := range types {
+		category := categoryForPlaceType(strings.ToLower(strings.TrimSpace(raw)))
+		if category == "" {
+			continue
+		}
+		rank := stampCategoryRank(category)
+		if rank < bestRank {
+			best = category
+			bestRank = rank
+		}
+	}
+	return best
+}
+
+func categoryForPlaceType(placeType string) string {
+	switch placeType {
+	case "cafe", "coffee_shop", "bakery":
+		return "cafe"
+	case "night_club", "nightclub", "club":
+		return "club"
+	case "bar", "pub", "wine_bar":
+		return "bar"
+	case "restaurant", "food", "meal_takeaway", "meal_delivery", "food_court":
+		return "restaurant"
+	}
+	switch {
+	case strings.HasSuffix(placeType, "_cafe"), strings.HasSuffix(placeType, "_bakery"):
+		return "cafe"
+	case strings.HasSuffix(placeType, "_club"):
+		return "club"
+	case strings.HasSuffix(placeType, "_bar"):
+		return "bar"
+	case strings.HasSuffix(placeType, "_restaurant"):
+		return "restaurant"
+	default:
+		return ""
+	}
+}
+
+var stampCategoryOrder = []string{"cafe", "club", "bar", "restaurant"}
+
+func stampCategoryRank(category string) int {
+	for i, item := range stampCategoryOrder {
+		if item == category {
+			return i
+		}
+	}
+	return len(stampCategoryOrder)
 }
 
 func cityHintAlt(cityHint string) string {
