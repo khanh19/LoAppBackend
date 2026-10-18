@@ -67,9 +67,10 @@ func (c *googlePlacesClient) autocomplete(ctx context.Context, input, sessionTok
 		if pred.PlaceID == "" {
 			continue
 		}
-		label := pred.Text.Text
+		// Prefer mainText so the title is the place name only (not "Name, Address").
+		label := pred.StructuredFormat.MainText.Text
 		if label == "" {
-			label = pred.StructuredFormat.MainText.Text
+			label = pred.Text.Text
 		}
 		out = append(out, AutocompletePrediction{
 			GooglePlaceID: pred.PlaceID,
