@@ -17,10 +17,14 @@ const (
 )
 
 func normalizeLibrarySort(sort string) string {
-	if strings.EqualFold(strings.TrimSpace(sort), "name") {
+	switch strings.ToLower(strings.TrimSpace(sort)) {
+	case "name":
 		return "name"
+	case "score":
+		return "score"
+	default:
+		return "recent"
 	}
-	return "recent"
 }
 
 func optionalQuery(q string) *string {
@@ -407,6 +411,9 @@ func (s *Service) listUserStampedPlaces(ctx context.Context, userID string, para
 			Neighborhood:  row.Neighborhood,
 			Address:       row.Address,
 			CoverImageURL: libraryCoverURL(row.CoverImageUrl),
+			PriceLevel:    row.PriceLevel,
+			Tags:          row.Tags,
+			StampScore:    numericPtr(row.StampScore),
 			CitySlug:      row.CitySlug,
 			CityName:      row.CityName,
 			CreatedAt:     timestamptzToString(row.StampedAt),
