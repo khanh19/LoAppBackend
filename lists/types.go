@@ -200,6 +200,7 @@ type LibraryPlaceItem struct {
 	PriceLevel    *int16   `json:"price_level,omitempty"`
 	Tags          []string `json:"tags,omitempty"`
 	StampScore    *float64 `json:"stamp_score,omitempty"`
+	Rating        *float64 `json:"rating,omitempty"`
 	CitySlug      string   `json:"city_slug"`
 	CityName      string   `json:"city_name"`
 	CreatedAt     string   `json:"created_at"`

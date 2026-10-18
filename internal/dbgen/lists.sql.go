@@ -1307,6 +1307,9 @@ SELECT
   p.neighborhood,
   p.address,
   p.cover_image_url,
+  p.price_level,
+  p.tags,
+  p.rating_cached,
   c.slug AS city_slug,
   c.name AS city_name,
   pb.created_at
@@ -1336,6 +1339,9 @@ type ListPlaceBookmarksRow struct {
 	Neighborhood  *string            `json:"neighborhood"`
 	Address       *string            `json:"address"`
 	CoverImageUrl *string            `json:"cover_image_url"`
+	PriceLevel    *int16             `json:"price_level"`
+	Tags          []string           `json:"tags"`
+	RatingCached  pgtype.Numeric     `json:"rating_cached"`
 	CitySlug      string             `json:"city_slug"`
 	CityName      string             `json:"city_name"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
@@ -1356,6 +1362,9 @@ func (q *Queries) ListPlaceBookmarks(ctx context.Context, arg ListPlaceBookmarks
 			&i.Neighborhood,
 			&i.Address,
 			&i.CoverImageUrl,
+			&i.PriceLevel,
+			&i.Tags,
+			&i.RatingCached,
 			&i.CitySlug,
 			&i.CityName,
 			&i.CreatedAt,
