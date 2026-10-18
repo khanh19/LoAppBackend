@@ -1762,12 +1762,17 @@ SELECT
   p.neighborhood,
   p.address,
   p.cover_image_url,
+  p.price_level,
+  p.tags,
   c.slug AS city_slug,
   c.name AS city_name,
-  MAX(s.created_at)::timestamptz AS stamped_at
+  MAX(s.created_at)::timestamptz AS stamped_at,
+  pe.score AS stamp_score
 FROM stamps s
 JOIN places p ON p.id = s.place_id AND p.is_active = true
 JOIN cities c ON c.id = p.city_id
+LEFT JOIN user_pool_entries pe
+  ON pe.user_id = s.user_id AND pe.place_id = p.id
 WHERE s.user_id = $1::uuid
   AND s.is_active = true
   AND (
@@ -1775,10 +1780,13 @@ WHERE s.user_id = $1::uuid
     OR btrim($2::text) = ''
     OR p.name ILIKE '%' || btrim($2::text) || '%'
   )
-GROUP BY p.id, p.name, p.neighborhood, p.address, p.cover_image_url, c.slug, c.name
+GROUP BY
+  p.id, p.name, p.neighborhood, p.address, p.cover_image_url,
+  p.price_level, p.tags, c.slug, c.name, pe.score
 ORDER BY
   CASE WHEN $3::text = 'name' THEN lower(p.name) ELSE NULL END ASC NULLS LAST,
-  CASE WHEN $3::text = 'name' THEN NULL ELSE MAX(s.created_at) END DESC NULLS LAST
+  CASE WHEN $3::text = 'score' THEN pe.score ELSE NULL END DESC NULLS LAST,
+  CASE WHEN $3::text = 'score' OR $3::text = 'name' THEN NULL ELSE MAX(s.created_at) END DESC NULLS LAST
 `
 
 type ListUserStampedPlacesParams struct {
@@ -1793,9 +1801,12 @@ type ListUserStampedPlacesRow struct {
 	Neighborhood  *string            `json:"neighborhood"`
 	Address       *string            `json:"address"`
 	CoverImageUrl *string            `json:"cover_image_url"`
+	PriceLevel    *int16             `json:"price_level"`
+	Tags          []string           `json:"tags"`
 	CitySlug      string             `json:"city_slug"`
 	CityName      string             `json:"city_name"`
 	StampedAt     pgtype.Timestamptz `json:"stamped_at"`
+	StampScore    pgtype.Numeric     `json:"stamp_score"`
 }
 
 func (q *Queries) ListUserStampedPlaces(ctx context.Context, arg ListUserStampedPlacesParams) ([]ListUserStampedPlacesRow, error) {
@@ -1813,9 +1824,12 @@ func (q *Queries) ListUserStampedPlaces(ctx context.Context, arg ListUserStamped
 			&i.Neighborhood,
 			&i.Address,
 			&i.CoverImageUrl,
+			&i.PriceLevel,
+			&i.Tags,
 			&i.CitySlug,
 			&i.CityName,
 			&i.StampedAt,
+			&i.StampScore,
 		); err != nil {
 			return nil, err
 		}

@@ -192,14 +192,17 @@ type CreateUserPlaceListResponse struct {
 }
 
 type LibraryPlaceItem struct {
-	PlaceID       string  `json:"place_id"`
-	Name          string  `json:"name"`
-	Neighborhood  *string `json:"neighborhood"`
-	Address       *string `json:"address"`
-	CoverImageURL *string `json:"cover_image_url"`
-	CitySlug      string  `json:"city_slug"`
-	CityName      string  `json:"city_name"`
-	CreatedAt     string  `json:"created_at"`
+	PlaceID       string   `json:"place_id"`
+	Name          string   `json:"name"`
+	Neighborhood  *string  `json:"neighborhood"`
+	Address       *string  `json:"address"`
+	CoverImageURL *string  `json:"cover_image_url"`
+	PriceLevel    *int16   `json:"price_level,omitempty"`
+	Tags          []string `json:"tags,omitempty"`
+	StampScore    *float64 `json:"stamp_score,omitempty"`
+	CitySlug      string   `json:"city_slug"`
+	CityName      string   `json:"city_name"`
+	CreatedAt     string   `json:"created_at"`
 }
 
 type GetUserPlaceListResponse struct {

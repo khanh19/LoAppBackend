@@ -30,6 +30,18 @@ func numericToFloat(v pgtype.Numeric) float64 {
 	return f.Float64
 }
 
+func numericPtr(v pgtype.Numeric) *float64 {
+	if !v.Valid {
+		return nil
+	}
+	f, err := v.Float64Value()
+	if err != nil || !f.Valid {
+		return nil
+	}
+	out := f.Float64
+	return &out
+}
+
 func stringPtr(v string) *string {
 	if v == "" {
 		return nil

@@ -765,12 +765,17 @@ SELECT
   p.neighborhood,
   p.address,
   p.cover_image_url,
+  p.price_level,
+  p.tags,
   c.slug AS city_slug,
   c.name AS city_name,
-  MAX(s.created_at)::timestamptz AS stamped_at
+  MAX(s.created_at)::timestamptz AS stamped_at,
+  pe.score AS stamp_score
 FROM stamps s
 JOIN places p ON p.id = s.place_id AND p.is_active = true
 JOIN cities c ON c.id = p.city_id
+LEFT JOIN user_pool_entries pe
+  ON pe.user_id = s.user_id AND pe.place_id = p.id
 WHERE s.user_id = sqlc.arg(user_id)::uuid
   AND s.is_active = true
   AND (
@@ -778,10 +783,13 @@ WHERE s.user_id = sqlc.arg(user_id)::uuid
     OR btrim(sqlc.narg(q)::text) = ''
     OR p.name ILIKE '%' || btrim(sqlc.narg(q)::text) || '%'
   )
-GROUP BY p.id, p.name, p.neighborhood, p.address, p.cover_image_url, c.slug, c.name
+GROUP BY
+  p.id, p.name, p.neighborhood, p.address, p.cover_image_url,
+  p.price_level, p.tags, c.slug, c.name, pe.score
 ORDER BY
   CASE WHEN sqlc.arg(sort)::text = 'name' THEN lower(p.name) ELSE NULL END ASC NULLS LAST,
-  CASE WHEN sqlc.arg(sort)::text = 'name' THEN NULL ELSE MAX(s.created_at) END DESC NULLS LAST;
+  CASE WHEN sqlc.arg(sort)::text = 'score' THEN pe.score ELSE NULL END DESC NULLS LAST,
+  CASE WHEN sqlc.arg(sort)::text = 'score' OR sqlc.arg(sort)::text = 'name' THEN NULL ELSE MAX(s.created_at) END DESC NULLS LAST;
 
 -- name: ListMyPlans :many
 SELECT
