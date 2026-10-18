@@ -34,10 +34,13 @@ func (s *Service) createStamp(ctx context.Context, userID string, req *CreateSta
 		}
 		return nil, errs.WrapCode(err, errs.Internal, "failed to load place")
 	}
-	if place.VenueCategory == nil || strings.TrimSpace(*place.VenueCategory) == "" {
-		return nil, &errs.Error{Code: errs.FailedPrecondition, Message: "place has no venue_category; cannot stamp yet"}
-	}
-	category := *place.VenueCategory
+		if place.VenueCategory == nil || !isStampableVenueCategory(strings.TrimSpace(*place.VenueCategory)) {
+			return nil, &errs.Error{
+				Code:    errs.FailedPrecondition,
+				Message: "only restaurants, cafes, bars, bakeries, and clubs can be stamped",
+			}
+		}
+		category := strings.TrimSpace(*place.VenueCategory)
 
 	visitCount := 1
 	existing, err := q.GetActiveStampByUserPlace(ctx, dbgen.GetActiveStampByUserPlaceParams{
@@ -240,6 +243,15 @@ func sumBandComparability(ctx context.Context, q *dbgen.Queries, userID pgtype.U
 		return 0, errs.WrapCode(err, errs.Internal, "failed to sum band comparability")
 	}
 	return total, nil
+}
+
+func isStampableVenueCategory(category string) bool {
+	switch category {
+	case "restaurant", "cafe", "bar", "club":
+		return true
+	default:
+		return false
+	}
 }
 
 func validateCreateStamp(req *CreateStampRequest) error {

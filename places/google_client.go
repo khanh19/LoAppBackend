@@ -23,8 +23,6 @@ const (
 
 	detailsProFieldMask    = "id,displayName,formattedAddress,shortFormattedAddress,addressComponents,location,rating,userRatingCount,priceLevel,regularOpeningHours,nationalPhoneNumber,websiteUri,businessStatus,types,primaryTypeDisplayName"
 	detailsPhotosFieldMask = detailsProFieldMask + ",photos"
-
-	autocompletePrimaryTypes = "restaurant,cafe,bar,bakery,food"
 )
 
 type googlePlacesClient struct {
@@ -39,11 +37,10 @@ func newGooglePlacesClient() *googlePlacesClient {
 
 func (c *googlePlacesClient) autocomplete(ctx context.Context, input, sessionToken string, lat, lng float64) ([]AutocompletePrediction, error) {
 	reqBody := autocompleteRequest{
-		Input:                input,
-		SessionToken:         sessionToken,
-		IncludedPrimaryTypes: strings.Split(autocompletePrimaryTypes, ","),
-		LanguageCode:         "en",
-		RegionCode:           "VN",
+		Input:        input,
+		SessionToken: sessionToken,
+		LanguageCode: "en",
+		RegionCode:   "VN",
 	}
 	if lat != 0 || lng != 0 {
 		reqBody.LocationBias = &locationBias{
