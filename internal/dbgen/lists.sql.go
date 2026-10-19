@@ -1159,6 +1159,130 @@ func (q *Queries) ListBookmarkedPlans(ctx context.Context, arg ListBookmarkedPla
 	return items, nil
 }
 
+const listFeedPlans = `-- name: ListFeedPlans :many
+SELECT
+  pl.id::text AS plan_id,
+  pl.slug,
+  pl.title,
+  pl.category,
+  pl.saves_count,
+  pl.visibility,
+  pl.created_at,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_list_entries ple
+    WHERE ple.list_id = pl.id
+      AND ple.is_active = true
+  ) AS stops_count,
+  COALESCE(cover.cover_place_id, '')::text AS cover_place_id,
+  COALESCE(cover.cover_image_url, '')::text AS cover_image_url,
+  COALESCE(pl.creator_user_id::text, ''::text)::text AS creator_user_id,
+  COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
+  COALESCE(up.username::text, ''::text)::text AS creator_username,
+  up.avatar_url AS creator_avatar_url
+FROM place_lists pl
+LEFT JOIN users u ON u.id = pl.creator_user_id
+LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
+LEFT JOIN LATERAL (
+  SELECT
+    p.id::text AS cover_place_id,
+    CASE
+      WHEN ple.image_url NOT ILIKE '%googleusercontent.com%' THEN ple.image_url
+      WHEN p.cover_image_url NOT ILIKE '%googleusercontent.com%' THEN p.cover_image_url
+      ELSE NULL
+    END AS cover_image_url
+  FROM place_list_entries ple
+  JOIN places p ON p.id = ple.place_id
+  WHERE ple.list_id = pl.id
+    AND ple.is_active = true
+    AND (
+      cardinality(p.photo_names) > 0
+      OR (
+        ple.image_url IS NOT NULL
+        AND ple.image_url NOT ILIKE '%googleusercontent.com%'
+      )
+      OR (
+        p.cover_image_url IS NOT NULL
+        AND p.cover_image_url NOT ILIKE '%googleusercontent.com%'
+      )
+    )
+  ORDER BY ple.stop_order
+  LIMIT 1
+) cover ON true
+WHERE pl.is_active = true
+  AND pl.list_type = 'user_plan'
+  AND pl.creator_user_id IS NOT NULL
+  AND (
+    pl.creator_user_id = $1::uuid
+    OR pl.creator_user_id IN (
+      SELECT uf.following_user_id
+      FROM user_follows uf
+      WHERE uf.follower_user_id = $1::uuid
+    )
+  )
+ORDER BY pl.created_at DESC
+LIMIT $3::int
+OFFSET $2::int
+`
+
+type ListFeedPlansParams struct {
+	ViewerID  pgtype.UUID `json:"viewer_id"`
+	OffsetVal int32       `json:"offset_val"`
+	LimitVal  int32       `json:"limit_val"`
+}
+
+type ListFeedPlansRow struct {
+	PlanID             string             `json:"plan_id"`
+	Slug               string             `json:"slug"`
+	Title              string             `json:"title"`
+	Category           string             `json:"category"`
+	SavesCount         int32              `json:"saves_count"`
+	Visibility         string             `json:"visibility"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	StopsCount         int32              `json:"stops_count"`
+	CoverPlaceID       string             `json:"cover_place_id"`
+	CoverImageUrl      string             `json:"cover_image_url"`
+	CreatorUserID      string             `json:"creator_user_id"`
+	CreatorDisplayName *string            `json:"creator_display_name"`
+	CreatorUsername    string             `json:"creator_username"`
+	CreatorAvatarUrl   *string            `json:"creator_avatar_url"`
+}
+
+func (q *Queries) ListFeedPlans(ctx context.Context, arg ListFeedPlansParams) ([]ListFeedPlansRow, error) {
+	rows, err := q.db.Query(ctx, listFeedPlans, arg.ViewerID, arg.OffsetVal, arg.LimitVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListFeedPlansRow
+	for rows.Next() {
+		var i ListFeedPlansRow
+		if err := rows.Scan(
+			&i.PlanID,
+			&i.Slug,
+			&i.Title,
+			&i.Category,
+			&i.SavesCount,
+			&i.Visibility,
+			&i.CreatedAt,
+			&i.StopsCount,
+			&i.CoverPlaceID,
+			&i.CoverImageUrl,
+			&i.CreatorUserID,
+			&i.CreatorDisplayName,
+			&i.CreatorUsername,
+			&i.CreatorAvatarUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMyPlans = `-- name: ListMyPlans :many
 SELECT
   pl.id::text AS id,
