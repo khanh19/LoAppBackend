@@ -250,3 +250,35 @@ type ListLibraryPlansResponse struct {
 type BookmarkStatusResponse struct {
 	Bookmarked bool `json:"bookmarked"`
 }
+
+// --- Feed ---
+
+type FeedQuery struct {
+	Limit  int `query:"limit"`
+	Offset int `query:"offset"`
+}
+
+type FeedPlanItem struct {
+	PlanID             string  `json:"plan_id"`
+	Slug               string  `json:"slug"`
+	Title              string  `json:"title"`
+	Category           string  `json:"category"`
+	SavesCount         int32   `json:"saves_count"`
+	StopsCount         int32   `json:"stops_count"`
+	Visibility         string  `json:"visibility"`
+	CoverPlaceID       *string `json:"cover_place_id"`
+	CoverImageURL      *string `json:"cover_image_url"`
+	CreatorUserID      string  `json:"creator_user_id"`
+	CreatorDisplayName string  `json:"creator_display_name"`
+	CreatorUsername    string  `json:"creator_username"`
+	CreatorAvatarURL   *string `json:"creator_avatar_url"`
+	IsMine             bool    `json:"is_mine"`
+	CreatedAt          string  `json:"created_at"`
+}
+
+type FeedPlansResponse struct {
+	Items   []FeedPlanItem `json:"items"`
+	Limit   int            `json:"limit"`
+	Offset  int            `json:"offset"`
+	HasMore bool           `json:"has_more"`
+}

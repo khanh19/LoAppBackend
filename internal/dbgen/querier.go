@@ -80,6 +80,7 @@ type Querier interface {
 	ListCuratedPlacesForProbe(ctx context.Context, arg ListCuratedPlacesForProbeParams) ([]ListCuratedPlacesForProbeRow, error)
 	ListCuratedVenuesByCity(ctx context.Context, cityID pgtype.UUID) ([]ListCuratedVenuesByCityRow, error)
 	ListExternalEvents(ctx context.Context, arg ListExternalEventsParams) ([]ListExternalEventsRow, error)
+	ListFeedPlans(ctx context.Context, arg ListFeedPlansParams) ([]ListFeedPlansRow, error)
 	ListFeedStamps(ctx context.Context, arg ListFeedStampsParams) ([]ListFeedStampsRow, error)
 	ListLikedPlacesForPairwise(ctx context.Context, arg ListLikedPlacesForPairwiseParams) ([]ListLikedPlacesForPairwiseRow, error)
 	ListLowConfidencePoolEntries(ctx context.Context, arg ListLowConfidencePoolEntriesParams) ([]ListLowConfidencePoolEntriesRow, error)
