@@ -100,6 +100,15 @@ type CreatePlanResponse struct {
 	Plan PlaceListDetail `json:"plan"`
 }
 
+type UpdatePlanRequest struct {
+	Title string                  `json:"title"`
+	Stops []CreatePlanStopRequest `json:"stops"`
+}
+
+type UpdatePlanResponse struct {
+	Plan PlaceListDetail `json:"plan"`
+}
+
 type ListPlansParams struct {
 	Limit    int    `query:"limit"`
 	CitySlug string `query:"city_slug"`

@@ -84,3 +84,25 @@ func (s *Service) CreatePlan(ctx context.Context, req *CreatePlanRequest) (*Crea
 	}
 	return &CreatePlanResponse{Plan: *plan}, nil
 }
+
+//encore:api auth method=PUT path=/plans/:slug
+func (s *Service) UpdatePlan(ctx context.Context, slug string, req *UpdatePlanRequest) (*UpdatePlanResponse, error) {
+	userID, err := requireAuthUserID()
+	if err != nil {
+		return nil, err
+	}
+	plan, err := s.updatePlan(ctx, userID, slug, req)
+	if err != nil {
+		return nil, err
+	}
+	return &UpdatePlanResponse{Plan: *plan}, nil
+}
+
+//encore:api auth method=DELETE path=/plans/:slug
+func (s *Service) DeletePlan(ctx context.Context, slug string) error {
+	userID, err := requireAuthUserID()
+	if err != nil {
+		return err
+	}
+	return s.deletePlan(ctx, userID, slug)
+}
