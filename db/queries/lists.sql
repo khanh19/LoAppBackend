@@ -988,6 +988,28 @@ SELECT EXISTS (
     AND list_id = sqlc.arg(list_id)::uuid
 )::boolean AS exists;
 
+-- name: UpdateUserPlanTitle :execrows
+UPDATE place_lists
+SET title = sqlc.arg(title),
+    updated_at = now()
+WHERE id = sqlc.arg(id)::uuid
+  AND list_type = 'user_plan'
+  AND is_active = true
+  AND creator_user_id = sqlc.arg(creator_user_id)::uuid;
+
+-- name: DeletePlaceListEntriesByListID :exec
+DELETE FROM place_list_entries
+WHERE list_id = sqlc.arg(list_id)::uuid;
+
+-- name: DeactivateUserPlan :execrows
+UPDATE place_lists
+SET is_active = false,
+    updated_at = now()
+WHERE id = sqlc.arg(id)::uuid
+  AND list_type = 'user_plan'
+  AND is_active = true
+  AND creator_user_id = sqlc.arg(creator_user_id)::uuid;
+
 -- name: ListFeedPlans :many
 SELECT
   pl.id::text AS plan_id,

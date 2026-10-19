@@ -355,6 +355,29 @@ func (q *Queries) DeactivatePlaceListEntriesNotInSeedNames(ctx context.Context, 
 	return result.RowsAffected(), nil
 }
 
+const deactivateUserPlan = `-- name: DeactivateUserPlan :execrows
+UPDATE place_lists
+SET is_active = false,
+    updated_at = now()
+WHERE id = $1::uuid
+  AND list_type = 'user_plan'
+  AND is_active = true
+  AND creator_user_id = $2::uuid
+`
+
+type DeactivateUserPlanParams struct {
+	ID            pgtype.UUID `json:"id"`
+	CreatorUserID pgtype.UUID `json:"creator_user_id"`
+}
+
+func (q *Queries) DeactivateUserPlan(ctx context.Context, arg DeactivateUserPlanParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deactivateUserPlan, arg.ID, arg.CreatorUserID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const decrementPlanSavesCount = `-- name: DecrementPlanSavesCount :exec
 UPDATE place_lists
 SET saves_count = GREATEST(saves_count - 1, 0), updated_at = now()
@@ -383,6 +406,16 @@ func (q *Queries) DeletePlaceBookmark(ctx context.Context, arg DeletePlaceBookma
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const deletePlaceListEntriesByListID = `-- name: DeletePlaceListEntriesByListID :exec
+DELETE FROM place_list_entries
+WHERE list_id = $1::uuid
+`
+
+func (q *Queries) DeletePlaceListEntriesByListID(ctx context.Context, listID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deletePlaceListEntriesByListID, listID)
+	return err
 }
 
 const deletePlanBookmark = `-- name: DeletePlanBookmark :execrows
@@ -2155,6 +2188,30 @@ func (q *Queries) UpdatePlaceFromGoogleResolve(ctx context.Context, arg UpdatePl
 		arg.ID,
 	)
 	return err
+}
+
+const updateUserPlanTitle = `-- name: UpdateUserPlanTitle :execrows
+UPDATE place_lists
+SET title = $1,
+    updated_at = now()
+WHERE id = $2::uuid
+  AND list_type = 'user_plan'
+  AND is_active = true
+  AND creator_user_id = $3::uuid
+`
+
+type UpdateUserPlanTitleParams struct {
+	Title         string      `json:"title"`
+	ID            pgtype.UUID `json:"id"`
+	CreatorUserID pgtype.UUID `json:"creator_user_id"`
+}
+
+func (q *Queries) UpdateUserPlanTitle(ctx context.Context, arg UpdateUserPlanTitleParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateUserPlanTitle, arg.Title, arg.ID, arg.CreatorUserID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const upsertGooglePlace = `-- name: UpsertGooglePlace :one

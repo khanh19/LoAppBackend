@@ -28,8 +28,10 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	CreateUserPlaceList(ctx context.Context, arg CreateUserPlaceListParams) (CreateUserPlaceListRow, error)
 	DeactivatePlaceListEntriesNotInSeedNames(ctx context.Context, arg DeactivatePlaceListEntriesNotInSeedNamesParams) (int64, error)
+	DeactivateUserPlan(ctx context.Context, arg DeactivateUserPlanParams) (int64, error)
 	DecrementPlanSavesCount(ctx context.Context, id pgtype.UUID) error
 	DeletePlaceBookmark(ctx context.Context, arg DeletePlaceBookmarkParams) (int64, error)
+	DeletePlaceListEntriesByListID(ctx context.Context, listID pgtype.UUID) error
 	DeletePlanBookmark(ctx context.Context, arg DeletePlanBookmarkParams) (int64, error)
 	DeleteStampTags(ctx context.Context, stampID pgtype.UUID) error
 	DeleteUserExploreCities(ctx context.Context, userID pgtype.UUID) error
@@ -114,6 +116,7 @@ type Querier interface {
 	UpdatePlaceCoverOnly(ctx context.Context, arg UpdatePlaceCoverOnlyParams) error
 	UpdatePlaceFromGoogleResolve(ctx context.Context, arg UpdatePlaceFromGoogleResolveParams) error
 	UpdatePlacementSession(ctx context.Context, arg UpdatePlacementSessionParams) (UpdatePlacementSessionRow, error)
+	UpdateUserPlanTitle(ctx context.Context, arg UpdateUserPlanTitleParams) (int64, error)
 	UpdateUserPoolEntryScores(ctx context.Context, arg UpdateUserPoolEntryScoresParams) error
 	UpsertFamiliarity(ctx context.Context, arg UpsertFamiliarityParams) error
 	UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlaceParams) (string, error)
