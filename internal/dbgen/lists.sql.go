@@ -236,7 +236,7 @@ INSERT INTO places (
   google_place_id,
   source,
   name,
-  neighborhood,
+  ward,
   address,
   latitude,
   longitude,
@@ -260,7 +260,7 @@ VALUES (
 ON CONFLICT (google_place_id) DO UPDATE
 SET
   name = EXCLUDED.name,
-  neighborhood = COALESCE(EXCLUDED.neighborhood, places.neighborhood),
+  ward = COALESCE(EXCLUDED.ward, places.ward),
   address = COALESCE(EXCLUDED.address, places.address),
   latitude = COALESCE(EXCLUDED.latitude, places.latitude),
   longitude = COALESCE(EXCLUDED.longitude, places.longitude),
@@ -277,7 +277,7 @@ type CreatePlanPlaceParams struct {
 	CityID        pgtype.UUID    `json:"city_id"`
 	GooglePlaceID *string        `json:"google_place_id"`
 	Name          string         `json:"name"`
-	Neighborhood  *string        `json:"neighborhood"`
+	Ward          *string        `json:"ward"`
 	Address       *string        `json:"address"`
 	Latitude      pgtype.Numeric `json:"latitude"`
 	Longitude     pgtype.Numeric `json:"longitude"`
@@ -290,7 +290,7 @@ func (q *Queries) CreatePlanPlace(ctx context.Context, arg CreatePlanPlaceParams
 		arg.CityID,
 		arg.GooglePlaceID,
 		arg.Name,
-		arg.Neighborhood,
+		arg.Ward,
 		arg.Address,
 		arg.Latitude,
 		arg.Longitude,
@@ -516,7 +516,12 @@ SELECT
   slug,
   name,
   latitude,
-  longitude
+  longitude,
+  sw_lat,
+  sw_lng,
+  ne_lat,
+  ne_lng,
+  search_radius_m
 FROM cities
 WHERE is_active = true
   AND (
@@ -535,11 +540,16 @@ type GetCityByHintParams struct {
 }
 
 type GetCityByHintRow struct {
-	ID        string         `json:"id"`
-	Slug      string         `json:"slug"`
-	Name      string         `json:"name"`
-	Latitude  pgtype.Numeric `json:"latitude"`
-	Longitude pgtype.Numeric `json:"longitude"`
+	ID            string         `json:"id"`
+	Slug          string         `json:"slug"`
+	Name          string         `json:"name"`
+	Latitude      pgtype.Numeric `json:"latitude"`
+	Longitude     pgtype.Numeric `json:"longitude"`
+	SwLat         pgtype.Numeric `json:"sw_lat"`
+	SwLng         pgtype.Numeric `json:"sw_lng"`
+	NeLat         pgtype.Numeric `json:"ne_lat"`
+	NeLng         pgtype.Numeric `json:"ne_lng"`
+	SearchRadiusM int32          `json:"search_radius_m"`
 }
 
 func (q *Queries) GetCityByHint(ctx context.Context, arg GetCityByHintParams) (GetCityByHintRow, error) {
@@ -551,6 +561,68 @@ func (q *Queries) GetCityByHint(ctx context.Context, arg GetCityByHintParams) (G
 		&i.Name,
 		&i.Latitude,
 		&i.Longitude,
+		&i.SwLat,
+		&i.SwLng,
+		&i.NeLat,
+		&i.NeLng,
+		&i.SearchRadiusM,
+	)
+	return i, err
+}
+
+const getCityByPoint = `-- name: GetCityByPoint :one
+SELECT
+  id::text AS id,
+  slug,
+  name,
+  latitude,
+  longitude,
+  sw_lat,
+  sw_lng,
+  ne_lat,
+  ne_lng,
+  search_radius_m
+FROM cities
+WHERE is_active = true
+  AND sw_lat IS NOT NULL
+  AND $1::numeric BETWEEN sw_lat AND ne_lat
+  AND $2::numeric BETWEEN sw_lng AND ne_lng
+ORDER BY sort_order
+LIMIT 1
+`
+
+type GetCityByPointParams struct {
+	Lat pgtype.Numeric `json:"lat"`
+	Lng pgtype.Numeric `json:"lng"`
+}
+
+type GetCityByPointRow struct {
+	ID            string         `json:"id"`
+	Slug          string         `json:"slug"`
+	Name          string         `json:"name"`
+	Latitude      pgtype.Numeric `json:"latitude"`
+	Longitude     pgtype.Numeric `json:"longitude"`
+	SwLat         pgtype.Numeric `json:"sw_lat"`
+	SwLng         pgtype.Numeric `json:"sw_lng"`
+	NeLat         pgtype.Numeric `json:"ne_lat"`
+	NeLng         pgtype.Numeric `json:"ne_lng"`
+	SearchRadiusM int32          `json:"search_radius_m"`
+}
+
+func (q *Queries) GetCityByPoint(ctx context.Context, arg GetCityByPointParams) (GetCityByPointRow, error) {
+	row := q.db.QueryRow(ctx, getCityByPoint, arg.Lat, arg.Lng)
+	var i GetCityByPointRow
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.Name,
+		&i.Latitude,
+		&i.Longitude,
+		&i.SwLat,
+		&i.SwLng,
+		&i.NeLat,
+		&i.NeLng,
+		&i.SearchRadiusM,
 	)
 	return i, err
 }
@@ -885,6 +957,7 @@ LEFT JOIN LATERAL (
 ) cover ON true
 WHERE pl.is_active = true
   AND pl.list_type = 'curated'
+  AND ($1::text IS NULL OR c.slug = $1)
 ORDER BY pl.sort_order, pl.title
 `
 
@@ -903,8 +976,8 @@ type ListActivePlaceListsRow struct {
 	CoverImageUrl string   `json:"cover_image_url"`
 }
 
-func (q *Queries) ListActivePlaceLists(ctx context.Context) ([]ListActivePlaceListsRow, error) {
-	rows, err := q.db.Query(ctx, listActivePlaceLists)
+func (q *Queries) ListActivePlaceLists(ctx context.Context, citySlug *string) ([]ListActivePlaceListsRow, error) {
+	rows, err := q.db.Query(ctx, listActivePlaceLists, citySlug)
 	if err != nil {
 		return nil, err
 	}
@@ -1461,7 +1534,7 @@ const listPlaceBookmarks = `-- name: ListPlaceBookmarks :many
 SELECT
   p.id::text AS place_id,
   p.name,
-  p.neighborhood,
+  p.ward,
   p.address,
   p.cover_image_url,
   p.price_level,
@@ -1493,7 +1566,7 @@ type ListPlaceBookmarksParams struct {
 type ListPlaceBookmarksRow struct {
 	PlaceID       string             `json:"place_id"`
 	Name          string             `json:"name"`
-	Neighborhood  *string            `json:"neighborhood"`
+	Ward          *string            `json:"ward"`
 	Address       *string            `json:"address"`
 	CoverImageUrl *string            `json:"cover_image_url"`
 	PriceLevel    *int16             `json:"price_level"`
@@ -1516,7 +1589,7 @@ func (q *Queries) ListPlaceBookmarks(ctx context.Context, arg ListPlaceBookmarks
 		if err := rows.Scan(
 			&i.PlaceID,
 			&i.Name,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.Address,
 			&i.CoverImageUrl,
 			&i.PriceLevel,
@@ -1555,7 +1628,7 @@ SELECT
   p.name AS place_name,
   p.google_place_id,
   p.address,
-  p.neighborhood,
+  p.ward,
   p.latitude,
   p.longitude,
   p.rating_cached,
@@ -1585,7 +1658,7 @@ type ListPlaceListEntriesByListIDRow struct {
 	PlaceName     string         `json:"place_name"`
 	GooglePlaceID *string        `json:"google_place_id"`
 	Address       *string        `json:"address"`
-	Neighborhood  *string        `json:"neighborhood"`
+	Ward          *string        `json:"ward"`
 	Latitude      pgtype.Numeric `json:"latitude"`
 	Longitude     pgtype.Numeric `json:"longitude"`
 	RatingCached  pgtype.Numeric `json:"rating_cached"`
@@ -1614,7 +1687,7 @@ func (q *Queries) ListPlaceListEntriesByListID(ctx context.Context, listID pgtyp
 			&i.PlaceName,
 			&i.GooglePlaceID,
 			&i.Address,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.Latitude,
 			&i.Longitude,
 			&i.RatingCached,
@@ -1775,7 +1848,7 @@ const listUserPlaceListItems = `-- name: ListUserPlaceListItems :many
 SELECT
   p.id::text AS place_id,
   p.name,
-  p.neighborhood,
+  p.ward,
   p.address,
   p.cover_image_url,
   c.slug AS city_slug,
@@ -1792,7 +1865,7 @@ ORDER BY upli.position, upli.created_at
 type ListUserPlaceListItemsRow struct {
 	PlaceID       string             `json:"place_id"`
 	Name          string             `json:"name"`
-	Neighborhood  *string            `json:"neighborhood"`
+	Ward          *string            `json:"ward"`
 	Address       *string            `json:"address"`
 	CoverImageUrl *string            `json:"cover_image_url"`
 	CitySlug      string             `json:"city_slug"`
@@ -1813,7 +1886,7 @@ func (q *Queries) ListUserPlaceListItems(ctx context.Context, listID pgtype.UUID
 		if err := rows.Scan(
 			&i.PlaceID,
 			&i.Name,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.Address,
 			&i.CoverImageUrl,
 			&i.CitySlug,
@@ -1925,7 +1998,7 @@ const listUserStampedPlaces = `-- name: ListUserStampedPlaces :many
 SELECT
   p.id::text AS place_id,
   p.name,
-  p.neighborhood,
+  p.ward,
   p.address,
   p.cover_image_url,
   p.price_level,
@@ -1947,7 +2020,7 @@ WHERE s.user_id = $1::uuid
     OR p.name ILIKE '%' || btrim($2::text) || '%'
   )
 GROUP BY
-  p.id, p.name, p.neighborhood, p.address, p.cover_image_url,
+  p.id, p.name, p.ward, p.address, p.cover_image_url,
   p.price_level, p.tags, c.slug, c.name, pe.score
 ORDER BY
   CASE WHEN $3::text = 'name' THEN lower(p.name) ELSE NULL END ASC NULLS LAST,
@@ -1964,7 +2037,7 @@ type ListUserStampedPlacesParams struct {
 type ListUserStampedPlacesRow struct {
 	PlaceID       string             `json:"place_id"`
 	Name          string             `json:"name"`
-	Neighborhood  *string            `json:"neighborhood"`
+	Ward          *string            `json:"ward"`
 	Address       *string            `json:"address"`
 	CoverImageUrl *string            `json:"cover_image_url"`
 	PriceLevel    *int16             `json:"price_level"`
@@ -1987,7 +2060,7 @@ func (q *Queries) ListUserStampedPlaces(ctx context.Context, arg ListUserStamped
 		if err := rows.Scan(
 			&i.PlaceID,
 			&i.Name,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.Address,
 			&i.CoverImageUrl,
 			&i.PriceLevel,
@@ -2078,7 +2151,7 @@ func (q *Queries) TouchUserPlaceList(ctx context.Context, id pgtype.UUID) error 
 const updatePlaceCoverOnly = `-- name: UpdatePlaceCoverOnly :exec
 UPDATE places
 SET
-  neighborhood = COALESCE($1, neighborhood),
+  ward = COALESCE($1, ward),
   address = COALESCE($2, address),
   latitude = COALESCE($3, latitude),
   longitude = COALESCE($4, longitude),
@@ -2101,7 +2174,7 @@ WHERE id = $10::uuid
 `
 
 type UpdatePlaceCoverOnlyParams struct {
-	Neighborhood  *string        `json:"neighborhood"`
+	Ward          *string        `json:"ward"`
 	Address       *string        `json:"address"`
 	Latitude      pgtype.Numeric `json:"latitude"`
 	Longitude     pgtype.Numeric `json:"longitude"`
@@ -2115,7 +2188,7 @@ type UpdatePlaceCoverOnlyParams struct {
 
 func (q *Queries) UpdatePlaceCoverOnly(ctx context.Context, arg UpdatePlaceCoverOnlyParams) error {
 	_, err := q.db.Exec(ctx, updatePlaceCoverOnly,
-		arg.Neighborhood,
+		arg.Ward,
 		arg.Address,
 		arg.Latitude,
 		arg.Longitude,
@@ -2135,7 +2208,7 @@ SET
   google_place_id = $1,
   source = 'google',
   name = $2,
-  neighborhood = COALESCE($3, neighborhood),
+  ward = COALESCE($3, ward),
   address = COALESCE($4, address),
   latitude = COALESCE($5, latitude),
   longitude = COALESCE($6, longitude),
@@ -2160,7 +2233,7 @@ WHERE id = $12::uuid
 type UpdatePlaceFromGoogleResolveParams struct {
 	GooglePlaceID *string        `json:"google_place_id"`
 	Name          string         `json:"name"`
-	Neighborhood  *string        `json:"neighborhood"`
+	Ward          *string        `json:"ward"`
 	Address       *string        `json:"address"`
 	Latitude      pgtype.Numeric `json:"latitude"`
 	Longitude     pgtype.Numeric `json:"longitude"`
@@ -2176,7 +2249,7 @@ func (q *Queries) UpdatePlaceFromGoogleResolve(ctx context.Context, arg UpdatePl
 	_, err := q.db.Exec(ctx, updatePlaceFromGoogleResolve,
 		arg.GooglePlaceID,
 		arg.Name,
-		arg.Neighborhood,
+		arg.Ward,
 		arg.Address,
 		arg.Latitude,
 		arg.Longitude,
@@ -2220,7 +2293,7 @@ INSERT INTO places (
   google_place_id,
   source,
   name,
-  neighborhood,
+  ward,
   address,
   latitude,
   longitude,
@@ -2252,7 +2325,7 @@ VALUES (
 ON CONFLICT (google_place_id) DO UPDATE
 SET
   name = EXCLUDED.name,
-  neighborhood = COALESCE(EXCLUDED.neighborhood, places.neighborhood),
+  ward = COALESCE(EXCLUDED.ward, places.ward),
   address = COALESCE(EXCLUDED.address, places.address),
   latitude = COALESCE(EXCLUDED.latitude, places.latitude),
   longitude = COALESCE(EXCLUDED.longitude, places.longitude),
@@ -2276,7 +2349,7 @@ type UpsertGooglePlaceParams struct {
 	CityID        pgtype.UUID    `json:"city_id"`
 	GooglePlaceID *string        `json:"google_place_id"`
 	Name          string         `json:"name"`
-	Neighborhood  *string        `json:"neighborhood"`
+	Ward          *string        `json:"ward"`
 	Address       *string        `json:"address"`
 	Latitude      pgtype.Numeric `json:"latitude"`
 	Longitude     pgtype.Numeric `json:"longitude"`
@@ -2292,7 +2365,7 @@ func (q *Queries) UpsertGooglePlace(ctx context.Context, arg UpsertGooglePlacePa
 		arg.CityID,
 		arg.GooglePlaceID,
 		arg.Name,
-		arg.Neighborhood,
+		arg.Ward,
 		arg.Address,
 		arg.Latitude,
 		arg.Longitude,

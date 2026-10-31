@@ -5,7 +5,14 @@ SELECT
   name,
   country_code,
   cover_image_url,
-  sort_order
+  sort_order,
+  latitude,
+  longitude,
+  sw_lat,
+  sw_lng,
+  ne_lat,
+  ne_lng,
+  search_radius_m
 FROM cities
 WHERE is_active = true
 ORDER BY sort_order, name;
@@ -40,7 +47,7 @@ SELECT
   COALESCE(pc.name, 'Restaurant') AS category,
   p.rating_cached,
   p.price_level,
-  p.neighborhood,
+  p.ward,
   p.cover_image_url,
   p.tags
 FROM places p

@@ -158,19 +158,33 @@ SELECT
   name,
   country_code,
   cover_image_url,
-  sort_order
+  sort_order,
+  latitude,
+  longitude,
+  sw_lat,
+  sw_lng,
+  ne_lat,
+  ne_lng,
+  search_radius_m
 FROM cities
 WHERE is_active = true
 ORDER BY sort_order, name
 `
 
 type ListActiveCitiesRow struct {
-	ID            string  `json:"id"`
-	Slug          string  `json:"slug"`
-	Name          string  `json:"name"`
-	CountryCode   string  `json:"country_code"`
-	CoverImageUrl *string `json:"cover_image_url"`
-	SortOrder     int32   `json:"sort_order"`
+	ID            string         `json:"id"`
+	Slug          string         `json:"slug"`
+	Name          string         `json:"name"`
+	CountryCode   string         `json:"country_code"`
+	CoverImageUrl *string        `json:"cover_image_url"`
+	SortOrder     int32          `json:"sort_order"`
+	Latitude      pgtype.Numeric `json:"latitude"`
+	Longitude     pgtype.Numeric `json:"longitude"`
+	SwLat         pgtype.Numeric `json:"sw_lat"`
+	SwLng         pgtype.Numeric `json:"sw_lng"`
+	NeLat         pgtype.Numeric `json:"ne_lat"`
+	NeLng         pgtype.Numeric `json:"ne_lng"`
+	SearchRadiusM int32          `json:"search_radius_m"`
 }
 
 func (q *Queries) ListActiveCities(ctx context.Context) ([]ListActiveCitiesRow, error) {
@@ -189,6 +203,13 @@ func (q *Queries) ListActiveCities(ctx context.Context) ([]ListActiveCitiesRow, 
 			&i.CountryCode,
 			&i.CoverImageUrl,
 			&i.SortOrder,
+			&i.Latitude,
+			&i.Longitude,
+			&i.SwLat,
+			&i.SwLng,
+			&i.NeLat,
+			&i.NeLng,
+			&i.SearchRadiusM,
 		); err != nil {
 			return nil, err
 		}
@@ -300,7 +321,7 @@ SELECT
   COALESCE(pc.name, 'Restaurant') AS category,
   p.rating_cached,
   p.price_level,
-  p.neighborhood,
+  p.ward,
   p.cover_image_url,
   p.tags
 FROM places p
@@ -325,7 +346,7 @@ type ListCuratedVenuesByCityRow struct {
 	Category      string         `json:"category"`
 	RatingCached  pgtype.Numeric `json:"rating_cached"`
 	PriceLevel    *int16         `json:"price_level"`
-	Neighborhood  *string        `json:"neighborhood"`
+	Ward          *string        `json:"ward"`
 	CoverImageUrl *string        `json:"cover_image_url"`
 	Tags          []string       `json:"tags"`
 }
@@ -346,7 +367,7 @@ func (q *Queries) ListCuratedVenuesByCity(ctx context.Context, cityID pgtype.UUI
 			&i.Category,
 			&i.RatingCached,
 			&i.PriceLevel,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.CoverImageUrl,
 			&i.Tags,
 		); err != nil {

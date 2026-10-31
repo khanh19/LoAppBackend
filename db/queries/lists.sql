@@ -43,6 +43,7 @@ LEFT JOIN LATERAL (
 ) cover ON true
 WHERE pl.is_active = true
   AND pl.list_type = 'curated'
+  AND (sqlc.narg(city_slug)::text IS NULL OR c.slug = sqlc.narg(city_slug))
 ORDER BY pl.sort_order, pl.title;
 
 -- name: ListActivePlans :many
@@ -188,7 +189,7 @@ SELECT
   p.name AS place_name,
   p.google_place_id,
   p.address,
-  p.neighborhood,
+  p.ward,
   p.latitude,
   p.longitude,
   p.rating_cached,
@@ -287,7 +288,7 @@ INSERT INTO places (
   google_place_id,
   source,
   name,
-  neighborhood,
+  ward,
   address,
   latitude,
   longitude,
@@ -300,7 +301,7 @@ VALUES (
   sqlc.narg(google_place_id),
   CASE WHEN sqlc.narg(google_place_id)::text IS NULL THEN 'curated' ELSE 'google' END,
   sqlc.arg(name),
-  sqlc.narg(neighborhood),
+  sqlc.narg(ward),
   sqlc.narg(address),
   sqlc.narg(latitude),
   sqlc.narg(longitude),
@@ -311,7 +312,7 @@ VALUES (
 ON CONFLICT (google_place_id) DO UPDATE
 SET
   name = EXCLUDED.name,
-  neighborhood = COALESCE(EXCLUDED.neighborhood, places.neighborhood),
+  ward = COALESCE(EXCLUDED.ward, places.ward),
   address = COALESCE(EXCLUDED.address, places.address),
   latitude = COALESCE(EXCLUDED.latitude, places.latitude),
   longitude = COALESCE(EXCLUDED.longitude, places.longitude),
@@ -387,7 +388,12 @@ SELECT
   slug,
   name,
   latitude,
-  longitude
+  longitude,
+  sw_lat,
+  sw_lng,
+  ne_lat,
+  ne_lng,
+  search_radius_m
 FROM cities
 WHERE is_active = true
   AND (
@@ -396,6 +402,26 @@ WHERE is_active = true
     OR lower(name) = lower(sqlc.arg(city_hint_alt))
     OR lower(slug) = lower(sqlc.arg(city_hint_alt))
   )
+ORDER BY sort_order
+LIMIT 1;
+
+-- name: GetCityByPoint :one
+SELECT
+  id::text AS id,
+  slug,
+  name,
+  latitude,
+  longitude,
+  sw_lat,
+  sw_lng,
+  ne_lat,
+  ne_lng,
+  search_radius_m
+FROM cities
+WHERE is_active = true
+  AND sw_lat IS NOT NULL
+  AND sqlc.arg(lat)::numeric BETWEEN sw_lat AND ne_lat
+  AND sqlc.arg(lng)::numeric BETWEEN sw_lng AND ne_lng
 ORDER BY sort_order
 LIMIT 1;
 
@@ -415,7 +441,7 @@ WHERE place_id = sqlc.arg(old_place_id)::uuid
 -- name: UpdatePlaceCoverOnly :exec
 UPDATE places
 SET
-  neighborhood = COALESCE(sqlc.narg(neighborhood), neighborhood),
+  ward = COALESCE(sqlc.narg(ward), ward),
   address = COALESCE(sqlc.narg(address), address),
   latitude = COALESCE(sqlc.narg(latitude), latitude),
   longitude = COALESCE(sqlc.narg(longitude), longitude),
@@ -462,7 +488,7 @@ SET
   google_place_id = sqlc.arg(google_place_id),
   source = 'google',
   name = sqlc.arg(name),
-  neighborhood = COALESCE(sqlc.narg(neighborhood), neighborhood),
+  ward = COALESCE(sqlc.narg(ward), ward),
   address = COALESCE(sqlc.narg(address), address),
   latitude = COALESCE(sqlc.narg(latitude), latitude),
   longitude = COALESCE(sqlc.narg(longitude), longitude),
@@ -497,7 +523,7 @@ INSERT INTO places (
   google_place_id,
   source,
   name,
-  neighborhood,
+  ward,
   address,
   latitude,
   longitude,
@@ -514,7 +540,7 @@ VALUES (
   sqlc.arg(google_place_id),
   'google',
   sqlc.arg(name),
-  sqlc.arg(neighborhood),
+  sqlc.arg(ward),
   sqlc.arg(address),
   sqlc.arg(latitude),
   sqlc.arg(longitude),
@@ -529,7 +555,7 @@ VALUES (
 ON CONFLICT (google_place_id) DO UPDATE
 SET
   name = EXCLUDED.name,
-  neighborhood = COALESCE(EXCLUDED.neighborhood, places.neighborhood),
+  ward = COALESCE(EXCLUDED.ward, places.ward),
   address = COALESCE(EXCLUDED.address, places.address),
   latitude = COALESCE(EXCLUDED.latitude, places.latitude),
   longitude = COALESCE(EXCLUDED.longitude, places.longitude),
@@ -675,7 +701,7 @@ WHERE id = sqlc.arg(id)::uuid
 SELECT
   p.id::text AS place_id,
   p.name,
-  p.neighborhood,
+  p.ward,
   p.address,
   p.cover_image_url,
   c.slug AS city_slug,
@@ -723,7 +749,7 @@ WHERE user_id = sqlc.arg(user_id)::uuid;
 SELECT
   p.id::text AS place_id,
   p.name,
-  p.neighborhood,
+  p.ward,
   p.address,
   p.cover_image_url,
   p.price_level,
@@ -765,7 +791,7 @@ WHERE id = sqlc.arg(id)::uuid
 SELECT
   p.id::text AS place_id,
   p.name,
-  p.neighborhood,
+  p.ward,
   p.address,
   p.cover_image_url,
   p.price_level,
@@ -787,7 +813,7 @@ WHERE s.user_id = sqlc.arg(user_id)::uuid
     OR p.name ILIKE '%' || btrim(sqlc.narg(q)::text) || '%'
   )
 GROUP BY
-  p.id, p.name, p.neighborhood, p.address, p.cover_image_url,
+  p.id, p.name, p.ward, p.address, p.cover_image_url,
   p.price_level, p.tags, c.slug, c.name, pe.score
 ORDER BY
   CASE WHEN sqlc.arg(sort)::text = 'name' THEN lower(p.name) ELSE NULL END ASC NULLS LAST,

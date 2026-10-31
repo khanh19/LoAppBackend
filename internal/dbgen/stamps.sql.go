@@ -391,7 +391,7 @@ SELECT
   p.name,
   p.city_id::text AS city_id,
   c.slug AS city_slug,
-  p.neighborhood,
+  p.ward,
   p.address,
   p.latitude,
   p.longitude,
@@ -411,7 +411,7 @@ type GetStampPlaceContextRow struct {
 	Name           string         `json:"name"`
 	CityID         string         `json:"city_id"`
 	CitySlug       string         `json:"city_slug"`
-	Neighborhood   *string        `json:"neighborhood"`
+	Ward           *string        `json:"ward"`
 	Address        *string        `json:"address"`
 	Latitude       pgtype.Numeric `json:"latitude"`
 	Longitude      pgtype.Numeric `json:"longitude"`
@@ -430,7 +430,7 @@ func (q *Queries) GetStampPlaceContext(ctx context.Context, id pgtype.UUID) (Get
 		&i.Name,
 		&i.CityID,
 		&i.CitySlug,
-		&i.Neighborhood,
+		&i.Ward,
 		&i.Address,
 		&i.Latitude,
 		&i.Longitude,
@@ -766,7 +766,7 @@ const listCuratedPlacesForProbe = `-- name: ListCuratedPlacesForProbe :many
 SELECT
   p.id::text AS id,
   p.name,
-  p.neighborhood,
+  p.ward,
   p.price_level,
   p.cover_image_url,
   p.venue_category,
@@ -802,7 +802,7 @@ type ListCuratedPlacesForProbeParams struct {
 type ListCuratedPlacesForProbeRow struct {
 	ID             string   `json:"id"`
 	Name           string   `json:"name"`
-	Neighborhood   *string  `json:"neighborhood"`
+	Ward           *string  `json:"ward"`
 	PriceLevel     *int16   `json:"price_level"`
 	CoverImageUrl  *string  `json:"cover_image_url"`
 	VenueCategory  *string  `json:"venue_category"`
@@ -827,7 +827,7 @@ func (q *Queries) ListCuratedPlacesForProbe(ctx context.Context, arg ListCurated
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.PriceLevel,
 			&i.CoverImageUrl,
 			&i.VenueCategory,
@@ -954,7 +954,7 @@ const listLikedPlacesForPairwise = `-- name: ListLikedPlacesForPairwise :many
 SELECT
   p.id::text AS id,
   p.name,
-  p.neighborhood,
+  p.ward,
   p.price_level,
   p.cover_image_url,
   p.venue_category,
@@ -984,7 +984,7 @@ type ListLikedPlacesForPairwiseParams struct {
 type ListLikedPlacesForPairwiseRow struct {
 	ID             string   `json:"id"`
 	Name           string   `json:"name"`
-	Neighborhood   *string  `json:"neighborhood"`
+	Ward           *string  `json:"ward"`
 	PriceLevel     *int16   `json:"price_level"`
 	CoverImageUrl  *string  `json:"cover_image_url"`
 	VenueCategory  *string  `json:"venue_category"`
@@ -1010,7 +1010,7 @@ func (q *Queries) ListLikedPlacesForPairwise(ctx context.Context, arg ListLikedP
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.PriceLevel,
 			&i.CoverImageUrl,
 			&i.VenueCategory,
@@ -1039,7 +1039,7 @@ SELECT
   upe.placement_confidence,
   upe.comparisons_count,
   p.name AS place_name,
-  p.neighborhood,
+  p.ward,
   p.cover_image_url,
   p.venue_archetype,
   p.price_level,
@@ -1068,7 +1068,7 @@ type ListLowConfidencePoolEntriesRow struct {
 	PlacementConfidence pgtype.Numeric `json:"placement_confidence"`
 	ComparisonsCount    int32          `json:"comparisons_count"`
 	PlaceName           string         `json:"place_name"`
-	Neighborhood        *string        `json:"neighborhood"`
+	Ward                *string        `json:"ward"`
 	CoverImageUrl       *string        `json:"cover_image_url"`
 	VenueArchetype      *string        `json:"venue_archetype"`
 	PriceLevel          *int16         `json:"price_level"`
@@ -1094,7 +1094,7 @@ func (q *Queries) ListLowConfidencePoolEntries(ctx context.Context, arg ListLowC
 			&i.PlacementConfidence,
 			&i.ComparisonsCount,
 			&i.PlaceName,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.CoverImageUrl,
 			&i.VenueArchetype,
 			&i.PriceLevel,
@@ -1321,7 +1321,7 @@ SELECT
   upe.contradiction_count,
   upe.is_provisional,
   p.name AS place_name,
-  p.neighborhood,
+  p.ward,
   p.price_level,
   p.cover_image_url,
   p.venue_archetype,
@@ -1352,7 +1352,7 @@ type ListUserPoolBandRow struct {
 	ContradictionCount  int32          `json:"contradiction_count"`
 	IsProvisional       bool           `json:"is_provisional"`
 	PlaceName           string         `json:"place_name"`
-	Neighborhood        *string        `json:"neighborhood"`
+	Ward                *string        `json:"ward"`
 	PriceLevel          *int16         `json:"price_level"`
 	CoverImageUrl       *string        `json:"cover_image_url"`
 	VenueArchetype      *string        `json:"venue_archetype"`
@@ -1380,7 +1380,7 @@ func (q *Queries) ListUserPoolBand(ctx context.Context, arg ListUserPoolBandPara
 			&i.ContradictionCount,
 			&i.IsProvisional,
 			&i.PlaceName,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.PriceLevel,
 			&i.CoverImageUrl,
 			&i.VenueArchetype,
@@ -1409,7 +1409,7 @@ SELECT
   upe.contradiction_count,
   upe.is_provisional,
   p.name AS place_name,
-  p.neighborhood,
+  p.ward,
   p.price_level,
   p.cover_image_url,
   p.venue_archetype,
@@ -1445,7 +1445,7 @@ type ListUserPoolByCategoryRow struct {
 	ContradictionCount  int32          `json:"contradiction_count"`
 	IsProvisional       bool           `json:"is_provisional"`
 	PlaceName           string         `json:"place_name"`
-	Neighborhood        *string        `json:"neighborhood"`
+	Ward                *string        `json:"ward"`
 	PriceLevel          *int16         `json:"price_level"`
 	CoverImageUrl       *string        `json:"cover_image_url"`
 	VenueArchetype      *string        `json:"venue_archetype"`
@@ -1473,7 +1473,7 @@ func (q *Queries) ListUserPoolByCategory(ctx context.Context, arg ListUserPoolBy
 			&i.ContradictionCount,
 			&i.IsProvisional,
 			&i.PlaceName,
-			&i.Neighborhood,
+			&i.Ward,
 			&i.PriceLevel,
 			&i.CoverImageUrl,
 			&i.VenueArchetype,

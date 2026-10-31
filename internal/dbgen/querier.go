@@ -47,6 +47,7 @@ type Querier interface {
 	GetActivePlacementSession(ctx context.Context, stampID pgtype.UUID) (GetActivePlacementSessionRow, error)
 	GetActiveStampByUserPlace(ctx context.Context, arg GetActiveStampByUserPlaceParams) (GetActiveStampByUserPlaceRow, error)
 	GetCityByHint(ctx context.Context, arg GetCityByHintParams) (GetCityByHintRow, error)
+	GetCityByPoint(ctx context.Context, arg GetCityByPointParams) (GetCityByPointRow, error)
 	GetFamiliarity(ctx context.Context, arg GetFamiliarityParams) (GetFamiliarityRow, error)
 	GetPlaceByGooglePlaceID(ctx context.Context, googlePlaceID *string) (GetPlaceByGooglePlaceIDRow, error)
 	GetPlaceByID(ctx context.Context, id pgtype.UUID) (GetPlaceByIDRow, error)
@@ -73,7 +74,7 @@ type Querier interface {
 	InsertVenueScoreHistory(ctx context.Context) error
 	IsUsernameTakenByAnotherUser(ctx context.Context, arg IsUsernameTakenByAnotherUserParams) (bool, error)
 	ListActiveCities(ctx context.Context) ([]ListActiveCitiesRow, error)
-	ListActivePlaceLists(ctx context.Context) ([]ListActivePlaceListsRow, error)
+	ListActivePlaceLists(ctx context.Context, citySlug *string) ([]ListActivePlaceListsRow, error)
 	ListActivePlans(ctx context.Context, arg ListActivePlansParams) ([]ListActivePlansRow, error)
 	ListActivePurposeCategories(ctx context.Context) ([]ListActivePurposeCategoriesRow, error)
 	ListActiveVibes(ctx context.Context) ([]ListActiveVibesRow, error)
