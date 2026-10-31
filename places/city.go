@@ -39,12 +39,23 @@ func (c cityConfig) contains(lat, lng float64) bool {
 // searchArea builds the Google search scope for this city. The user's own
 // position is used as the bias center when it falls inside the city.
 func (c cityConfig) searchArea(lat, lng float64) searchArea {
+	return c.searchAreaWithRadius(lat, lng, 0)
+}
+
+// searchAreaWithRadius is like searchArea, but a positive radiusM replaces the
+// city default and drops the bounding-box restriction so the circle radius is
+// what Google actually uses (Google rejects bias + restriction together).
+func (c cityConfig) searchAreaWithRadius(lat, lng, radiusM float64) searchArea {
 	area := searchArea{
 		Center:  center{Latitude: c.Latitude, Longitude: c.Longitude},
 		RadiusM: float64(c.SearchRadiusM),
 	}
 	if c.contains(lat, lng) {
 		area.Center = center{Latitude: lat, Longitude: lng}
+	}
+	if radiusM > 0 {
+		area.RadiusM = radiusM
+		return area
 	}
 	if c.hasBounds() {
 		area.Restrict = &rectangle{
@@ -118,6 +129,29 @@ func cityByPoint(ctx context.Context, q *dbgen.Queries, lat, lng float64) (cityC
 		return cityConfig{}, false, errs.WrapCode(err, errs.Internal, "failed to resolve city by coordinates")
 	}
 	return cityFromPointRow(row), true, nil
+}
+
+// Google Autocomplete accepts at most five includedPrimaryTypes.
+const maxIncludedPrimaryTypes = 5
+
+func clampPrimaryTypes(types []string) []string {
+	out := make([]string, 0, maxIncludedPrimaryTypes)
+	seen := make(map[string]struct{}, maxIncludedPrimaryTypes)
+	for _, raw := range types {
+		t := strings.TrimSpace(raw)
+		if t == "" {
+			continue
+		}
+		if _, ok := seen[t]; ok {
+			continue
+		}
+		seen[t] = struct{}{}
+		out = append(out, t)
+		if len(out) >= maxIncludedPrimaryTypes {
+			break
+		}
+	}
+	return out
 }
 
 // resolveCity picks the city in order of trustworthiness: the slug the client

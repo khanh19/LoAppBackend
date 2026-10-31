@@ -126,7 +126,22 @@ func (s *Service) AutocompletePlaces(ctx context.Context, req *AutocompleteReque
 		return nil, err
 	}
 
-	predictions, err := s.google.autocomplete(ctx, input, sessionToken, city.searchArea(req.Latitude, req.Longitude))
+	radiusM := float64(req.SearchRadiusM)
+	if radiusM < 0 {
+		radiusM = 0
+	}
+	if radiusM > 50000 {
+		radiusM = 50000
+	}
+	types := clampPrimaryTypes(req.IncludedTypes)
+
+	predictions, err := s.google.autocomplete(
+		ctx,
+		input,
+		sessionToken,
+		city.searchAreaWithRadius(req.Latitude, req.Longitude, radiusM),
+		types,
+	)
 	if err != nil {
 		return nil, errs.WrapCode(err, errs.Internal, "autocomplete failed")
 	}

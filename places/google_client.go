@@ -35,15 +35,19 @@ func newGooglePlacesClient() *googlePlacesClient {
 	}
 }
 
-func (c *googlePlacesClient) autocomplete(ctx context.Context, input, sessionToken string, area searchArea) ([]AutocompletePrediction, error) {
+func (c *googlePlacesClient) autocomplete(ctx context.Context, input, sessionToken string, area searchArea, includedTypes []string) ([]AutocompletePrediction, error) {
 	reqBody := autocompleteRequest{
 		Input:        input,
 		SessionToken: sessionToken,
 		LanguageCode: "en",
 		RegionCode:   "VN",
 	}
+	if len(includedTypes) > 0 {
+		reqBody.IncludedPrimaryTypes = includedTypes
+	}
 	// Google rejects a request that carries both a bias and a restriction, so
 	// the city rectangle wins when we have one: it keeps results in the city.
+	// A client radius override clears Restrict so the circle radius is used.
 	switch {
 	case area.Restrict != nil:
 		reqBody.LocationRestriction = &locationRestriction{Rectangle: *area.Restrict}
