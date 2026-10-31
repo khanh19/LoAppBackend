@@ -106,13 +106,15 @@ func (s *Service) enrichPlanPlacesMissingCover(ctx context.Context, limit int) (
 }
 
 func (s *Service) enrichOnePlanPlace(ctx context.Context, q *dbgen.Queries, row dbgen.ListPlanPlacesMissingCoverRow) error {
-	lat := numericToFloat(row.Latitude)
-	lng := numericToFloat(row.Longitude)
-	if lat == 0 && lng == 0 {
-		lat, lng = cityCoords(dbgen.GetCityByHintRow{Slug: row.CitySlug})
+	area, err := cityAreaForSlug(ctx, q, row.CitySlug)
+	if err != nil {
+		return err
+	}
+	if lat, lng := numericToFloat(row.Latitude), numericToFloat(row.Longitude); lat != 0 || lng != 0 {
+		area.Latitude, area.Longitude = lat, lng
 	}
 
-	resolved, err := s.resolvePlaceWithFallbacks(ctx, row.Name, row.CitySlug, lat, lng)
+	resolved, err := s.resolvePlaceWithFallbacks(ctx, row.Name, row.CitySlug, area)
 	if err != nil {
 		return err
 	}
@@ -133,7 +135,7 @@ func (s *Service) enrichOnePlanPlace(ctx context.Context, q *dbgen.Queries, row 
 	err = q.UpdatePlaceFromGoogleResolve(ctx, dbgen.UpdatePlaceFromGoogleResolveParams{
 		GooglePlaceID: stringPtr(resolved.GooglePlaceID),
 		Name:          resolved.Name,
-		Neighborhood:  stringPtr(resolved.Neighborhood),
+		Ward:          stringPtr(resolved.Ward),
 		Address:       stringPtr(resolved.Address),
 		Latitude:      numericFromFloat(resolved.Latitude),
 		Longitude:     numericFromFloat(resolved.Longitude),
@@ -162,7 +164,7 @@ func (s *Service) enrichOnePlanPlace(ctx context.Context, q *dbgen.Queries, row 
 		CityID:        cityUUID,
 		GooglePlaceID: stringPtr(resolved.GooglePlaceID),
 		Name:          resolved.Name,
-		Neighborhood:  stringPtr(resolved.Neighborhood),
+		Ward:          stringPtr(resolved.Ward),
 		Address:       stringPtr(resolved.Address),
 		Latitude:      numericFromFloat(resolved.Latitude),
 		Longitude:     numericFromFloat(resolved.Longitude),
@@ -188,7 +190,7 @@ func (s *Service) enrichOnePlanPlace(ctx context.Context, q *dbgen.Queries, row 
 	// Always copy cover onto the original place too, so any remaining
 	// entries that couldn't remapped still show a thumb.
 	return q.UpdatePlaceCoverOnly(ctx, dbgen.UpdatePlaceCoverOnlyParams{
-		Neighborhood:  stringPtr(resolved.Neighborhood),
+		Ward:          stringPtr(resolved.Ward),
 		Address:       stringPtr(resolved.Address),
 		Latitude:      numericFromFloat(resolved.Latitude),
 		Longitude:     numericFromFloat(resolved.Longitude),
@@ -201,13 +203,13 @@ func (s *Service) enrichOnePlanPlace(ctx context.Context, q *dbgen.Queries, row 
 	})
 }
 
-func (s *Service) resolvePlaceWithFallbacks(ctx context.Context, name, citySlug string, lat, lng float64) (*googleResolvedPlace, error) {
+func (s *Service) resolvePlaceWithFallbacks(ctx context.Context, name, citySlug string, area searchArea) (*googleResolvedPlace, error) {
 	name = strings.TrimSpace(name)
 	queries := buildEnrichSearchQueries(name, citySlug)
 
 	var lastErr error
 	for _, query := range queries {
-		resolved, err := s.google.resolvePlace(ctx, query, lat, lng)
+		resolved, err := s.google.resolvePlace(ctx, query, area)
 		if err != nil {
 			lastErr = err
 			continue
@@ -257,7 +259,7 @@ func citySearchLabels(citySlug string) []string {
 		return []string{"Da Nang", "Danang"}
 	default:
 		if strings.TrimSpace(citySlug) == "" {
-			return []string{"Ho Chi Minh City"}
+			return nil
 		}
 		return []string{citySlug}
 	}

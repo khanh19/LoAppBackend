@@ -25,7 +25,7 @@ type PlaceListEntry struct {
 	Name          string   `json:"name"`
 	GooglePlaceID *string  `json:"google_place_id"`
 	Address       *string  `json:"address"`
-	Neighborhood  *string  `json:"neighborhood"`
+	Ward          *string  `json:"ward"`
 	Latitude      float64  `json:"latitude"`
 	Longitude     float64  `json:"longitude"`
 	Rating        float64  `json:"rating"`
@@ -59,6 +59,10 @@ type PlaceListDetail struct {
 	Entries    []PlaceListEntry  `json:"entries"`
 }
 
+type ListPlaceListsParams struct {
+	CitySlug string `query:"city_slug"`
+}
+
 type ListPlaceListsResponse struct {
 	Lists []PlaceListSummary `json:"lists"`
 }
@@ -88,7 +92,7 @@ type CreatePlanStopRequest struct {
 	PlaceName     string   `json:"place_name"`
 	GooglePlaceID *string  `json:"google_place_id"`
 	Address       *string  `json:"address"`
-	Neighborhood  *string  `json:"neighborhood"`
+	Ward          *string  `json:"ward"`
 	Latitude      *float64 `json:"latitude"`
 	Longitude     *float64 `json:"longitude"`
 	Note          string   `json:"note"`
@@ -188,8 +192,8 @@ type UserPlaceListSummary struct {
 }
 
 type ListUserPlaceListsResponse struct {
-	Lists              []UserPlaceListSummary `json:"lists"`
-	BookmarkedCount    int32                  `json:"bookmarked_count"`
+	Lists           []UserPlaceListSummary `json:"lists"`
+	BookmarkedCount int32                  `json:"bookmarked_count"`
 }
 
 type CreateUserPlaceListRequest struct {
@@ -203,7 +207,7 @@ type CreateUserPlaceListResponse struct {
 type LibraryPlaceItem struct {
 	PlaceID       string   `json:"place_id"`
 	Name          string   `json:"name"`
-	Neighborhood  *string  `json:"neighborhood"`
+	Ward          *string  `json:"ward"`
 	Address       *string  `json:"address"`
 	CoverImageURL *string  `json:"cover_image_url"`
 	PriceLevel    *int16   `json:"price_level,omitempty"`

@@ -13,8 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func listPlaceLists(ctx context.Context, db *pgxpool.Pool) ([]PlaceListSummary, error) {
-	rows, err := dbgen.New(db).ListActivePlaceLists(ctx)
+func listPlaceLists(ctx context.Context, db *pgxpool.Pool, citySlug string) ([]PlaceListSummary, error) {
+	rows, err := dbgen.New(db).ListActivePlaceLists(ctx, optionalCitySlug(strings.TrimSpace(citySlug)))
 	if err != nil {
 		return nil, errs.WrapCode(err, errs.Internal, "failed to list place lists")
 	}
@@ -136,7 +136,7 @@ func getPlaceListBySlug(ctx context.Context, db *pgxpool.Pool, slug string) (*Pl
 			Name:          row.PlaceName,
 			GooglePlaceID: row.GooglePlaceID,
 			Address:       row.Address,
-			Neighborhood:  row.Neighborhood,
+			Ward:          row.Ward,
 			Latitude:      numericToFloat(row.Latitude),
 			Longitude:     numericToFloat(row.Longitude),
 			Rating:        numericToFloat(row.RatingCached),

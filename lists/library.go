@@ -172,7 +172,7 @@ func (s *Service) getUserPlaceList(ctx context.Context, userID, listID string) (
 		out = append(out, LibraryPlaceItem{
 			PlaceID:       item.PlaceID,
 			Name:          item.Name,
-			Neighborhood:  item.Neighborhood,
+			Ward:          item.Ward,
 			Address:       item.Address,
 			CoverImageURL: libraryCoverURL(item.CoverImageUrl),
 			CitySlug:      item.CitySlug,
@@ -324,7 +324,7 @@ func (s *Service) listPlaceBookmarks(ctx context.Context, userID string, params 
 		places = append(places, LibraryPlaceItem{
 			PlaceID:       row.PlaceID,
 			Name:          row.Name,
-			Neighborhood:  row.Neighborhood,
+			Ward:          row.Ward,
 			Address:       row.Address,
 			CoverImageURL: libraryCoverURL(row.CoverImageUrl),
 			PriceLevel:    row.PriceLevel,
@@ -411,7 +411,7 @@ func (s *Service) listUserStampedPlaces(ctx context.Context, userID string, para
 		places = append(places, LibraryPlaceItem{
 			PlaceID:       row.PlaceID,
 			Name:          row.Name,
-			Neighborhood:  row.Neighborhood,
+			Ward:          row.Ward,
 			Address:       row.Address,
 			CoverImageURL: libraryCoverURL(row.CoverImageUrl),
 			PriceLevel:    row.PriceLevel,

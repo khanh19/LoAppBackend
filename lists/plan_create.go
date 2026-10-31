@@ -205,7 +205,7 @@ func normalizeCreatePlanStop(stop CreatePlanStopRequest, fallbackStopOrder int) 
 	stop.PlaceID = trimStringPtr(stop.PlaceID)
 	stop.GooglePlaceID = trimStringPtr(stop.GooglePlaceID)
 	stop.Address = trimStringPtr(stop.Address)
-	stop.Neighborhood = trimStringPtr(stop.Neighborhood)
+	stop.Ward = trimStringPtr(stop.Ward)
 	stop.ImageURL = trimStringPtr(stop.ImageURL)
 	if stop.ImageURL != nil && strings.Contains(*stop.ImageURL, "googleusercontent.com") {
 		stop.ImageURL = nil
