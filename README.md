@@ -260,7 +260,8 @@ See [Authentication (Auth0)](#authentication-auth0) for full flow diagrams.
 
 | Access | Method | Path | Function | Description |
 |--------|--------|------|----------|-------------|
-| public | GET | `/onboarding/cities` | `ListCities` | Active cities (Hanoi, HCMC, Da Nang, …) |
+| public | GET | `/cities` | `ListActiveCities` | Active cities with center, bounds and `search_radius_m` |
+| public | GET | `/onboarding/cities` | `ListCities` | Same payload, kept for the onboarding client |
 | public | GET | `/onboarding/categories` | `ListCategories` | Purpose categories (Restaurants, Cafes, …) |
 | public | GET | `/onboarding/vibes` | `ListVibes` | Vibe options (Chill, Trendy, …) |
 | public | GET | `/onboarding/venues` | `ListVenues` | Curated venues for `?city_id=` (required) |
@@ -291,11 +292,11 @@ When `skip` is false, completion runs in one transaction:
 | public | POST | `/places/resolve` | `ResolvePlace` | Upsert Google place → internal UUID + full detail |
 | private | — | (RPC) | `ResolvePlaceForPlan` | Same resolve for `lists` plan creation; returns `place_id` only |
 
-**`AutocompleteRequest`:** `input` (≥2 chars), `session_token` (required), `city_slug` (accepted but unused), `latitude`, `longitude`
+**`AutocompleteRequest`:** `input` (≥2 chars), `session_token` (required), `city_slug`, `latitude`, `longitude` — `city_slug` (else the coordinates) resolves the city whose bounds and `search_radius_m` scope the Google search
 
-**`ResolvePlaceRequest`:** `google_place_id`, `session_token`, `city_slug`, optional lat/lng (lat/lng currently ignored for city resolution)
+**`ResolvePlaceRequest`:** `google_place_id`, `session_token`, `city_slug`, optional lat/lng — city resolution tries `city_slug`, then the coordinates (Google's own coordinates win when present), then Google's locality hint
 
-**`PlaceDetail` fields:** `id`, `google_place_id`, `name`, `address`, `neighborhood`, `latitude`, `longitude`, `rating`, `user_rating_count`, `price_level`, `hours`, `hours_json`, `phone`, `website`, `business_status`, `cover_image_url`, `photo_urls`, `tags`, `city_slug`, `city_name`, `last_synced_at`, `is_stale`
+**`PlaceDetail` fields:** `id`, `google_place_id`, `name`, `address`, `ward`, `latitude`, `longitude`, `rating`, `user_rating_count`, `price_level`, `hours`, `hours_json`, `phone`, `website`, `business_status`, `cover_image_url`, `photo_urls`, `tags`, `city_slug`, `city_name`, `last_synced_at`, `is_stale`
 
 **Tables:** `places` (upsert), `cities` (read for city hint).
 
@@ -311,7 +312,7 @@ See [Google Places API integration](#google-places-api-integration) for caching,
 
 | Access | Method | Path | Function | Description |
 |--------|--------|------|----------|-------------|
-| public | GET | `/lists` | `ListPlaceLists` | Active curated lists with cover + entry count |
+| public | GET | `/lists` | `ListPlaceLists` | Active curated lists with cover + entry count; optional `?city_slug=` |
 | public | GET | `/lists/details/:slug` | `GetPlaceList` | Full list/plan detail including stops |
 | public | GET | `/plans` | `ListPlans` | Public user plans (`?limit`, `?city_slug`) |
 | auth | POST | `/plans` | `CreatePlan` | Create a user plan with stops |
@@ -461,9 +462,15 @@ Request body highlights:
   "includedPrimaryTypes": ["restaurant", "cafe", "bar", "bakery", "food"],
   "languageCode": "en",
   "regionCode": "VN",
-  "locationBias": { "circle": { "center": { "latitude": …, "longitude": … }, "radius": 15000 } }
+  "locationRestriction": { "rectangle": { "low": { … }, "high": { … } } }
 }
 ```
+
+The scope comes from the `cities` row resolved for the request: the bounding
+box becomes a `locationRestriction` rectangle so results stay inside the city.
+Cities without bounds fall back to a `locationBias` circle centered on the
+user (or the city center) with `search_radius_m` as the radius. Google rejects
+requests that carry both, so only one is ever sent.
 
 Field mask:
 
@@ -495,7 +502,7 @@ Field mask for Text Search:
 places.id,places.displayName,places.shortFormattedAddress,places.addressComponents,places.location,places.rating,places.userRatingCount,places.priceLevel,places.primaryTypeDisplayName,places.types,places.photos
 ```
 
-Request: `textQuery`, `pageSize: 1`, optional 15 km `locationBias`. Query construction joins seed name + location hint + city hint (e.g. `"Some Cafe, District 1, Ho Chi Minh City"`).
+Request: `textQuery`, `pageSize: 1`, optional `locationBias` circle built from the city's center and `search_radius_m`. Query construction joins seed name + location hint + city hint (e.g. `"Some Cafe, Ho Chi Minh City"`).
 
 Concurrency: **3 workers** for both sync and enrich paths.
 
@@ -506,7 +513,7 @@ Concurrency: **3 workers** for both sync and enrich paths.
 | `id` | `google_place_id` |
 | `displayName.text` | `name` |
 | `shortFormattedAddress` / `formattedAddress` | `address` |
-| `addressComponents` (sublocality_level_1 or administrative_area_level_2) | `neighborhood` |
+| `addressComponents` (Phường/Ward/Xã/Commune, else administrative_area_level_3 or sublocality_level_1) | `ward` |
 | `location.latitude/longitude` | `latitude`, `longitude` |
 | `rating` | `rating_cached` |
 | `userRatingCount` | `user_rating_count` |
@@ -583,8 +590,6 @@ sequenceDiagram
 ### Known gaps
 
 - `places` declares Text Search URL/types but never uses them.
-- `AutocompleteRequest.CitySlug` is accepted but ignored.
-- `ResolvePlaceRequest.Latitude/Longitude` are accepted but ignored in city resolution.
 - `ResolvePlace` cache hits never trigger background refresh (only `GetPlace` does).
 - `lists` writes to `places` directly during sync/enrich, bypassing the `places` service.
 
