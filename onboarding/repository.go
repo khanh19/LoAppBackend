@@ -23,6 +23,13 @@ func listCities(ctx context.Context, db *pgxpool.Pool) ([]City, error) {
 			Name:          row.Name,
 			CountryCode:   row.CountryCode,
 			CoverImageURL: row.CoverImageUrl,
+			Latitude:      numericToFloat(row.Latitude),
+			Longitude:     numericToFloat(row.Longitude),
+			SwLat:         numericToFloat(row.SwLat),
+			SwLng:         numericToFloat(row.SwLng),
+			NeLat:         numericToFloat(row.NeLat),
+			NeLng:         numericToFloat(row.NeLng),
+			SearchRadiusM: row.SearchRadiusM,
 		})
 	}
 	return cities, nil
@@ -84,7 +91,7 @@ func listVenuesByCity(ctx context.Context, db *pgxpool.Pool, cityID string) ([]V
 			Category: row.Category,
 			Rating:   numericToFloat(row.RatingCached),
 			Price:    formatPriceLevel(row.PriceLevel),
-			Location: stringValue(row.Neighborhood),
+			Location: stringValue(row.Ward),
 			Tags:     row.Tags,
 			Image:    row.CoverImageUrl,
 		})

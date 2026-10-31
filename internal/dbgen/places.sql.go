@@ -21,7 +21,7 @@ SELECT
   p.source,
   p.name,
   p.slug,
-  p.neighborhood,
+  p.ward,
   p.address,
   p.latitude,
   p.longitude,
@@ -55,7 +55,7 @@ type GetPlaceByGooglePlaceIDRow struct {
 	Source          string             `json:"source"`
 	Name            string             `json:"name"`
 	Slug            *string            `json:"slug"`
-	Neighborhood    *string            `json:"neighborhood"`
+	Ward            *string            `json:"ward"`
 	Address         *string            `json:"address"`
 	Latitude        pgtype.Numeric     `json:"latitude"`
 	Longitude       pgtype.Numeric     `json:"longitude"`
@@ -88,7 +88,7 @@ func (q *Queries) GetPlaceByGooglePlaceID(ctx context.Context, googlePlaceID *st
 		&i.Source,
 		&i.Name,
 		&i.Slug,
-		&i.Neighborhood,
+		&i.Ward,
 		&i.Address,
 		&i.Latitude,
 		&i.Longitude,
@@ -121,7 +121,7 @@ SELECT
   p.source,
   p.name,
   p.slug,
-  p.neighborhood,
+  p.ward,
   p.address,
   p.latitude,
   p.longitude,
@@ -155,7 +155,7 @@ type GetPlaceByIDRow struct {
 	Source          string             `json:"source"`
 	Name            string             `json:"name"`
 	Slug            *string            `json:"slug"`
-	Neighborhood    *string            `json:"neighborhood"`
+	Ward            *string            `json:"ward"`
 	Address         *string            `json:"address"`
 	Latitude        pgtype.Numeric     `json:"latitude"`
 	Longitude       pgtype.Numeric     `json:"longitude"`
@@ -188,7 +188,7 @@ func (q *Queries) GetPlaceByID(ctx context.Context, id pgtype.UUID) (GetPlaceByI
 		&i.Source,
 		&i.Name,
 		&i.Slug,
-		&i.Neighborhood,
+		&i.Ward,
 		&i.Address,
 		&i.Latitude,
 		&i.Longitude,
@@ -217,7 +217,7 @@ INSERT INTO places (
   google_place_id,
   source,
   name,
-  neighborhood,
+  ward,
   address,
   latitude,
   longitude,
@@ -265,7 +265,7 @@ VALUES (
 ON CONFLICT (google_place_id) DO UPDATE
 SET
   name = EXCLUDED.name,
-  neighborhood = COALESCE(EXCLUDED.neighborhood, places.neighborhood),
+  ward = COALESCE(EXCLUDED.ward, places.ward),
   address = COALESCE(EXCLUDED.address, places.address),
   latitude = COALESCE(EXCLUDED.latitude, places.latitude),
   longitude = COALESCE(EXCLUDED.longitude, places.longitude),
@@ -300,7 +300,7 @@ type UpsertPlaceFromGoogleParams struct {
 	CityID          pgtype.UUID    `json:"city_id"`
 	GooglePlaceID   *string        `json:"google_place_id"`
 	Name            string         `json:"name"`
-	Neighborhood    *string        `json:"neighborhood"`
+	Ward            *string        `json:"ward"`
 	Address         *string        `json:"address"`
 	Latitude        pgtype.Numeric `json:"latitude"`
 	Longitude       pgtype.Numeric `json:"longitude"`
@@ -324,7 +324,7 @@ func (q *Queries) UpsertPlaceFromGoogle(ctx context.Context, arg UpsertPlaceFrom
 		arg.CityID,
 		arg.GooglePlaceID,
 		arg.Name,
-		arg.Neighborhood,
+		arg.Ward,
 		arg.Address,
 		arg.Latitude,
 		arg.Longitude,

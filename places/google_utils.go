@@ -14,19 +14,20 @@ func mapGooglePlace(place *googlePlace, includePhotos bool) *googleResolvedPlace
 	}
 
 	resolved := &googleResolvedPlace{
-		GooglePlaceID: place.ID,
-		Name:          place.DisplayName.Text,
-		Address:       address,
-		Neighborhood:  parseNeighborhood(place.AddressComponents),
-		Latitude:      place.Location.Latitude,
-		Longitude:     place.Location.Longitude,
-		Rating:        place.Rating,
-		PriceLevel:    mapPriceLevel(place.PriceLevel),
-		Phone:         place.NationalPhoneNumber,
-		Website:       place.WebsiteURI,
+		GooglePlaceID:  place.ID,
+		Name:           place.DisplayName.Text,
+		Address:        address,
+		Ward:           parseWard(place.AddressComponents),
+		CityHint:       parseCityHint(place.AddressComponents),
+		Latitude:       place.Location.Latitude,
+		Longitude:      place.Location.Longitude,
+		Rating:         place.Rating,
+		PriceLevel:     mapPriceLevel(place.PriceLevel),
+		Phone:          place.NationalPhoneNumber,
+		Website:        place.WebsiteURI,
 		BusinessStatus: place.BusinessStatus,
-		Tags:          buildPlaceTags(place),
-		GoogleTypes:   append([]string(nil), place.Types...),
+		Tags:           buildPlaceTags(place),
+		GoogleTypes:    append([]string(nil), place.Types...),
 	}
 	cat, arch := inferVenueCategoryAndArchetype(place.Types, resolved.PriceLevel)
 	resolved.VenueCategory = cat
@@ -56,18 +57,88 @@ func mapGooglePlace(place *googlePlace, includePhotos bool) *googleResolvedPlace
 	return resolved
 }
 
-func parseNeighborhood(components []addressComponent) string {
+// parseWard picks the ward, the lowest administrative unit left after
+// Vietnam's 2025 reform removed districts. Components that still name a
+// district are ignored rather than used as a fallback.
+func parseWard(components []addressComponent) string {
+	fallback := ""
 	for _, component := range components {
-		for _, t := range component.Types {
-			if t == "sublocality_level_1" || t == "administrative_area_level_2" {
-				if component.LongText != "" {
-					return component.LongText
-				}
-				return component.ShortText
+		text := componentText(component)
+		if text == "" || looksLikeDistrict(text) {
+			continue
+		}
+		if looksLikeWard(text) {
+			return text
+		}
+		if fallback == "" && hasComponentType(component, "administrative_area_level_3", "sublocality_level_1") {
+			fallback = text
+		}
+	}
+	return fallback
+}
+
+// parseCityHint returns the Google name for the city a place sits in, used as
+// the last resort when resolving a place to one of Lo's cities.
+func parseCityHint(components []addressComponent) string {
+	fallback := ""
+	for _, component := range components {
+		text := componentText(component)
+		if text == "" {
+			continue
+		}
+		if hasComponentType(component, "locality") {
+			return text
+		}
+		if fallback == "" && hasComponentType(component, "administrative_area_level_1") {
+			fallback = text
+		}
+	}
+	return fallback
+}
+
+var wardPrefixes = []string{"phường", "ward", "xã", "commune"}
+
+func looksLikeWard(text string) bool {
+	lower := strings.ToLower(text)
+	for _, prefix := range wardPrefixes {
+		if strings.HasPrefix(lower, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+var districtPrefixes = []string{"quận", "quan ", "huyện", "huyen ", "thị xã", "thi xa"}
+
+func looksLikeDistrict(text string) bool {
+	lower := strings.ToLower(text)
+	if strings.Contains(lower, "district") {
+		return true
+	}
+	for _, prefix := range districtPrefixes {
+		if strings.HasPrefix(lower, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func componentText(component addressComponent) string {
+	if text := strings.TrimSpace(component.LongText); text != "" {
+		return text
+	}
+	return strings.TrimSpace(component.ShortText)
+}
+
+func hasComponentType(component addressComponent, types ...string) bool {
+	for _, t := range component.Types {
+		for _, want := range types {
+			if t == want {
+				return true
 			}
 		}
 	}
-	return ""
+	return false
 }
 
 func mapPriceLevel(level string) *int16 {

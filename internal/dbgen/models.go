@@ -19,6 +19,11 @@ type City struct {
 	IsActive      bool               `json:"is_active"`
 	SortOrder     int32              `json:"sort_order"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	SwLat         pgtype.Numeric     `json:"sw_lat"`
+	SwLng         pgtype.Numeric     `json:"sw_lng"`
+	NeLat         pgtype.Numeric     `json:"ne_lat"`
+	NeLng         pgtype.Numeric     `json:"ne_lng"`
+	SearchRadiusM int32              `json:"search_radius_m"`
 }
 
 type EventSource struct {
@@ -81,7 +86,7 @@ type Place struct {
 	Source        string         `json:"source"`
 	Name          string         `json:"name"`
 	Slug          *string        `json:"slug"`
-	Neighborhood  *string        `json:"neighborhood"`
+	Ward          *string        `json:"ward"`
 	Address       *string        `json:"address"`
 	Latitude      pgtype.Numeric `json:"latitude"`
 	Longitude     pgtype.Numeric `json:"longitude"`

@@ -35,19 +35,21 @@ func newGooglePlacesClient() *googlePlacesClient {
 	}
 }
 
-func (c *googlePlacesClient) autocomplete(ctx context.Context, input, sessionToken string, lat, lng float64) ([]AutocompletePrediction, error) {
+func (c *googlePlacesClient) autocomplete(ctx context.Context, input, sessionToken string, area searchArea) ([]AutocompletePrediction, error) {
 	reqBody := autocompleteRequest{
 		Input:        input,
 		SessionToken: sessionToken,
 		LanguageCode: "en",
 		RegionCode:   "VN",
 	}
-	if lat != 0 || lng != 0 {
+	// Google rejects a request that carries both a bias and a restriction, so
+	// the city rectangle wins when we have one: it keeps results in the city.
+	switch {
+	case area.Restrict != nil:
+		reqBody.LocationRestriction = &locationRestriction{Rectangle: *area.Restrict}
+	case area.RadiusM > 0:
 		reqBody.LocationBias = &locationBias{
-			Circle: circle{
-				Center: center{Latitude: lat, Longitude: lng},
-				Radius: 15000,
-			},
+			Circle: circle{Center: area.Center, Radius: area.RadiusM},
 		}
 	}
 

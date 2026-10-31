@@ -9,8 +9,12 @@ import (
 )
 
 //encore:api public method=GET path=/lists
-func (s *Service) ListPlaceLists(ctx context.Context) (*ListPlaceListsResponse, error) {
-	lists, err := listPlaceLists(ctx, s.db)
+func (s *Service) ListPlaceLists(ctx context.Context, params *ListPlaceListsParams) (*ListPlaceListsResponse, error) {
+	citySlug := ""
+	if params != nil {
+		citySlug = params.CitySlug
+	}
+	lists, err := listPlaceLists(ctx, s.db, citySlug)
 	if err != nil {
 		return nil, err
 	}

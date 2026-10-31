@@ -3,27 +3,27 @@ package stamps
 import "time"
 
 type CreateStampRequest struct {
-	PlaceID     string   `json:"place_id"`
-	Verdict     string   `json:"verdict"`
-	Quality     string   `json:"quality"`
-	Companions  []string `json:"companions"`
-	Vibes       []string `json:"vibes"`
-	Note        string   `json:"note"`
-	Latitude    *float64 `json:"latitude"`
-	Longitude   *float64 `json:"longitude"`
+	PlaceID    string   `json:"place_id"`
+	Verdict    string   `json:"verdict"`
+	Quality    string   `json:"quality"`
+	Companions []string `json:"companions"`
+	Vibes      []string `json:"vibes"`
+	Note       string   `json:"note"`
+	Latitude   *float64 `json:"latitude"`
+	Longitude  *float64 `json:"longitude"`
 }
 
 type PairwiseCandidate struct {
-	PlaceID      string   `json:"place_id"`
-	Name         string   `json:"name"`
-	Neighborhood *string  `json:"neighborhood"`
-	CoverImageURL *string `json:"cover_image_url"`
-	PriceLevel   *int16   `json:"price_level"`
-	Archetype    *string  `json:"venue_archetype"`
-	Comparability float64 `json:"comparability"`
-	Tier         int      `json:"tier"`
-	Reasons      []string `json:"reasons"`
-	IsProbe      bool     `json:"is_probe"`
+	PlaceID       string   `json:"place_id"`
+	Name          string   `json:"name"`
+	Ward          *string  `json:"ward"`
+	CoverImageURL *string  `json:"cover_image_url"`
+	PriceLevel    *int16   `json:"price_level"`
+	Archetype     *string  `json:"venue_archetype"`
+	Comparability float64  `json:"comparability"`
+	Tier          int      `json:"tier"`
+	Reasons       []string `json:"reasons"`
+	IsProbe       bool     `json:"is_probe"`
 }
 
 type CreateStampResponse struct {
@@ -54,7 +54,7 @@ type PoolEntry struct {
 	Score               float64 `json:"score"`
 	PlacementConfidence float64 `json:"placement_confidence"`
 	IsProvisional       bool    `json:"is_provisional"`
-	Neighborhood        *string `json:"neighborhood"`
+	Ward                *string `json:"ward"`
 	CoverImageURL       *string `json:"cover_image_url"`
 	PriceLevel          *int16  `json:"price_level"`
 }

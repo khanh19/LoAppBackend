@@ -4,7 +4,8 @@ type googleResolvedPlace struct {
 	GooglePlaceID   string
 	Name            string
 	Address         string
-	Neighborhood    string
+	Ward            string
+	CityHint        string
 	Latitude        float64
 	Longitude       float64
 	Rating          *float64
@@ -24,12 +25,21 @@ type googleResolvedPlace struct {
 }
 
 type autocompleteRequest struct {
-	Input                  string        `json:"input"`
-	SessionToken           string        `json:"sessionToken,omitempty"`
-	IncludedPrimaryTypes   []string      `json:"includedPrimaryTypes,omitempty"`
-	LanguageCode           string        `json:"languageCode,omitempty"`
-	RegionCode             string        `json:"regionCode,omitempty"`
-	LocationBias           *locationBias `json:"locationBias,omitempty"`
+	Input                string               `json:"input"`
+	SessionToken         string               `json:"sessionToken,omitempty"`
+	IncludedPrimaryTypes []string             `json:"includedPrimaryTypes,omitempty"`
+	LanguageCode         string               `json:"languageCode,omitempty"`
+	RegionCode           string               `json:"regionCode,omitempty"`
+	LocationBias         *locationBias        `json:"locationBias,omitempty"`
+	LocationRestriction  *locationRestriction `json:"locationRestriction,omitempty"`
+}
+
+// searchArea is the resolved scope for one Google query: where to bias from,
+// how far, and optionally the rectangle results must fall inside.
+type searchArea struct {
+	Center   center
+	RadiusM  float64
+	Restrict *rectangle
 }
 
 type autocompleteResponse struct {
@@ -41,8 +51,8 @@ type autocompleteSuggestion struct {
 }
 
 type placePrediction struct {
-	PlaceID string        `json:"placeId"`
-	Text    localizedText `json:"text"`
+	PlaceID          string           `json:"placeId"`
+	Text             localizedText    `json:"text"`
 	StructuredFormat structuredFormat `json:"structuredFormat"`
 }
 
@@ -61,6 +71,15 @@ type textSearchRequest struct {
 
 type locationBias struct {
 	Circle circle `json:"circle"`
+}
+
+type locationRestriction struct {
+	Rectangle rectangle `json:"rectangle"`
+}
+
+type rectangle struct {
+	Low  center `json:"low"`
+	High center `json:"high"`
 }
 
 type circle struct {

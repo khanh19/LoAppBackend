@@ -118,7 +118,7 @@ func (s *Service) syncSeedList(ctx context.Context, q *dbgen.Queries, list seedL
 		return nil, 0, 0, 0, err
 	}
 
-	lat, lng := cityCoords(city)
+	area := citySearchArea(city)
 	existingNames := make(map[string]struct{})
 	seedNames := make([]string, 0, len(list.Items))
 	for _, item := range list.Items {
@@ -154,7 +154,7 @@ func (s *Service) syncSeedList(ctx context.Context, q *dbgen.Queries, list seedL
 				continue
 			}
 
-			placeID, status, resolveErr := s.resolvePlaceForItem(ctx, q, cityUUID, job.item, lat, lng)
+			placeID, status, resolveErr := s.resolvePlaceForItem(ctx, q, cityUUID, job.item, area)
 			results <- resolveResult{
 				item:    job.item,
 				placeID: placeID,
@@ -262,7 +262,7 @@ func (s *Service) syncSeedList(ctx context.Context, q *dbgen.Queries, list seedL
 	return details, added, skipped, failed, nil
 }
 
-func (s *Service) resolvePlaceForItem(ctx context.Context, q *dbgen.Queries, cityID pgtype.UUID, item seedItem, lat, lng float64) (string, string, error) {
+func (s *Service) resolvePlaceForItem(ctx context.Context, q *dbgen.Queries, cityID pgtype.UUID, item seedItem, area searchArea) (string, string, error) {
 	placeID, err := q.FindPlaceByNameInCity(ctx, dbgen.FindPlaceByNameInCityParams{
 		CityID: cityID,
 		Name:   item.SeedName,
@@ -274,7 +274,7 @@ func (s *Service) resolvePlaceForItem(ctx context.Context, q *dbgen.Queries, cit
 		return "", "", err
 	}
 
-	resolved, err := s.google.resolvePlace(ctx, buildSearchQuery(item), lat, lng)
+	resolved, err := s.google.resolvePlace(ctx, buildSearchQuery(item), area)
 	if err != nil {
 		return "", "", err
 	}
@@ -283,7 +283,7 @@ func (s *Service) resolvePlaceForItem(ctx context.Context, q *dbgen.Queries, cit
 		CityID:        cityID,
 		GooglePlaceID: stringPtr(resolved.GooglePlaceID),
 		Name:          resolved.Name,
-		Neighborhood:  stringPtr(resolved.Neighborhood),
+		Ward:          stringPtr(resolved.Ward),
 		Address:       stringPtr(resolved.Address),
 		Latitude:      numericFromFloat(resolved.Latitude),
 		Longitude:     numericFromFloat(resolved.Longitude),
@@ -325,22 +325,13 @@ func resolveCity(ctx context.Context, q *dbgen.Queries, items []seedItem) (dbgen
 	return dbgen.GetCityByHintRow{}, errors.New("no city hint matched an active city")
 }
 
-func cityCoords(city dbgen.GetCityByHintRow) (float64, float64) {
-	lat := numericToFloat(city.Latitude)
-	lng := numericToFloat(city.Longitude)
-	if lat == 0 && lng == 0 {
-		switch city.Slug {
-		case "hcmc":
-			return 10.8231, 106.6297
-		case "hanoi":
-			return 21.0285, 105.8542
-		case "danang":
-			return 16.0544, 108.2022
-		default:
-			return 10.8231, 106.6297
-		}
+// citySearchArea reads the Google search scope straight off the city row.
+func citySearchArea(city dbgen.GetCityByHintRow) searchArea {
+	return searchArea{
+		Latitude:  numericToFloat(city.Latitude),
+		Longitude: numericToFloat(city.Longitude),
+		RadiusM:   float64(city.SearchRadiusM),
 	}
-	return lat, lng
 }
 
 func findExistingEntryPlaceID(ctx context.Context, q *dbgen.Queries, listID pgtype.UUID, seedName string) (string, error) {

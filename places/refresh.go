@@ -79,7 +79,13 @@ func (s *Service) resolveAndUpsertPlace(
 		return "", errs.WrapCode(err, errs.Internal, "failed to resolve google place")
 	}
 
-	city, err := resolveCity(ctx, q, citySlug, lat, lng)
+	// The coordinates Google returned for the place beat whatever the client
+	// guessed, so prefer them when deciding which city the place belongs to.
+	if resolved.Latitude != 0 || resolved.Longitude != 0 {
+		lat, lng = resolved.Latitude, resolved.Longitude
+	}
+
+	city, err := resolveCity(ctx, q, citySlug, lat, lng, resolved.CityHint)
 	if err != nil {
 		return "", err
 	}
@@ -100,21 +106,21 @@ func upsertParamsFromResolved(cityID pgtype.UUID, resolved *googleResolvedPlace)
 		CityID:          cityID,
 		GooglePlaceID:   stringPtr(resolved.GooglePlaceID),
 		Name:            resolved.Name,
-		Neighborhood:  stringPtr(resolved.Neighborhood),
-		Address:       stringPtr(resolved.Address),
-		Latitude:      numericFromFloat(resolved.Latitude),
-		Longitude:     numericFromFloat(resolved.Longitude),
-		PriceLevel:    resolved.PriceLevel,
-		RatingCached:  numericFromOptionalFloat(resolved.Rating),
+		Ward:            stringPtr(resolved.Ward),
+		Address:         stringPtr(resolved.Address),
+		Latitude:        numericFromFloat(resolved.Latitude),
+		Longitude:       numericFromFloat(resolved.Longitude),
+		PriceLevel:      resolved.PriceLevel,
+		RatingCached:    numericFromOptionalFloat(resolved.Rating),
 		UserRatingCount: resolved.UserRatingCount,
-		Phone:         stringPtr(resolved.Phone),
-		Website:       stringPtr(resolved.Website),
-		BusinessStatus: stringPtr(resolved.BusinessStatus),
-		CoverImageUrl: stringPtr(resolved.CoverImageURL),
-		Tags:          resolved.Tags,
-		GoogleTypes:   resolved.GoogleTypes,
-		VenueCategory: resolved.VenueCategory,
-		VenueArchetype: resolved.VenueArchetype,
+		Phone:           stringPtr(resolved.Phone),
+		Website:         stringPtr(resolved.Website),
+		BusinessStatus:  stringPtr(resolved.BusinessStatus),
+		CoverImageUrl:   stringPtr(resolved.CoverImageURL),
+		Tags:            resolved.Tags,
+		GoogleTypes:     resolved.GoogleTypes,
+		VenueCategory:   resolved.VenueCategory,
+		VenueArchetype:  resolved.VenueArchetype,
 	}
 	if len(resolved.HoursJSON) > 0 {
 		params.HoursJson = resolved.HoursJSON
@@ -131,32 +137,4 @@ func upsertParamsFromResolved(cityID pgtype.UUID, resolved *googleResolvedPlace)
 		params.GoogleTypes = []string{}
 	}
 	return params
-}
-
-func resolveCity(ctx context.Context, q *dbgen.Queries, citySlug string, lat, lng float64) (dbgen.GetCityByHintRow, error) {
-	citySlug = strings.TrimSpace(citySlug)
-	if citySlug != "" {
-		city, err := q.GetCityByHint(ctx, dbgen.GetCityByHintParams{
-			CityHint:    citySlug,
-			CityHintAlt: cityHintAlt(citySlug),
-		})
-		if err == nil {
-			return city, nil
-		}
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return dbgen.GetCityByHintRow{}, errs.WrapCode(err, errs.Internal, "failed to resolve city")
-		}
-	}
-
-	// Default to HCMC when city slug is missing or unknown.
-	city, err := q.GetCityByHint(ctx, dbgen.GetCityByHintParams{
-		CityHint:    "hcmc",
-		CityHintAlt: "ho chi minh city",
-	})
-	if err != nil {
-		return dbgen.GetCityByHintRow{}, &errs.Error{Code: errs.InvalidArgument, Message: "city_slug does not match an active city"}
-	}
-	_ = lat
-	_ = lng
-	return city, nil
 }

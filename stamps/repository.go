@@ -34,13 +34,13 @@ func (s *Service) createStamp(ctx context.Context, userID string, req *CreateSta
 		}
 		return nil, errs.WrapCode(err, errs.Internal, "failed to load place")
 	}
-		if place.VenueCategory == nil || !isStampableVenueCategory(strings.TrimSpace(*place.VenueCategory)) {
-			return nil, &errs.Error{
-				Code:    errs.FailedPrecondition,
-				Message: "only restaurants, cafes, bars, bakeries, and clubs can be stamped",
-			}
+	if place.VenueCategory == nil || !isStampableVenueCategory(strings.TrimSpace(*place.VenueCategory)) {
+		return nil, &errs.Error{
+			Code:    errs.FailedPrecondition,
+			Message: "only restaurants, cafes, bars, bakeries, and clubs can be stamped",
 		}
-		category := strings.TrimSpace(*place.VenueCategory)
+	}
+	category := strings.TrimSpace(*place.VenueCategory)
 
 	visitCount := 1
 	existing, err := q.GetActiveStampByUserPlace(ctx, dbgen.GetActiveStampByUserPlaceParams{
@@ -130,9 +130,9 @@ func (s *Service) createStamp(ctx context.Context, userID string, req *CreateSta
 	}
 
 	poolRows, err := tq.ListUserPoolBand(ctx, dbgen.ListUserPoolBandParams{
-		UserID:         userUUID,
-		VenueCategory:  category,
-		Band:           band,
+		UserID:        userUUID,
+		VenueCategory: category,
+		Band:          band,
 	})
 	if err != nil {
 		return nil, errs.WrapCode(err, errs.Internal, "failed to load pool band")
@@ -301,7 +301,7 @@ func (s *Service) getPool(ctx context.Context, userID, category string) (*GetPoo
 			Score:               numericToFloat(row.Score),
 			PlacementConfidence: numericToFloat(row.PlacementConfidence),
 			IsProvisional:       row.IsProvisional,
-			Neighborhood:        row.Neighborhood,
+			Ward:                row.Ward,
 			CoverImageURL:       row.CoverImageUrl,
 			PriceLevel:          row.PriceLevel,
 		})

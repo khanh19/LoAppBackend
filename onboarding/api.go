@@ -7,13 +7,21 @@ import (
 	"encore.dev/beta/errs"
 )
 
-//encore:api public method=GET path=/onboarding/cities
-func (s *Service) ListCities(ctx context.Context) (*ListCitiesResponse, error) {
+// ListActiveCities is the single source of truth for the cities Lo supports,
+// including the center, bounds and search radius clients use to scope search.
+//
+//encore:api public method=GET path=/cities
+func (s *Service) ListActiveCities(ctx context.Context) (*ListCitiesResponse, error) {
 	cities, err := listCities(ctx, s.db)
 	if err != nil {
 		return nil, err
 	}
 	return &ListCitiesResponse{Cities: cities}, nil
+}
+
+//encore:api public method=GET path=/onboarding/cities
+func (s *Service) ListCities(ctx context.Context) (*ListCitiesResponse, error) {
+	return s.ListActiveCities(ctx)
 }
 
 //encore:api public method=GET path=/onboarding/categories

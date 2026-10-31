@@ -219,11 +219,11 @@ func RecomputeBandScores(band BandBounds, placeIDs []string, eBand float64, comp
 			conf = 1
 		}
 		out[placeID] = PoolScore{
-			RankKey:              rankKey,
-			Score:                ScoreAtPosition(band, i, k, s, cfg),
-			PlacementConfidence:  conf,
-			ComparisonsCount:     comps,
-			EvidenceRatio:        s,
+			RankKey:             rankKey,
+			Score:               ScoreAtPosition(band, i, k, s, cfg),
+			PlacementConfidence: conf,
+			ComparisonsCount:    comps,
+			EvidenceRatio:       s,
 		}
 	}
 	return out
@@ -362,11 +362,11 @@ func Jaccard(a, b []string) float64 {
 
 type ComparabilityInput struct {
 	BisectionScore float64 // 0..1
-	SameNeighborhood bool
-	SameCity         bool
-	PriceA, PriceB   *int16
-	VibesA, VibesB   []string
-	RecencyScore     float64 // 0..1
+	SameWard       bool
+	SameCity       bool
+	PriceA, PriceB *int16
+	VibesA, VibesB []string
+	RecencyScore   float64 // 0..1
 }
 
 func ScoreComparability(in ComparabilityInput, w ComparabilityWeights) float64 {
@@ -374,7 +374,7 @@ func ScoreComparability(in ComparabilityInput, w ComparabilityWeights) float64 {
 		w = defaultComparability
 	}
 	geo := 0.0
-	if in.SameNeighborhood {
+	if in.SameWard {
 		geo = 1.0
 	} else if in.SameCity {
 		geo = 0.4
@@ -406,8 +406,8 @@ func BuildComparabilityReasons(in ComparabilityInput, archetype string) []string
 	if archetype != "" {
 		reasons = append(reasons, humanArchetype(archetype))
 	}
-	if in.SameNeighborhood {
-		reasons = append(reasons, "Same neighborhood")
+	if in.SameWard {
+		reasons = append(reasons, "Same ward")
 	} else if in.SameCity {
 		reasons = append(reasons, "Same city")
 	}

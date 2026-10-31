@@ -4,7 +4,7 @@ type googleResolvedPlace struct {
 	GooglePlaceID string
 	Name          string
 	Address       string
-	Neighborhood  string
+	Ward          string
 	Latitude      float64
 	Longitude     float64
 	Rating        *float64
@@ -20,6 +20,17 @@ type textSearchRequest struct {
 	LocationBias *locationBias `json:"locationBias,omitempty"`
 	LanguageCode string        `json:"languageCode,omitempty"`
 	RegionCode   string        `json:"regionCode,omitempty"`
+}
+
+// searchArea is the per-city Google search scope, read from the cities table.
+type searchArea struct {
+	Latitude  float64
+	Longitude float64
+	RadiusM   float64
+}
+
+func (a searchArea) isZero() bool {
+	return a.Latitude == 0 && a.Longitude == 0
 }
 
 type locationBias struct {

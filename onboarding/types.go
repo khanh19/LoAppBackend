@@ -1,11 +1,20 @@
 package onboarding
 
+// City carries both the onboarding presentation fields and the geography the
+// clients need to bias search and center the map.
 type City struct {
 	ID            string  `json:"id"`
 	Slug          string  `json:"slug"`
 	Name          string  `json:"name"`
 	CountryCode   string  `json:"country_code"`
 	CoverImageURL *string `json:"cover_image_url"`
+	Latitude      float64 `json:"latitude"`
+	Longitude     float64 `json:"longitude"`
+	SwLat         float64 `json:"sw_lat"`
+	SwLng         float64 `json:"sw_lng"`
+	NeLat         float64 `json:"ne_lat"`
+	NeLng         float64 `json:"ne_lng"`
+	SearchRadiusM int32   `json:"search_radius_m"`
 }
 
 type PurposeCategory struct {

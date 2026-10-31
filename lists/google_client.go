@@ -31,8 +31,8 @@ func newGooglePlacesClient() *googlePlacesClient {
 	}
 }
 
-func (c *googlePlacesClient) resolvePlace(ctx context.Context, query string, lat, lng float64) (*googleResolvedPlace, error) {
-	place, err := c.searchText(ctx, query, lat, lng)
+func (c *googlePlacesClient) resolvePlace(ctx context.Context, query string, area searchArea) (*googleResolvedPlace, error) {
+	place, err := c.searchText(ctx, query, area)
 	if err != nil {
 		return nil, err
 	}
@@ -41,18 +41,18 @@ func (c *googlePlacesClient) resolvePlace(ctx context.Context, query string, lat
 	return resolved, nil
 }
 
-func (c *googlePlacesClient) searchText(ctx context.Context, query string, lat, lng float64) (*googlePlace, error) {
+func (c *googlePlacesClient) searchText(ctx context.Context, query string, area searchArea) (*googlePlace, error) {
 	reqBody := textSearchRequest{
 		TextQuery:    query,
 		PageSize:     1,
 		LanguageCode: "en",
 		RegionCode:   "VN",
 	}
-	if lat != 0 || lng != 0 {
+	if !area.isZero() && area.RadiusM > 0 {
 		reqBody.LocationBias = &locationBias{
 			Circle: circle{
-				Center: center{Latitude: lat, Longitude: lng},
-				Radius: 15000,
+				Center: center{Latitude: area.Latitude, Longitude: area.Longitude},
+				Radius: area.RadiusM,
 			},
 		}
 	}

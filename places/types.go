@@ -7,7 +7,7 @@ type PlaceDetail struct {
 	GooglePlaceID   *string         `json:"google_place_id"`
 	Name            string          `json:"name"`
 	Address         *string         `json:"address"`
-	Neighborhood    *string         `json:"neighborhood"`
+	Ward            *string         `json:"ward"`
 	Latitude        float64         `json:"latitude"`
 	Longitude       float64         `json:"longitude"`
 	Rating          float64         `json:"rating"`

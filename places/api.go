@@ -121,7 +121,12 @@ func (s *Service) AutocompletePlaces(ctx context.Context, req *AutocompleteReque
 		return nil, &errs.Error{Code: errs.InvalidArgument, Message: "session_token is required"}
 	}
 
-	predictions, err := s.google.autocomplete(ctx, input, sessionToken, req.Latitude, req.Longitude)
+	city, err := resolveCity(ctx, dbgen.New(s.db), req.CitySlug, req.Latitude, req.Longitude, "")
+	if err != nil {
+		return nil, err
+	}
+
+	predictions, err := s.google.autocomplete(ctx, input, sessionToken, city.searchArea(req.Latitude, req.Longitude))
 	if err != nil {
 		return nil, errs.WrapCode(err, errs.Internal, "autocomplete failed")
 	}
