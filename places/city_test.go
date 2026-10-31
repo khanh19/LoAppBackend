@@ -76,3 +76,30 @@ func TestCitySearchAreaWithoutBoundsHasNoRestriction(t *testing.T) {
 		t.Fatalf("expected the city radius, got %v", area.RadiusM)
 	}
 }
+
+func TestCitySearchAreaWithRadiusOverrideDropsRestriction(t *testing.T) {
+	t.Parallel()
+
+	area := hanoi.searchAreaWithRadius(21.0278, 105.8342, 5000)
+	if area.Restrict != nil {
+		t.Fatalf("expected no city rectangle when radius is overridden, got %+v", area.Restrict)
+	}
+	if area.RadiusM != 5000 {
+		t.Fatalf("expected override radius 5000, got %v", area.RadiusM)
+	}
+	if area.Center.Latitude != 21.0278 || area.Center.Longitude != 105.8342 {
+		t.Fatalf("expected user center, got %+v", area.Center)
+	}
+}
+
+func TestClampPrimaryTypes(t *testing.T) {
+	t.Parallel()
+
+	got := clampPrimaryTypes([]string{" restaurant ", "cafe", "restaurant", "", "bar", "bakery", "night_club", "park"})
+	if len(got) != 5 {
+		t.Fatalf("expected 5 types, got %v", got)
+	}
+	if got[0] != "restaurant" || got[1] != "cafe" || got[4] != "night_club" {
+		t.Fatalf("unexpected order/values: %v", got)
+	}
+}

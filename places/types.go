@@ -64,11 +64,17 @@ type GetPlacePhotoResponse struct {
 }
 
 type AutocompleteRequest struct {
-	Input        string  `json:"input"`
-	SessionToken string  `json:"session_token"`
-	CitySlug     string  `json:"city_slug"`
-	Latitude     float64 `json:"latitude"`
-	Longitude    float64 `json:"longitude"`
+	Input        string   `json:"input"`
+	SessionToken string   `json:"session_token"`
+	CitySlug     string   `json:"city_slug"`
+	Latitude     float64  `json:"latitude"`
+	Longitude    float64  `json:"longitude"`
+	// SearchRadiusM optionally overrides the city's default search radius.
+	// When set (>0), autocomplete biases with a circle of this radius instead
+	// of the city bounding-box restriction.
+	SearchRadiusM int32 `json:"search_radius_m"`
+	// IncludedTypes maps to Google Autocomplete includedPrimaryTypes (max 5).
+	IncludedTypes []string `json:"included_types"`
 }
 
 type AutocompletePrediction struct {
