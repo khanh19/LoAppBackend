@@ -80,14 +80,14 @@ func (s *Service) selectPairwiseCandidates(
 				continue
 			}
 			in := ComparabilityInput{
-				BisectionScore:   0.5,
-				SameNeighborhood: eqPtr(place.Neighborhood, row.Neighborhood),
-				SameCity:         true,
-				PriceA:           place.PriceLevel,
-				PriceB:           row.PriceLevel,
-				VibesA:           place.Tags,
-				VibesB:           row.Tags,
-				RecencyScore:     0.5,
+				BisectionScore: 0.5,
+				SameWard:       eqPtr(place.Ward, row.Ward),
+				SameCity:       true,
+				PriceA:         place.PriceLevel,
+				PriceB:         row.PriceLevel,
+				VibesA:         place.Tags,
+				VibesB:         row.Tags,
+				RecencyScore:   0.5,
 			}
 			score := ScoreComparability(in, defaultComparability)
 			arch := ""
@@ -97,7 +97,7 @@ func (s *Service) selectPairwiseCandidates(
 			cands = append(cands, PairwiseCandidate{
 				PlaceID:       row.ID,
 				Name:          row.Name,
-				Neighborhood:  row.Neighborhood,
+				Ward:          row.Ward,
 				CoverImageURL: row.CoverImageUrl,
 				PriceLevel:    row.PriceLevel,
 				Archetype:     row.VenueArchetype,
@@ -128,14 +128,14 @@ func (s *Service) selectPairwiseCandidates(
 			continue
 		}
 		in := ComparabilityInput{
-			BisectionScore:   0.5,
-			SameNeighborhood: eqPtr(place.Neighborhood, row.Neighborhood),
-			SameCity:         true,
-			PriceA:           place.PriceLevel,
-			PriceB:           row.PriceLevel,
-			VibesA:           place.Tags,
-			VibesB:           row.Tags,
-			RecencyScore:     0.3,
+			BisectionScore: 0.5,
+			SameWard:       eqPtr(place.Ward, row.Ward),
+			SameCity:       true,
+			PriceA:         place.PriceLevel,
+			PriceB:         row.PriceLevel,
+			VibesA:         place.Tags,
+			VibesB:         row.Tags,
+			RecencyScore:   0.3,
 		}
 		score := ScoreComparability(in, defaultComparability)
 		arch := ""
@@ -145,7 +145,7 @@ func (s *Service) selectPairwiseCandidates(
 		cands = append(cands, PairwiseCandidate{
 			PlaceID:       row.ID,
 			Name:          row.Name,
-			Neighborhood:  row.Neighborhood,
+			Ward:          row.Ward,
 			CoverImageURL: row.CoverImageUrl,
 			PriceLevel:    row.PriceLevel,
 			Archetype:     row.VenueArchetype,
@@ -208,14 +208,14 @@ func (s *Service) scorePoolCandidates(
 			}
 		}
 		in := ComparabilityInput{
-			BisectionScore:   bisection,
-			SameNeighborhood: eqPtr(place.Neighborhood, row.Neighborhood),
-			SameCity:         place.CityID == row.CityID,
-			PriceA:           place.PriceLevel,
-			PriceB:           row.PriceLevel,
-			VibesA:           place.Tags,
-			VibesB:           row.Tags,
-			RecencyScore:     0.8,
+			BisectionScore: bisection,
+			SameWard:       eqPtr(place.Ward, row.Ward),
+			SameCity:       place.CityID == row.CityID,
+			PriceA:         place.PriceLevel,
+			PriceB:         row.PriceLevel,
+			VibesA:         place.Tags,
+			VibesB:         row.Tags,
+			RecencyScore:   0.8,
 		}
 		score := ScoreComparability(in, defaultComparability)
 		arch := ""
@@ -225,7 +225,7 @@ func (s *Service) scorePoolCandidates(
 		cands = append(cands, PairwiseCandidate{
 			PlaceID:       row.ID,
 			Name:          row.Name,
-			Neighborhood:  row.Neighborhood,
+			Ward:          row.Ward,
 			CoverImageURL: row.CoverImageUrl,
 			PriceLevel:    row.PriceLevel,
 			Archetype:     row.VenueArchetype,
@@ -327,14 +327,14 @@ func (s *Service) submitPairwise(ctx context.Context, userID, stampID string, re
 	hasSession := err == nil
 
 	in := ComparabilityInput{
-		BisectionScore:   0.8,
-		SameNeighborhood: eqPtr(place.Neighborhood, opp.Neighborhood),
-		SameCity:         place.CityID == opp.CityID,
-		PriceA:           place.PriceLevel,
-		PriceB:           opp.PriceLevel,
-		VibesA:           place.Tags,
-		VibesB:           opp.Tags,
-		RecencyScore:     0.8,
+		BisectionScore: 0.8,
+		SameWard:       eqPtr(place.Ward, opp.Ward),
+		SameCity:       place.CityID == opp.CityID,
+		PriceA:         place.PriceLevel,
+		PriceB:         opp.PriceLevel,
+		VibesA:         place.Tags,
+		VibesB:         opp.Tags,
+		RecencyScore:   0.8,
 	}
 	comparability := ScoreComparability(in, defaultComparability)
 
@@ -377,16 +377,16 @@ func (s *Service) submitPairwise(ctx context.Context, userID, stampID string, re
 
 	stampIDArg := stampUUID
 	_, err = tq.InsertPairwiseComparison(ctx, dbgen.InsertPairwiseComparisonParams{
-		UserID:         userUUID,
-		StampID:        stampIDArg,
-		PlaceAID:       placeUUID,
-		PlaceBID:       oppUUID,
-		WinnerPlaceID:  winnerUUID,
-		VenueCategory:  stamp.VenueCategory,
-		Band:           stamp.Verdict,
-		Tier:           tier,
-		Comparability:  numericFromFloat(comparability),
-		Surface:        surface,
+		UserID:        userUUID,
+		StampID:       stampIDArg,
+		PlaceAID:      placeUUID,
+		PlaceBID:      oppUUID,
+		WinnerPlaceID: winnerUUID,
+		VenueCategory: stamp.VenueCategory,
+		Band:          stamp.Verdict,
+		Tier:          tier,
+		Comparability: numericFromFloat(comparability),
+		Surface:       surface,
 	})
 	if err != nil {
 		return nil, errs.WrapCode(err, errs.Internal, "failed to insert pairwise")
