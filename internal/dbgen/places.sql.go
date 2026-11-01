@@ -268,7 +268,24 @@ WHERE p.is_active = true
   AND p.longitude::float8 BETWEEN $3::float8 AND $4::float8
   AND (
     $5::text IS NULL
-    OR p.venue_category = $5::text
+    OR (
+      $5::text = 'pub'
+      AND (
+        'pub' = ANY (COALESCE(p.google_types, '{}'::text[]))
+        OR p.venue_archetype = 'pub'
+      )
+    )
+    OR (
+      $5::text = 'bar'
+      AND p.venue_category = 'bar'
+      AND NOT ('pub' = ANY (COALESCE(p.google_types, '{}'::text[])))
+      AND COALESCE(p.venue_archetype, '') <> 'pub'
+    )
+    OR (
+      $5::text IS NOT NULL
+      AND $5::text NOT IN ('pub', 'bar')
+      AND p.venue_category = $5::text
+    )
   )
   AND (
     cardinality($6::uuid[]) = 0

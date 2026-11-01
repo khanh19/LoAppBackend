@@ -174,7 +174,24 @@ WHERE p.is_active = true
   AND p.longitude::float8 BETWEEN sqlc.arg(sw_lng)::float8 AND sqlc.arg(ne_lng)::float8
   AND (
     sqlc.narg(category)::text IS NULL
-    OR p.venue_category = sqlc.narg(category)::text
+    OR (
+      sqlc.narg(category)::text = 'pub'
+      AND (
+        'pub' = ANY (COALESCE(p.google_types, '{}'::text[]))
+        OR p.venue_archetype = 'pub'
+      )
+    )
+    OR (
+      sqlc.narg(category)::text = 'bar'
+      AND p.venue_category = 'bar'
+      AND NOT ('pub' = ANY (COALESCE(p.google_types, '{}'::text[])))
+      AND COALESCE(p.venue_archetype, '') <> 'pub'
+    )
+    OR (
+      sqlc.narg(category)::text IS NOT NULL
+      AND sqlc.narg(category)::text NOT IN ('pub', 'bar')
+      AND p.venue_category = sqlc.narg(category)::text
+    )
   )
   AND (
     cardinality(sqlc.arg(exclude_ids)::uuid[]) = 0

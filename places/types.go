@@ -113,7 +113,7 @@ type NearbyRequest struct {
 	Latitude  float64  `json:"latitude"`
 	Longitude float64  `json:"longitude"`
 	RadiusM   int32    `json:"radius_m"`
-	// Category filters to restaurant, cafe, or bar. Empty means all three.
+	// Category filters to restaurant, cafe, bar, club, or pub. Empty means all of them.
 	Category string `json:"category"`
 	// ExcludeIDs are place ids the client already passed or saved.
 	ExcludeIDs []string `json:"exclude_ids"`

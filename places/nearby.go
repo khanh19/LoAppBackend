@@ -25,6 +25,8 @@ var nearbyCategories = map[string]string{
 	"cafe":       "cafe",
 	"bar":        "bar",
 	"bars":       "bar",
+	"club":       "club",
+	"pub":        "pub",
 }
 
 //encore:api public method=POST path=/places/nearby
@@ -95,7 +97,7 @@ func normalizeNearbyCategory(raw string) (*string, error) {
 	if !ok {
 		return nil, &errs.Error{
 			Code:    errs.InvalidArgument,
-			Message: "category must be restaurant, cafe, or bar",
+			Message: "category must be restaurant, cafe, bar, club, or pub",
 		}
 	}
 	return &mapped, nil
@@ -161,11 +163,25 @@ func (s *Service) listNearbyFromDB(
 	return rows, nil
 }
 
-func (s *Service) fillNearbyFromGoogle(ctx context.Context, lat, lng, radiusM float64, category *string) error {
-	types := []string{"restaurant", "cafe", "bar"}
-	if category != nil {
-		types = []string{*category}
+// nearbyGoogleTypes maps a swipe category onto Google Places included types.
+// Pubs are stored as bars, so the pub search asks Google for bars and the SQL
+// filter keeps places tagged as pubs.
+func nearbyGoogleTypes(category *string) []string {
+	if category == nil {
+		return []string{"restaurant", "cafe", "bar", "night_club"}
 	}
+	switch *category {
+	case "club":
+		return []string{"night_club"}
+	case "pub":
+		return []string{"bar"}
+	default:
+		return []string{*category}
+	}
+}
+
+func (s *Service) fillNearbyFromGoogle(ctx context.Context, lat, lng, radiusM float64, category *string) error {
+	types := nearbyGoogleTypes(category)
 
 	resolved, err := s.google.searchNearby(ctx, lat, lng, radiusM, types, nearbyDeckLimit)
 	if err != nil {
