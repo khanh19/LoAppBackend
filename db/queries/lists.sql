@@ -1017,7 +1017,8 @@ SELECT EXISTS (
 -- name: UpdateUserPlanTitle :execrows
 UPDATE place_lists
 SET title = sqlc.arg(title),
-    updated_at = now()
+    updated_at = now(),
+    posted_at = now()
 WHERE id = sqlc.arg(id)::uuid
   AND list_type = 'user_plan'
   AND is_active = true
@@ -1044,7 +1045,7 @@ SELECT
   pl.category,
   pl.saves_count,
   pl.visibility,
-  pl.created_at,
+  pl.posted_at AS created_at,
   (
     SELECT COUNT(*)::integer
     FROM place_list_entries ple
@@ -1097,6 +1098,6 @@ WHERE pl.is_active = true
       WHERE uf.follower_user_id = sqlc.arg(viewer_id)::uuid
     )
   )
-ORDER BY pl.created_at DESC
+ORDER BY pl.posted_at DESC
 LIMIT sqlc.arg(limit_val)::int
 OFFSET sqlc.arg(offset_val)::int;

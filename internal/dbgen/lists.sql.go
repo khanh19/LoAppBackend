@@ -1273,7 +1273,7 @@ SELECT
   pl.category,
   pl.saves_count,
   pl.visibility,
-  pl.created_at,
+  pl.posted_at AS created_at,
   (
     SELECT COUNT(*)::integer
     FROM place_list_entries ple
@@ -1326,7 +1326,7 @@ WHERE pl.is_active = true
       WHERE uf.follower_user_id = $1::uuid
     )
   )
-ORDER BY pl.created_at DESC
+ORDER BY pl.posted_at DESC
 LIMIT $3::int
 OFFSET $2::int
 `
@@ -2266,7 +2266,8 @@ func (q *Queries) UpdatePlaceFromGoogleResolve(ctx context.Context, arg UpdatePl
 const updateUserPlanTitle = `-- name: UpdateUserPlanTitle :execrows
 UPDATE place_lists
 SET title = $1,
-    updated_at = now()
+    updated_at = now(),
+    posted_at = now()
 WHERE id = $2::uuid
   AND list_type = 'user_plan'
   AND is_active = true
