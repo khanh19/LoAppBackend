@@ -11,6 +11,40 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countBookmarksForPlaces = `-- name: CountBookmarksForPlaces :many
+SELECT
+  place_id::text AS place_id,
+  COUNT(*)::integer AS bookmark_count
+FROM place_bookmarks
+WHERE place_id = ANY ($1::uuid[])
+GROUP BY place_id
+`
+
+type CountBookmarksForPlacesRow struct {
+	PlaceID       string `json:"place_id"`
+	BookmarkCount int32  `json:"bookmark_count"`
+}
+
+func (q *Queries) CountBookmarksForPlaces(ctx context.Context, placeIds []pgtype.UUID) ([]CountBookmarksForPlacesRow, error) {
+	rows, err := q.db.Query(ctx, countBookmarksForPlaces, placeIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountBookmarksForPlacesRow
+	for rows.Next() {
+		var i CountBookmarksForPlacesRow
+		if err := rows.Scan(&i.PlaceID, &i.BookmarkCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPlaceByGooglePlaceID = `-- name: GetPlaceByGooglePlaceID :one
 SELECT
   p.id::text AS id,
@@ -209,6 +243,176 @@ func (q *Queries) GetPlaceByID(ctx context.Context, id pgtype.UUID) (GetPlaceByI
 		&i.IsActive,
 	)
 	return i, err
+}
+
+const listNearbyPlaces = `-- name: ListNearbyPlaces :many
+SELECT
+  p.id::text AS id,
+  p.google_place_id,
+  p.name,
+  p.ward,
+  p.address,
+  p.latitude,
+  p.longitude,
+  p.price_level,
+  p.cover_image_url,
+  p.venue_category,
+  c.slug AS city_slug,
+  c.name AS city_name
+FROM places p
+JOIN cities c ON c.id = p.city_id
+WHERE p.is_active = true
+  AND p.latitude IS NOT NULL
+  AND p.longitude IS NOT NULL
+  AND p.latitude::float8 BETWEEN $1::float8 AND $2::float8
+  AND p.longitude::float8 BETWEEN $3::float8 AND $4::float8
+  AND (
+    $5::text IS NULL
+    OR p.venue_category = $5::text
+  )
+  AND (
+    cardinality($6::uuid[]) = 0
+    OR NOT (p.id = ANY ($6::uuid[]))
+  )
+  AND (
+    6371000 * acos(
+      least(
+        1.0,
+        greatest(
+          -1.0,
+          cos(radians($7::float8)) * cos(radians(p.latitude::float8)) *
+          cos(radians(p.longitude::float8) - radians($8::float8)) +
+          sin(radians($7::float8)) * sin(radians(p.latitude::float8))
+        )
+      )
+    )
+  ) <= $9::float8
+ORDER BY random()
+LIMIT $10
+`
+
+type ListNearbyPlacesParams struct {
+	SwLat      float64       `json:"sw_lat"`
+	NeLat      float64       `json:"ne_lat"`
+	SwLng      float64       `json:"sw_lng"`
+	NeLng      float64       `json:"ne_lng"`
+	Category   *string       `json:"category"`
+	ExcludeIds []pgtype.UUID `json:"exclude_ids"`
+	Lat        float64       `json:"lat"`
+	Lng        float64       `json:"lng"`
+	RadiusM    float64       `json:"radius_m"`
+	LimitCount int32         `json:"limit_count"`
+}
+
+type ListNearbyPlacesRow struct {
+	ID            string         `json:"id"`
+	GooglePlaceID *string        `json:"google_place_id"`
+	Name          string         `json:"name"`
+	Ward          *string        `json:"ward"`
+	Address       *string        `json:"address"`
+	Latitude      pgtype.Numeric `json:"latitude"`
+	Longitude     pgtype.Numeric `json:"longitude"`
+	PriceLevel    *int16         `json:"price_level"`
+	CoverImageUrl *string        `json:"cover_image_url"`
+	VenueCategory *string        `json:"venue_category"`
+	CitySlug      string         `json:"city_slug"`
+	CityName      string         `json:"city_name"`
+}
+
+// Bounding-box prefilter, then haversine distance, then random order for the swipe deck.
+func (q *Queries) ListNearbyPlaces(ctx context.Context, arg ListNearbyPlacesParams) ([]ListNearbyPlacesRow, error) {
+	rows, err := q.db.Query(ctx, listNearbyPlaces,
+		arg.SwLat,
+		arg.NeLat,
+		arg.SwLng,
+		arg.NeLng,
+		arg.Category,
+		arg.ExcludeIds,
+		arg.Lat,
+		arg.Lng,
+		arg.RadiusM,
+		arg.LimitCount,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListNearbyPlacesRow
+	for rows.Next() {
+		var i ListNearbyPlacesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.GooglePlaceID,
+			&i.Name,
+			&i.Ward,
+			&i.Address,
+			&i.Latitude,
+			&i.Longitude,
+			&i.PriceLevel,
+			&i.CoverImageUrl,
+			&i.VenueCategory,
+			&i.CitySlug,
+			&i.CityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTopCompanionsForPlaces = `-- name: ListTopCompanionsForPlaces :many
+SELECT
+  vta.place_id::text AS place_id,
+  vta.tag_slug,
+  COALESCE(tt.label, vta.tag_slug) AS label,
+  vta.percentage,
+  vta.raw_count
+FROM venue_tag_aggregates vta
+LEFT JOIN tag_taxonomy tt
+  ON tt.slug = vta.tag_slug
+ AND tt.tag_type = 'companion'
+WHERE vta.place_id = ANY ($1::uuid[])
+  AND vta.tag_type = 'companion'
+  AND vta.raw_count > 0
+ORDER BY vta.place_id, vta.percentage DESC, vta.tag_slug
+`
+
+type ListTopCompanionsForPlacesRow struct {
+	PlaceID    string         `json:"place_id"`
+	TagSlug    string         `json:"tag_slug"`
+	Label      string         `json:"label"`
+	Percentage pgtype.Numeric `json:"percentage"`
+	RawCount   int32          `json:"raw_count"`
+}
+
+func (q *Queries) ListTopCompanionsForPlaces(ctx context.Context, placeIds []pgtype.UUID) ([]ListTopCompanionsForPlacesRow, error) {
+	rows, err := q.db.Query(ctx, listTopCompanionsForPlaces, placeIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTopCompanionsForPlacesRow
+	for rows.Next() {
+		var i ListTopCompanionsForPlacesRow
+		if err := rows.Scan(
+			&i.PlaceID,
+			&i.TagSlug,
+			&i.Label,
+			&i.Percentage,
+			&i.RawCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const upsertPlaceFromGoogle = `-- name: UpsertPlaceFromGoogle :one

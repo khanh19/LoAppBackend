@@ -14,6 +14,7 @@ type Querier interface {
 	AddUserPlaceListItem(ctx context.Context, arg AddUserPlaceListItemParams) error
 	CompleteUserOnboarding(ctx context.Context, userID pgtype.UUID) (string, error)
 	CountBookmarkedPlans(ctx context.Context, arg CountBookmarkedPlansParams) (int32, error)
+	CountBookmarksForPlaces(ctx context.Context, placeIds []pgtype.UUID) ([]CountBookmarksForPlacesRow, error)
 	CountExternalEvents(ctx context.Context, citySlug *string) (int64, error)
 	CountMyPlans(ctx context.Context, arg CountMyPlansParams) (int32, error)
 	CountPlaceBookmarks(ctx context.Context, userID pgtype.UUID) (int32, error)
@@ -90,6 +91,8 @@ type Querier interface {
 	ListLowConfidencePoolEntries(ctx context.Context, arg ListLowConfidencePoolEntriesParams) ([]ListLowConfidencePoolEntriesRow, error)
 	ListMyPlans(ctx context.Context, arg ListMyPlansParams) ([]ListMyPlansRow, error)
 	ListMyStampActivities(ctx context.Context, arg ListMyStampActivitiesParams) ([]ListMyStampActivitiesRow, error)
+	// Bounding-box prefilter, then haversine distance, then random order for the swipe deck.
+	ListNearbyPlaces(ctx context.Context, arg ListNearbyPlacesParams) ([]ListNearbyPlacesRow, error)
 	ListPlaceBookmarks(ctx context.Context, arg ListPlaceBookmarksParams) ([]ListPlaceBookmarksRow, error)
 	ListPlaceListEntriesByListID(ctx context.Context, listID pgtype.UUID) ([]ListPlaceListEntriesByListIDRow, error)
 	ListPlaceListEntrySeedNamesByListID(ctx context.Context, listID pgtype.UUID) ([]string, error)
@@ -100,6 +103,7 @@ type Querier interface {
 	ListRecentSyncRuns(ctx context.Context, limitVal int32) ([]ListRecentSyncRunsRow, error)
 	ListStampPhotos(ctx context.Context, stampID pgtype.UUID) ([]ListStampPhotosRow, error)
 	ListStampTags(ctx context.Context, stampID pgtype.UUID) ([]ListStampTagsRow, error)
+	ListTopCompanionsForPlaces(ctx context.Context, placeIds []pgtype.UUID) ([]ListTopCompanionsForPlacesRow, error)
 	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]ListUpcomingEventsRow, error)
 	ListUserPlaceListItems(ctx context.Context, listID pgtype.UUID) ([]ListUserPlaceListItemsRow, error)
 	// ---------------------------------------------------------------------------
