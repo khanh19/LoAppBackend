@@ -17,12 +17,14 @@ var secrets struct {
 
 const (
 	googlePlacesSearchURL       = "https://places.googleapis.com/v1/places:searchText"
+	googlePlacesNearbyURL       = "https://places.googleapis.com/v1/places:searchNearby"
 	googlePlacesAutocompleteURL = "https://places.googleapis.com/v1/places:autocomplete"
 	googlePlacesDetailsURL      = "https://places.googleapis.com/v1/places/"
 	googlePhotoMediaURL         = "https://places.googleapis.com/v1/"
 
 	detailsProFieldMask    = "id,displayName,formattedAddress,shortFormattedAddress,addressComponents,location,rating,userRatingCount,priceLevel,regularOpeningHours,nationalPhoneNumber,websiteUri,businessStatus,types,primaryTypeDisplayName"
 	detailsPhotosFieldMask = detailsProFieldMask + ",photos"
+	nearbySearchFieldMask  = "places.id,places.displayName,places.formattedAddress,places.shortFormattedAddress,places.addressComponents,places.location,places.rating,places.userRatingCount,places.priceLevel,places.regularOpeningHours,places.nationalPhoneNumber,places.websiteUri,places.businessStatus,places.types,places.primaryTypeDisplayName,places.photos"
 )
 
 type googlePlacesClient struct {
@@ -83,6 +85,48 @@ func (c *googlePlacesClient) autocomplete(ctx context.Context, input, sessionTok
 			Label:         label,
 			Secondary:     pred.StructuredFormat.SecondaryText.Text,
 		})
+	}
+	return out, nil
+}
+
+func (c *googlePlacesClient) searchNearby(ctx context.Context, lat, lng, radiusM float64, includedTypes []string, maxResults int) ([]*googleResolvedPlace, error) {
+	if maxResults <= 0 {
+		maxResults = 20
+	}
+	if maxResults > 20 {
+		maxResults = 20
+	}
+	reqBody := nearbySearchRequest{
+		IncludedTypes:  includedTypes,
+		MaxResultCount: maxResults,
+		LanguageCode:   "en",
+		RegionCode:     "VN",
+		RankPreference: "DISTANCE",
+		LocationRestriction: nearbyLocationRestriction{
+			Circle: circle{
+				Center: center{Latitude: lat, Longitude: lng},
+				Radius: radiusM,
+			},
+		},
+	}
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp nearbySearchResponse
+	if err := c.doJSONWithRetry(ctx, http.MethodPost, googlePlacesNearbyURL, nearbySearchFieldMask, body, &resp, ""); err != nil {
+		return nil, err
+	}
+
+	out := make([]*googleResolvedPlace, 0, len(resp.Places))
+	for i := range resp.Places {
+		place := resp.Places[i]
+		if place.ID == "" {
+			continue
+		}
+		resolved := mapGooglePlace(&place, true)
+		out = append(out, resolved)
 	}
 	return out, nil
 }

@@ -69,6 +69,23 @@ type textSearchRequest struct {
 	RegionCode   string        `json:"regionCode,omitempty"`
 }
 
+type nearbySearchRequest struct {
+	IncludedTypes         []string                   `json:"includedTypes,omitempty"`
+	MaxResultCount        int                        `json:"maxResultCount,omitempty"`
+	LanguageCode          string                     `json:"languageCode,omitempty"`
+	RegionCode            string                     `json:"regionCode,omitempty"`
+	LocationRestriction   nearbyLocationRestriction  `json:"locationRestriction"`
+	RankPreference        string                     `json:"rankPreference,omitempty"`
+}
+
+type nearbyLocationRestriction struct {
+	Circle circle `json:"circle"`
+}
+
+type nearbySearchResponse struct {
+	Places []googlePlace `json:"places"`
+}
+
 type locationBias struct {
 	Circle circle `json:"circle"`
 }

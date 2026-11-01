@@ -14,7 +14,7 @@ func mapGooglePlace(place *googlePlace, includePhotos bool) *googleResolvedPlace
 	}
 
 	resolved := &googleResolvedPlace{
-		GooglePlaceID:  place.ID,
+		GooglePlaceID:  strings.TrimPrefix(place.ID, "places/"),
 		Name:           place.DisplayName.Text,
 		Address:        address,
 		Ward:           parseWard(place.AddressComponents),
