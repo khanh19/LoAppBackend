@@ -287,6 +287,7 @@ type FeedPlanItem struct {
 	CreatorAvatarURL   *string `json:"creator_avatar_url"`
 	IsMine             bool    `json:"is_mine"`
 	CreatedAt          string  `json:"created_at"`
+	Updated            bool    `json:"updated"`
 }
 
 type FeedPlansResponse struct {
