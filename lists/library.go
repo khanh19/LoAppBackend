@@ -553,6 +553,39 @@ func parseLibraryPlanPaging(params *LibraryQueryParams) (limit, offset int, sort
 	return limit, offset, sort, q
 }
 
+func (s *Service) getPlanBookmark(ctx context.Context, userID, slug string) (*BookmarkStatusResponse, error) {
+	ownerID, err := requireUserUUID(userID)
+	if err != nil {
+		return nil, err
+	}
+	slug = strings.TrimSpace(slug)
+	if slug == "" {
+		return nil, &errs.Error{Code: errs.InvalidArgument, Message: "slug is required"}
+	}
+
+	q := dbgen.New(s.db)
+	plan, err := q.GetPlanIDBySlug(ctx, slug)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &errs.Error{Code: errs.NotFound, Message: "plan not found"}
+		}
+		return nil, errs.WrapCode(err, errs.Internal, "failed to resolve plan")
+	}
+	listUUID, err := uuidFromString(plan.ID)
+	if err != nil {
+		return nil, errs.WrapCode(err, errs.Internal, "invalid plan id")
+	}
+
+	exists, err := q.HasPlanBookmark(ctx, dbgen.HasPlanBookmarkParams{
+		UserID: ownerID,
+		ListID: listUUID,
+	})
+	if err != nil {
+		return nil, errs.WrapCode(err, errs.Internal, "failed to check plan bookmark")
+	}
+	return &BookmarkStatusResponse{Bookmarked: exists}, nil
+}
+
 func (s *Service) putPlanBookmark(ctx context.Context, userID, slug string) (*BookmarkStatusResponse, error) {
 	ownerID, err := requireUserUUID(userID)
 	if err != nil {
