@@ -108,3 +108,33 @@ type ResolvePlaceResponse struct {
 	PlaceID string      `json:"place_id"`
 	Place   PlaceDetail `json:"place"`
 }
+
+type NearbyRequest struct {
+	Latitude  float64  `json:"latitude"`
+	Longitude float64  `json:"longitude"`
+	RadiusM   int32    `json:"radius_m"`
+	// Category filters to restaurant, cafe, or bar. Empty means all three.
+	Category string `json:"category"`
+	// ExcludeIDs are place ids the client already passed or saved.
+	ExcludeIDs []string `json:"exclude_ids"`
+}
+
+type NearbyPlace struct {
+	ID             string   `json:"id"`
+	Name           string   `json:"name"`
+	Address        *string  `json:"address"`
+	Ward           *string  `json:"ward"`
+	Latitude       float64  `json:"latitude"`
+	Longitude      float64  `json:"longitude"`
+	PriceLevel     *int16   `json:"price_level"`
+	CoverImageURL  *string  `json:"cover_image_url"`
+	VenueCategory  *string  `json:"venue_category"`
+	CitySlug       string   `json:"city_slug"`
+	CityName       string   `json:"city_name"`
+	BookmarkCount  int32    `json:"bookmark_count"`
+	BestForLabels  []string `json:"best_for_labels"`
+}
+
+type NearbyResponse struct {
+	Places []NearbyPlace `json:"places"`
+}
