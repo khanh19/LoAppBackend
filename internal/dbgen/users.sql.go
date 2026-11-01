@@ -195,6 +195,59 @@ func (q *Queries) GetUserProfile(ctx context.Context, userID pgtype.UUID) (GetUs
 	return i, err
 }
 
+const getUserProfileStats = `-- name: GetUserProfileStats :one
+SELECT
+  (
+    SELECT COUNT(*)::integer
+    FROM user_follows
+    WHERE following_user_id = $1::uuid
+  ) AS followers_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM user_follows
+    WHERE follower_user_id = $1::uuid
+  ) AS following_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM stamps
+    WHERE user_id = $1::uuid
+      AND is_active = true
+  ) AS stamps_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM user_place_lists
+    WHERE owner_user_id = $1::uuid
+  ) AS collections_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_lists
+    WHERE is_active = true
+      AND list_type = 'user_plan'
+      AND creator_user_id = $1::uuid
+  ) AS plans_count
+`
+
+type GetUserProfileStatsRow struct {
+	FollowersCount   int32 `json:"followers_count"`
+	FollowingCount   int32 `json:"following_count"`
+	StampsCount      int32 `json:"stamps_count"`
+	CollectionsCount int32 `json:"collections_count"`
+	PlansCount       int32 `json:"plans_count"`
+}
+
+func (q *Queries) GetUserProfileStats(ctx context.Context, userID pgtype.UUID) (GetUserProfileStatsRow, error) {
+	row := q.db.QueryRow(ctx, getUserProfileStats, userID)
+	var i GetUserProfileStatsRow
+	err := row.Scan(
+		&i.FollowersCount,
+		&i.FollowingCount,
+		&i.StampsCount,
+		&i.CollectionsCount,
+		&i.PlansCount,
+	)
+	return i, err
+}
+
 const hasUserProfile = `-- name: HasUserProfile :one
 SELECT EXISTS (
   SELECT 1

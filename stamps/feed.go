@@ -60,6 +60,52 @@ func (s *Service) GetStampFeed(ctx context.Context, p *FeedQuery) (*FeedResponse
 	}, nil
 }
 
+//encore:api auth method=GET path=/me/activities
+func (s *Service) GetMyActivities(ctx context.Context, p *FeedQuery) (*FeedResponse, error) {
+	userID, err := requireUserID()
+	if err != nil {
+		return nil, err
+	}
+
+	limit := defaultFeedLimit
+	offset := 0
+	if p != nil {
+		limit = normalizeFeedLimit(p.Limit)
+		offset = normalizeFeedOffset(p.Offset)
+	}
+
+	viewerUUID, err := uuidFromString(userID)
+	if err != nil {
+		return nil, &errs.Error{Code: errs.Unauthenticated, Message: "invalid user"}
+	}
+
+	rows, err := dbgen.New(s.db).ListMyStampActivities(ctx, dbgen.ListMyStampActivitiesParams{
+		ViewerID:  viewerUUID,
+		LimitVal:  int32(limit + 1),
+		OffsetVal: int32(offset),
+	})
+	if err != nil {
+		return nil, errs.WrapCode(err, errs.Internal, "failed to list activities")
+	}
+
+	hasMore := len(rows) > limit
+	if hasMore {
+		rows = rows[:limit]
+	}
+
+	items := make([]FeedStampItem, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, feedStampItemFromRow(dbgen.ListFeedStampsRow(row), userID))
+	}
+
+	return &FeedResponse{
+		Items:   items,
+		Limit:   limit,
+		Offset:  offset,
+		HasMore: hasMore,
+	}, nil
+}
+
 func normalizeFeedLimit(limit int) int {
 	if limit <= 0 {
 		return defaultFeedLimit

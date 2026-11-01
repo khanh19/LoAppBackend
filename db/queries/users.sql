@@ -165,3 +165,34 @@ SELECT EXISTS (
   FROM user_profiles
   WHERE user_id = sqlc.arg(user_id)::uuid
 ) AS profile_exists;
+
+-- name: GetUserProfileStats :one
+SELECT
+  (
+    SELECT COUNT(*)::integer
+    FROM user_follows
+    WHERE following_user_id = sqlc.arg(user_id)::uuid
+  ) AS followers_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM user_follows
+    WHERE follower_user_id = sqlc.arg(user_id)::uuid
+  ) AS following_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM stamps
+    WHERE user_id = sqlc.arg(user_id)::uuid
+      AND is_active = true
+  ) AS stamps_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM user_place_lists
+    WHERE owner_user_id = sqlc.arg(user_id)::uuid
+  ) AS collections_count,
+  (
+    SELECT COUNT(*)::integer
+    FROM place_lists
+    WHERE is_active = true
+      AND list_type = 'user_plan'
+      AND creator_user_id = sqlc.arg(user_id)::uuid
+  ) AS plans_count;
