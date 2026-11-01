@@ -101,5 +101,6 @@ func feedPlanItemFromRow(row dbgen.ListFeedPlansRow, viewerID string) FeedPlanIt
 		CreatorAvatarURL:   row.CreatorAvatarUrl,
 		IsMine:             row.CreatorUserID == viewerID,
 		CreatedAt:          timestamptzToString(row.CreatedAt),
+		Updated:            row.Updated,
 	}
 }

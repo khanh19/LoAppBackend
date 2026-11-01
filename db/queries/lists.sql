@@ -1057,7 +1057,8 @@ SELECT
   COALESCE(pl.creator_user_id::text, ''::text)::text AS creator_user_id,
   COALESCE(NULLIF(trim(concat_ws(' ', up.first_name, up.last_name)), ''), up.username::text, u.primary_email) AS creator_display_name,
   COALESCE(up.username::text, ''::text)::text AS creator_username,
-  up.avatar_url AS creator_avatar_url
+  up.avatar_url AS creator_avatar_url,
+  (pl.posted_at > pl.created_at) AS updated
 FROM place_lists pl
 LEFT JOIN users u ON u.id = pl.creator_user_id
 LEFT JOIN user_profiles up ON up.user_id = pl.creator_user_id
