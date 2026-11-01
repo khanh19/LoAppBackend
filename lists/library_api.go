@@ -123,6 +123,15 @@ func (s *Service) ListMyPlanBookmarks(ctx context.Context, params *LibraryQueryP
 	return s.listBookmarkedPlans(ctx, userID, params)
 }
 
+//encore:api auth method=GET path=/plans/:slug/bookmark
+func (s *Service) GetPlanBookmark(ctx context.Context, slug string) (*BookmarkStatusResponse, error) {
+	userID, err := requireAuthUserID()
+	if err != nil {
+		return nil, err
+	}
+	return s.getPlanBookmark(ctx, userID, slug)
+}
+
 //encore:api auth method=PUT path=/plans/:slug/bookmark
 func (s *Service) PutPlanBookmark(ctx context.Context, slug string) (*BookmarkStatusResponse, error) {
 	userID, err := requireAuthUserID()
