@@ -142,6 +142,7 @@ type PlaceList struct {
 	ListType      string             `json:"list_type"`
 	Visibility    string             `json:"visibility"`
 	SavesCount    int32              `json:"saves_count"`
+	PostedAt      pgtype.Timestamptz `json:"posted_at"`
 }
 
 type PlaceListEntry struct {
