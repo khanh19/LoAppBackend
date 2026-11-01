@@ -149,3 +149,73 @@ SET
   last_synced_at = now(),
   updated_at = now()
 RETURNING id::text AS id;
+
+-- name: ListNearbyPlaces :many
+-- Bounding-box prefilter, then haversine distance, then random order for the swipe deck.
+SELECT
+  p.id::text AS id,
+  p.google_place_id,
+  p.name,
+  p.ward,
+  p.address,
+  p.latitude,
+  p.longitude,
+  p.price_level,
+  p.cover_image_url,
+  p.venue_category,
+  c.slug AS city_slug,
+  c.name AS city_name
+FROM places p
+JOIN cities c ON c.id = p.city_id
+WHERE p.is_active = true
+  AND p.latitude IS NOT NULL
+  AND p.longitude IS NOT NULL
+  AND p.latitude::float8 BETWEEN sqlc.arg(sw_lat)::float8 AND sqlc.arg(ne_lat)::float8
+  AND p.longitude::float8 BETWEEN sqlc.arg(sw_lng)::float8 AND sqlc.arg(ne_lng)::float8
+  AND (
+    sqlc.narg(category)::text IS NULL
+    OR p.venue_category = sqlc.narg(category)::text
+  )
+  AND (
+    cardinality(sqlc.arg(exclude_ids)::uuid[]) = 0
+    OR NOT (p.id = ANY (sqlc.arg(exclude_ids)::uuid[]))
+  )
+  AND (
+    6371000 * acos(
+      least(
+        1.0,
+        greatest(
+          -1.0,
+          cos(radians(sqlc.arg(lat)::float8)) * cos(radians(p.latitude::float8)) *
+          cos(radians(p.longitude::float8) - radians(sqlc.arg(lng)::float8)) +
+          sin(radians(sqlc.arg(lat)::float8)) * sin(radians(p.latitude::float8))
+        )
+      )
+    )
+  ) <= sqlc.arg(radius_m)::float8
+ORDER BY random()
+LIMIT sqlc.arg(limit_count);
+
+-- name: CountBookmarksForPlaces :many
+SELECT
+  place_id::text AS place_id,
+  COUNT(*)::integer AS bookmark_count
+FROM place_bookmarks
+WHERE place_id = ANY (sqlc.arg(place_ids)::uuid[])
+GROUP BY place_id;
+
+-- name: ListTopCompanionsForPlaces :many
+SELECT
+  vta.place_id::text AS place_id,
+  vta.tag_slug,
+  COALESCE(tt.label, vta.tag_slug) AS label,
+  vta.percentage,
+  vta.raw_count
+FROM venue_tag_aggregates vta
+LEFT JOIN tag_taxonomy tt
+  ON tt.slug = vta.tag_slug
+ AND tt.tag_type = 'companion'
+WHERE vta.place_id = ANY (sqlc.arg(place_ids)::uuid[])
+  AND vta.tag_type = 'companion'
+  AND vta.raw_count > 0
+ORDER BY vta.place_id, vta.percentage DESC, vta.tag_slug;
